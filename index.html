@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Informed Dataset Selection</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .card {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 10px;
+        background: #fff;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .controls {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .control-group {
+        flex: 1;
+      }
+      .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Informed Dataset Selection</h1>
+      <p>Select different options to control the contents of the diagram.</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <p>Choose datasets (Checkboxes):</p>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="dataset1" /> Dataset 1</label>
+            <label><input type="checkbox" value="dataset2" /> Dataset 2</label>
+            <label><input type="checkbox" value="dataset3" /> Dataset 3</label>
+          </div>
+        </div>
+        <div class="control-group">
+          <p>Choose a dataset (Dropdown):</p>
+          <select id="dataset">
+            <option value="dataset1">Dataset 1</option>
+            <option value="dataset2">Dataset 2</option>
+            <option value="dataset3">Dataset 3</option>
+          </select>
+        </div>
+      </div>
+      <p>
+        <b>The Algorithm performance space for Recommender-System Datasets.</b>
+        The chart is based on 2 algorithms, reduced to two dimensions via PCA.
+        The further apart two datasets, the more diverse they are. Generally, we
+        suggest using datasets for recommender-system experiments that are
+        diverse.
+      </p>
+      <div class="card" id="diagram-container">
+        <canvas id="myChart" style="width: 100%; max-width: 700px"></canvas>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const xyValues = [
+      { x: 0.05, y: 0.1, label: "1" },
+      { x: 0.125, y: 0.125, label: "2" },
+      { x: 0.13, y: 0.08, label: "3" },
+      { x: 0.05, y: 0.85, label: "4" },
+      { x: 0.25, y: 0.9, label: "5" },
+      { x: 0.8, y: 0.95, label: "6" },
+      { x: 0.85, y: 0.8, label: "7" },
+      { x: 0.9, y: 0.08, label: "8" },
+      { x: 0.85, y: 0.2, label: "9" },
+      { x: 0.78, y: 0.1, label: "10" },
+      { x: 0.4, y: 0.45, label: "11" },
+      { x: 0.48, y: 0.55, label: "12" },
+      { x: 0.55, y: 0.5, label: "13" },
+      { x: 0.48, y: 0.4, label: "14" },
+      { x: 0.5, y: 0.45, label: "15" },
+      { x: 0.6, y: 0.45, label: "16" },
+    ];
+
+    const ctx = document.getElementById("myChart");
+
+    new Chart(ctx, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            pointRadius: 10,
+            pointBackgroundColor: "rgb(200,20,0)",
+            data: xyValues,
+          },
+        ],
+      },
+      options: {
+        aspectRatio: 1,
+        legend: { display: false },
+        scales: {
+          xAxes: [
+            {
+              ticks: {
+                min: 0,
+                max: 1,
+                stepSize: 0.25, // Controls the interval between tick marks
+              },
+            },
+          ],
+          yAxes: [
+            {
+              ticks: {
+                min: 0,
+                max: 1,
+                stepSize: 0.25,
+              },
+            },
+          ],
+        },
+      },
+      plugins: [
+        {
+          afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            ctx.font = "12px Arial";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+
+            meta.data.forEach((point, index) => {
+              const label = xyValues[index].label;
+              const { x, y } = point.getCenterPoint();
+              ctx.fillText(label, x, y);
+            });
+          },
+        },
+      ],
+    });
+  </script>
+</html>
