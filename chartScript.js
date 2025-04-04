@@ -1,3 +1,6 @@
+import { getAlgorithms } from "./apiService.js";
+
+// Initial random datapoints
 const xyValues = [
   { x: 0.05, y: 0.1, label: "1" },
   { x: 0.125, y: 0.125, label: "2" },
@@ -17,77 +20,124 @@ const xyValues = [
   { x: 0.6, y: 0.45, label: "16" },
 ];
 
-const ctx = document.getElementById("myChart");
+// Chart instance variable
+let chart;
 
-const comp1 = 91.92;
-const comp2 = 3.06;
+// Function to initialize or update the chart
+function updateChart(xLabel, yLabel) {
+  const ctx = document.getElementById("myChart");
 
-new Chart(ctx, {
-  type: "scatter",
-  data: {
-    datasets: [
+  // If the chart already exists, destroy it before creating a new one
+  if (chart) {
+    chart.destroy();
+  }
+  // Create a new chart instance
+  chart = new Chart(ctx, {
+    type: "scatter",
+    data: {
+      datasets: [
+        {
+          pointRadius: 10,
+          pointBackgroundColor: "rgb(200,20,0)",
+          data: xyValues,
+        },
+      ],
+    },
+    options: {
+      title: {
+        display: true,
+        text: "Algorithm Performance Space",
+      },
+      aspectRatio: 1,
+      legend: { display: false },
+      scales: {
+        xAxes: [
+          {
+            ticks: {
+              min: 0,
+              max: 1,
+              stepSize: 0.25, // Controls the interval between tick marks
+            },
+            scaleLabel: {
+              display: true,
+              labelString: xLabel,
+            },
+          },
+        ],
+        yAxes: [
+          {
+            ticks: {
+              min: 0,
+              max: 1,
+              stepSize: 0.25,
+            },
+            scaleLabel: {
+              display: true,
+              labelString: yLabel,
+            },
+          },
+        ],
+      },
+    },
+    plugins: [
       {
-        pointRadius: 10,
-        pointBackgroundColor: "rgb(200,20,0)",
-        data: xyValues,
+        afterDraw: (chart) => {
+          const ctx = chart.ctx;
+          ctx.font = "12px Arial";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          const dataset = chart.data.datasets[0];
+          const meta = chart.getDatasetMeta(0);
+
+          meta.data.forEach((point, index) => {
+            const label = xyValues[index].label;
+            const { x, y } = point.getCenterPoint();
+            ctx.fillText(label, x, y);
+          });
+        },
       },
     ],
-  },
-  options: {
-    title: {
-      display: true,
-      text: "Algorithm Performance Space",
-      
-    },
-    aspectRatio: 1,
-    legend: { display: false },
-    scales: {
-      xAxes: [
-        {
-          ticks: {
-            min: 0,
-            max: 1,
-            stepSize: 0.25, // Controls the interval between tick marks
-          },
-          scaleLabel: {
-            display: true,
-            labelString: "Component 1 - " + comp1 + "%",
-          },
-        },
-      ],
-      yAxes: [
-        {
-          ticks: {
-            min: 0,
-            max: 1,
-            stepSize: 0.25,
-          },
-          scaleLabel: {
-            display: true,
-            labelString: "Component 2 - " + comp2 + "%",
-          },
-        },
-      ],
-    },
-  },
-  plugins: [
-    {
-      afterDraw: (chart) => {
-        const ctx = chart.ctx;
-        ctx.font = "12px Arial";
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
+  });
+}
 
-        const dataset = chart.data.datasets[0];
-        const meta = chart.getDatasetMeta(0);
+// function to handle dropdown changes
+function handleDropdownChange() {
+  const algorithms = getAlgorithms();
 
-        meta.data.forEach((point, index) => {
-          const label = xyValues[index].label;
-          const { x, y } = point.getCenterPoint();
-          ctx.fillText(label, x, y);
-        });
-      },
-    },
-  ],
-});
+  // Get the selected algorithm IDs from the dropdowns
+  const firstAlgorithmId = Number(
+    document.getElementById("select-first-algorithm").value
+  );
+  const secondAlgorithmId = Number(
+    document.getElementById("select-second-algorithm").value
+  );
+
+  // Find the selected algorithms based on their IDs
+  const firstAlgorithm = algorithms.find(
+    (algorithm) => algorithm.id === firstAlgorithmId
+  );
+  const secondAlgorithm = algorithms.find(
+    (algorithm) => algorithm.id === secondAlgorithmId
+  );
+
+  // Get the names of the selected algorithms
+  const firstAlgorithmName = firstAlgorithm ? firstAlgorithm.name : "";
+  const secondAlgorithmName = secondAlgorithm ? secondAlgorithm.name : "";
+
+  // Update the chart title based on selected algorithms
+  chart.options.title.text = `Performance Comparison: ${firstAlgorithmName} vs ${secondAlgorithmName}`;
+  updateChart(firstAlgorithmName, secondAlgorithmName);
+}
+
+// Event listeners for dropdown changes
+document
+  .getElementById("select-first-algorithm")
+  .addEventListener("change", handleDropdownChange);
+document
+  .getElementById("select-second-algorithm")
+  .addEventListener("change", handleDropdownChange);
+
+// Initial call to set up the chart with default labels
+updateChart("Algorithm 1", "Algorithm 2");

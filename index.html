@@ -12,28 +12,51 @@
       Ensure you have an active internet connection to load the library from the CDN.
     -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <!-- our project just needs Font Awesome Solid + Brands -->
+    <link href="/assets/css/fontawesome.css" rel="stylesheet" />
+    <link href="/assets/css/brands.css" rel="stylesheet" />
+    <link href="/assets/css/solid.css" rel="stylesheet" />
+    <script type="module">
+      import {
+        checkServerHealth,
+        fetchAlgorithms,
+        populateSelectAlgorithm,
+      } from "./apiService.js";
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Check server health
+        const isServerOnline = await checkServerHealth();
+
+        // If the server is online, fetch algorithm data
+        if (isServerOnline) {
+          await fetchAlgorithms();
+        }
+
+        // Populate the dropdowns (can be called later as needed)
+        populateSelectAlgorithm();
+      });
+    </script>
   </head>
   <body>
     <div class="container">
-      <h1>Informed Dataset Selection</h1>
+      <div class="header">
+        <h1>Informed Dataset Selection</h1>
+        <div class="filler"></div>
+        <!-- Server status indicator-->
+        <div>
+          <div id="server-status" class="checking">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            Checking server status...
+          </div>
+        </div>
+      </div>
       <p>Select different options to control the contents of the diagram.</p>
 
       <div class="controls">
         <div class="control-group">
-          <p>Choose datasets (Checkboxes):</p>
-          <div class="checkbox-group">
-            <label><input type="checkbox" value="dataset1" /> Dataset 1</label>
-            <label><input type="checkbox" value="dataset2" /> Dataset 2</label>
-            <label><input type="checkbox" value="dataset3" /> Dataset 3</label>
-          </div>
-        </div>
-        <div class="control-group">
-          <p>Choose a dataset (Dropdown):</p>
-          <select id="dataset">
-            <option value="dataset1">Dataset 1</option>
-            <option value="dataset2">Dataset 2</option>
-            <option value="dataset3">Dataset 3</option>
-          </select>
+          <p>Choose two algorithms:</p>
+          <select id="select-first-algorithm"></select>
+          <select id="select-second-algorithm"></select>
         </div>
       </div>
       <p>
@@ -45,7 +68,7 @@
       </p>
       <div class="card" id="diagram-container">
         <canvas id="myChart" style="width: 100%; max-width: 700px"></canvas>
-        <script src="chartScript.js"></script>
+        <script type="module" src="chartScript.js"></script>
       </div>
     </div>
   </body>

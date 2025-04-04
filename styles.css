@@ -12,6 +12,12 @@ body {
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+.header {
+  display: flex;
+}
+.filler {
+  flex: 1;
+}
 .card {
   border: 1px solid #ddd;
   padding: 20px;
@@ -33,4 +39,24 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+#server-status {
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: block;
+  font-weight: bold;
+  height: fit-content;
+}
+#server-status.checking {
+  background-color: #fff3cd;
+  color: #856404;
+}
+#server-status.online {
+  background-color: #d4edda;
+  color: #155724;
+}
+#server-status.offline {
+  background-color: #f8d7da;
+  color: #721c24;
 }
