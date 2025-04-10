@@ -1,7 +1,7 @@
-import { getAlgorithms } from "./apiService.js";
+import { getDatasetName, getAlgorithmName } from "./apiService.js";
 
 // Initial random datapoints
-const xyValues = [
+let xyValues = [
   { x: 0.05, y: 0.1, label: "1" },
   { x: 0.125, y: 0.125, label: "2" },
   { x: 0.13, y: 0.08, label: "3" },
@@ -22,6 +22,40 @@ const xyValues = [
 
 // Chart instance variable
 let chart;
+
+// function to update xyValues with the latest performance results
+export function updateXYValues(compareResults) {
+  // get the performance metric
+  const performanceMetric = document.getElementById(
+    "formPerformanceMetric"
+  ).value;
+  if (compareResults) {
+    xyValues = compareResults.map((result) => {
+      // the final x (y) value is the average of the five datapoints of the according performance metric
+      const xValue = Object.keys(result.x[performanceMetric]).reduce(
+        (avg, key, _, { length }) =>
+          avg + result.x[performanceMetric][key] / length,
+        0
+      );
+      const yValue = Object.keys(result.y[performanceMetric]).reduce(
+        (avg, key, _, { length }) =>
+          avg + result.y[performanceMetric][key] / length,
+        0
+      );
+      return {
+        x: xValue,
+        y: yValue,
+        label: result.datasetId,
+      };
+    });
+  }
+}
+
+// Function to put in new data into the chart
+export function updateChartData() {
+  chart.data.datasets[0].data = xyValues;
+  chart.update();
+}
 
 // Function to initialize or update the chart
 function updateChart(xLabel, yLabel) {
@@ -45,7 +79,7 @@ function updateChart(xLabel, yLabel) {
     },
     options: {
       title: {
-        display: true,
+        display: false,
         text: "Algorithm Performance Space",
       },
       aspectRatio: 1,
@@ -78,6 +112,20 @@ function updateChart(xLabel, yLabel) {
           },
         ],
       },
+      tooltips: {
+        callbacks: {
+          label: function (tooltipItem, data) {
+            const index = tooltipItem.index;
+            const label = xyValues[index].label;
+            return [
+              `Dataset ID: ${label}`,
+              `Dataset Name: ${getAlgorithmName(tooltipItem.index)}`,
+              `X: ${xyValues[index].x}`,
+              `Y: ${xyValues[index].y}`,
+            ];
+          },
+        },
+      },
     },
     plugins: [
       {
@@ -104,39 +152,29 @@ function updateChart(xLabel, yLabel) {
 
 // function to handle dropdown changes
 function handleDropdownChange() {
-  const algorithms = getAlgorithms();
-
   // Get the selected algorithm IDs from the dropdowns
   const firstAlgorithmId = Number(
-    document.getElementById("select-first-algorithm").value
+    document.getElementById("formControlAlgorithm1").value
   );
   const secondAlgorithmId = Number(
-    document.getElementById("select-second-algorithm").value
+    document.getElementById("formControlAlgorithm2").value
   );
 
   // Find the selected algorithms based on their IDs
-  const firstAlgorithm = algorithms.find(
-    (algorithm) => algorithm.id === firstAlgorithmId
-  );
-  const secondAlgorithm = algorithms.find(
-    (algorithm) => algorithm.id === secondAlgorithmId
-  );
-
-  // Get the names of the selected algorithms
-  const firstAlgorithmName = firstAlgorithm ? firstAlgorithm.name : "";
-  const secondAlgorithmName = secondAlgorithm ? secondAlgorithm.name : "";
+  const firstAlgorithm = getAlgorithmName(firstAlgorithmId);
+  const secondAlgorithm = getAlgorithmName(secondAlgorithmId);
 
   // Update the chart title based on selected algorithms
-  chart.options.title.text = `Performance Comparison: ${firstAlgorithmName} vs ${secondAlgorithmName}`;
-  updateChart(firstAlgorithmName, secondAlgorithmName);
+  chart.options.title.text = `Performance Comparison: ${firstAlgorithm} vs ${secondAlgorithm}`;
+  updateChart(firstAlgorithm, secondAlgorithm);
 }
 
 // Event listeners for dropdown changes
 document
-  .getElementById("select-first-algorithm")
+  .getElementById("formControlAlgorithm1")
   .addEventListener("change", handleDropdownChange);
 document
-  .getElementById("select-second-algorithm")
+  .getElementById("formControlAlgorithm2")
   .addEventListener("change", handleDropdownChange);
 
 // Initial call to set up the chart with default labels

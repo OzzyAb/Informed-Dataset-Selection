@@ -6,8 +6,17 @@ const algorithmUrl = `${apiUrl}/algorithm`;
 const datasetUrl = `${apiUrl}/dataset`;
 // URL to fetch server status
 const serverStatusUrl = `${apiUrl}/health`;
+// URL to fetch performance results of two algorithms
+const performanceUrl = (a1, a2) => `${apiUrl}/result/compare?x=${a1}&y=${a2}`;
 
 let algorithms = [];
+let datasets = [];
+let compareResults = {};
+
+// function get the compare results
+export function getCompareResults() {
+  return compareResults;
+}
 
 export async function checkServerHealth() {
   const statusIndicator = document.getElementById("server-status");
@@ -15,19 +24,40 @@ export async function checkServerHealth() {
     const response = await fetch(serverStatusUrl);
     if (response.ok) {
       statusIndicator.textContent = "Server is online";
-      statusIndicator.className = "online";
-      statusIndicator.innerHTML =
-        '<i class="fas fa-check-circle"></i> Server is online';
+      statusIndicator.className =
+        "badge bg-success-subtle text-success-emphasis rounded-pill";
+      statusIndicator.innerHTML = "Server is online";
       return true;
     } else {
       throw new Error("Server is not healthy");
     }
   } catch (error) {
     statusIndicator.textContent = "Server is offline";
-    statusIndicator.className = "offline";
+    statusIndicator.className = "badge text-bg-danger";
     statusIndicator.innerHTML =
       '<i class="fas fa-times-circle"></i> Server is offline';
     return false;
+  }
+}
+
+// function to fetch performance results of two algorithms
+export async function fetchPerformanceResults(
+  firstAlgorithmId,
+  secondAlgorithmId
+) {
+  try {
+    const response = await fetch(
+      performanceUrl(firstAlgorithmId, secondAlgorithmId)
+    );
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    console.log(data);
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching performance results:", error);
+    return null;
   }
 }
 
@@ -46,8 +76,8 @@ export async function fetchAlgorithms() {
 }
 
 export function populateSelectAlgorithm() {
-  const firstAlgorithm = document.getElementById("select-first-algorithm");
-  const secondAlgorithm = document.getElementById("select-second-algorithm");
+  const firstAlgorithm = document.getElementById("formControlAlgorithm1");
+  const secondAlgorithm = document.getElementById("formControlAlgorithm2");
 
   // Clear existing options
   firstAlgorithm.innerHTML = "";
@@ -71,3 +101,10 @@ export function populateSelectAlgorithm() {
 export function getAlgorithms() {
   return algorithms;
 }
+
+export function getAlgorithmName(id) {
+  const algorithm = algorithms.find((alg) => alg.id === id);
+  return algorithm ? algorithm.name : "";
+}
+
+export function getDatasetName(id) {}
