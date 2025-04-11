@@ -71,65 +71,140 @@ function updateChart(xLabel, yLabel) {
     data: {
       datasets: [
         {
-          pointRadius: 10,
+          label: "Datasets",
+          pointRadius: 5,
           pointBackgroundColor: "rgb(200,20,0)",
+          pointBorderWidth: 0,
           data: xyValues,
         },
       ],
     },
     options: {
-      title: {
-        display: false,
-        text: "Algorithm Performance Space",
-      },
+      responsive: true,
+      maintainAspectRatio: true,
       aspectRatio: 1,
-      legend: { display: false },
       scales: {
-        xAxes: [
-          {
-            ticks: {
-              min: 0,
-              max: 1,
-              stepSize: 0.25, // Controls the interval between tick marks
-            },
-            scaleLabel: {
-              display: true,
-              labelString: xLabel,
-            },
+        x: {
+          min: 0,
+          max: 1,
+          ticks: {
+            stepSize: 0.25, // Controls the interval between tick marks
           },
-        ],
-        yAxes: [
-          {
-            ticks: {
-              min: 0,
-              max: 1,
-              stepSize: 0.25,
-            },
-            scaleLabel: {
-              display: true,
-              labelString: yLabel,
-            },
+          title: {
+            display: true,
+            text: xLabel,
           },
-        ],
+        },
+        y: {
+          min: 0,
+          max: 1,
+          ticks: {
+            stepSize: 0.25,
+          },
+          title: {
+            display: true,
+            text: yLabel,
+          },
+        },
       },
-      tooltips: {
-        callbacks: {
-          label: function (tooltipItem, data) {
-            const index = tooltipItem.index;
-            const label = xyValues[index].label;
-            return [
-              `Dataset Name: ${getDatasetName(tooltipItem.index)}`,
-              `X: ${xyValues[index].x}`,
-              `Y: ${xyValues[index].y}`,
-            ];
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+        },
+        title: {
+          display: true,
+          text: `Performance Comparison: ${xLabel} vs ${yLabel}`,
+          font: {
+            size: 16,
+            weight: "bold",
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const index = context.dataIndex;
+              return [
+                `Dataset Name: ${getDatasetName(index)}`,
+                `X: ${xyValues[index].x}`,
+                `Y: ${xyValues[index].y}`,
+              ];
+            },
           },
         },
       },
     },
     plugins: [
       {
-        afterDraw: (chart) => {
-          const ctx = chart.ctx;
+        id: "custom_diagonal_line",
+        beforeDraw(chart) {
+          const { ctx, chartArea, scales } = chart;
+
+          // Draw the diagonal dashed line
+          ctx.save();
+          ctx.setLineDash([5, 5]); // Dashed line pattern
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 1;
+
+          ctx.beginPath();
+          ctx.moveTo(
+            scales.x.getPixelForValue(0),
+            scales.y.getPixelForValue(0)
+          ); // Origin (0, 0)
+          ctx.lineTo(
+            scales.x.getPixelForValue(1),
+            scales.y.getPixelForValue(1)
+          ); // Top-right corner (1, 1)
+          ctx.stroke();
+          ctx.restore();
+
+          // Fill the bottom triangle
+          ctx.save();
+          ctx.fillStyle = "rgba(0, 255, 0, 0.1)"; // Light red
+          ctx.beginPath();
+          ctx.moveTo(
+            scales.x.getPixelForValue(0),
+            scales.y.getPixelForValue(0)
+          ); // Origin
+          ctx.lineTo(
+            scales.x.getPixelForValue(1),
+            scales.y.getPixelForValue(1)
+          ); // Top-right corner
+          ctx.lineTo(
+            scales.x.getPixelForValue(1),
+            scales.y.getPixelForValue(0)
+          ); // Bottom-right corner
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // Fill the top triangle
+          ctx.save();
+          ctx.fillStyle = "rgba(0, 0, 255, 0.1)"; // Light blue
+          ctx.beginPath();
+          ctx.moveTo(
+            scales.x.getPixelForValue(0),
+            scales.y.getPixelForValue(0)
+          ); // Origin
+          ctx.lineTo(
+            scales.x.getPixelForValue(1),
+            scales.y.getPixelForValue(1)
+          ); // Top-right corner
+          ctx.lineTo(
+            scales.x.getPixelForValue(0),
+            scales.y.getPixelForValue(1)
+          ); // Top-left corner
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        },
+      },
+      {
+        id: "custom_labels",
+        afterDraw(chart) {
+          return;
+          const { ctx } = chart;
+          ctx.save();
           ctx.font = "12px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
@@ -143,6 +218,7 @@ function updateChart(xLabel, yLabel) {
             const { x, y } = point.getCenterPoint();
             ctx.fillText(label, x, y);
           });
+          ctx.restore();
         },
       },
     ],
@@ -164,8 +240,10 @@ function handleDropdownChange() {
   const secondAlgorithm = getAlgorithmName(secondAlgorithmId);
 
   // Update the chart title based on selected algorithms
-  chart.options.title.text = `Performance Comparison: ${firstAlgorithm} vs ${secondAlgorithm}`;
+  chart.options.plugins.title.text = `Performance Comparison: ${firstAlgorithm} vs ${secondAlgorithm}`;
   updateChart(firstAlgorithm, secondAlgorithm);
+
+  // Update the chart data
 }
 
 // Event listeners for dropdown changes
@@ -176,5 +254,5 @@ document
   .getElementById("formControlAlgorithm2")
   .addEventListener("change", handleDropdownChange);
 
-// Initial call to set up the chart with default labels
+// Initial chart render
 updateChart("Algorithm 1", "Algorithm 2");
