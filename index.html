@@ -46,40 +46,6 @@
         document.documentElement.setAttribute("data-bs-theme", newTheme);
       }
     </script>
-    <script type="module">
-      import { fetchPerformanceResults } from "./apiService.js";
-      import { updateXYValues, updateChartData } from "./chartScript.js";
-
-      async function compareAlgorithms() {
-        // Get the selected algorithm IDs from the dropdowns
-        const firstAlgorithmId = Number(
-          document.getElementById("formControlAlgorithm1").value
-        );
-        const secondAlgorithmId = Number(
-          document.getElementById("formControlAlgorithm2").value
-        );
-        // Check if both algorithms are selected
-        if (firstAlgorithmId && secondAlgorithmId) {
-          // Fetch and display the performance results
-          const results = await fetchPerformanceResults(
-            firstAlgorithmId,
-            secondAlgorithmId
-          );
-          if (results) {
-            // Update xy values
-            updateXYValues(results);
-            // Update the chart
-            updateChartData();
-          }
-        } else {
-          alert("Please select both algorithms to compare.");
-        }
-      }
-      // Attach the compareAlgorithms function to the button click event
-      document
-        .getElementById("compareButton")
-        .addEventListener("click", compareAlgorithms);
-    </script>
     <script type="module" src="chartScript.js"></script>
   </head>
   <body>
@@ -169,22 +135,23 @@
             class="form-select"
             aria-label="Select performance metric"
           >
-            <option value="ndcg">NDCG</option>
+            <option value="ndcg">nDCG</option>
             <option value="hr">Hit Ratio (HR)</option>
             <option value="recall">Recall</option>
           </select>
         </div>
         <div class="col">
-          <label for="formPerformanceMetric" class="form-label">K-Value</label>
+          <label for="formKValue" class="form-label">K-Value</label>
           <select
-            id="formPerformanceMetric"
+            id="formKValue"
             class="form-select"
-            aria-label="Select performance metric"
+            aria-label="Select k-value"
           >
-            <option value="5">@5</option>
-            <option value="10">@10</option>
-            <option value="20">@20</option>
-            <option value="50">@50</option>
+            <option value="one">@1</option>
+            <option value="three">@3</option>
+            <option value="five">@5</option>
+            <option value="ten">@10</option>
+            <option value="twenty">@20</option>
           </select>
         </div>
       </div>

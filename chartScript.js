@@ -1,4 +1,5 @@
 import { getDatasetName, getAlgorithmName } from "./apiService.js";
+import { fetchPerformanceResults } from "./apiService.js";
 
 // Initial random datapoints
 let xyValues = [
@@ -20,46 +21,61 @@ let xyValues = [
   { x: 0.6, y: 0.45, label: "16" },
 ];
 
+const numberMap = {
+  one: 1,
+  three: 3,
+  five: 5,
+  ten: 10,
+  twenty: 20,
+};
+
+const performanceMetricsMap = {
+  ndcg: "nDCG",
+  hr: "HR",
+  recall: "Recall",
+};
+
 // Chart instance variable
 let chart;
 
+function getKValue() {
+  return document.getElementById("formKValue").value;
+}
+
+function getPerformanceMetric() {
+  return document.getElementById("formPerformanceMetric").value;
+}
+
+function getFirstAlgorithmId() {
+  return Number(document.getElementById("formControlAlgorithm1").value);
+}
+
+function getSecondAlgorithmId() {
+  return Number(document.getElementById("formControlAlgorithm2").value);
+}
+
 // function to update xyValues with the latest performance results
 export function updateXYValues(compareResults) {
-  // get the performance metric
-  const performanceMetric = document.getElementById(
-    "formPerformanceMetric"
-  ).value;
+  const kValue = getKValue();
+  const performanceMetric = getPerformanceMetric();
   if (compareResults) {
     xyValues = compareResults.map((result) => {
-      // the final x (y) value is the average of the five datapoints of the according performance metric
-      const xValue = Object.keys(result.x[performanceMetric]).reduce(
-        (avg, key, _, { length }) =>
-          avg + result.x[performanceMetric][key] / length,
-        0
-      );
-      const yValue = Object.keys(result.y[performanceMetric]).reduce(
-        (avg, key, _, { length }) =>
-          avg + result.y[performanceMetric][key] / length,
-        0
-      );
       return {
-        x: xValue,
-        y: yValue,
+        x: result.x[performanceMetric][kValue],
+        y: result.y[performanceMetric][kValue],
         label: result.datasetId,
       };
     });
   }
 }
 
-// Function to put in new data into the chart
-export function updateChartData() {
-  chart.data.datasets[0].data = xyValues;
-  chart.update();
-}
-
 // Function to initialize or update the chart
-function updateChart(xLabel, yLabel) {
+function updateChart(firstAlgorithmId, secondAlgorithmId) {
   const ctx = document.getElementById("myChart");
+
+  // Find the selected algorithms based on their IDs
+  const firstAlgorithm = getAlgorithmName(firstAlgorithmId);
+  const secondAlgorithm = getAlgorithmName(secondAlgorithmId);
 
   // If the chart already exists, destroy it before creating a new one
   if (chart) {
@@ -82,7 +98,7 @@ function updateChart(xLabel, yLabel) {
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      aspectRatio: 1,
+      aspectRatio: 0.95,
       scales: {
         x: {
           min: 0,
@@ -92,7 +108,13 @@ function updateChart(xLabel, yLabel) {
           },
           title: {
             display: true,
-            text: xLabel,
+            text: `Performance of ${firstAlgorithm} (${
+              performanceMetricsMap[getPerformanceMetric()]
+            }@${numberMap[getKValue()]})`,
+            font: {
+              size: 14,
+              weight: "bold",
+            },
           },
         },
         y: {
@@ -103,7 +125,13 @@ function updateChart(xLabel, yLabel) {
           },
           title: {
             display: true,
-            text: yLabel,
+            text: `Performance of ${secondAlgorithm} (${
+              performanceMetricsMap[getPerformanceMetric()]
+            }@${numberMap[getKValue()]})`,
+            font: {
+              size: 14,
+              weight: "bold",
+            },
           },
         },
       },
@@ -111,12 +139,37 @@ function updateChart(xLabel, yLabel) {
         legend: {
           display: true,
           position: "bottom",
+          labels: {
+            generateLabels: function (chart) {
+              const defaultLabels =
+                Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              return [
+                ...defaultLabels,
+                {
+                  text: `${secondAlgorithm} outperforms ${firstAlgorithm}`,
+                  fillStyle: "rgba(0, 0, 255, 0.1)",
+                  strokeStyle: "rgba(0, 0, 255, 0.5)",
+                  lineWidth: 1,
+                  hidden: false,
+                },
+                {
+                  text: `${firstAlgorithm} outperforms ${secondAlgorithm}`,
+                  fillStyle: "rgba(0, 255, 0, 0.1)",
+                  strokeStyle: "rgba(0, 255, 0, 0.5)",
+                  lineWidth: 1,
+                  hidden: false,
+                },
+              ];
+            },
+          },
         },
         title: {
           display: true,
-          text: `Performance Comparison: ${xLabel} vs ${yLabel}`,
+          text: `Performance Comparison: ${firstAlgorithm} vs ${secondAlgorithm} (${
+            performanceMetricsMap[getPerformanceMetric()]
+          }@${numberMap[getKValue()]})`,
           font: {
-            size: 16,
+            size: 18,
             weight: "bold",
           },
         },
@@ -226,7 +279,9 @@ function updateChart(xLabel, yLabel) {
 }
 
 // function to handle dropdown changes
-function handleDropdownChange() {
+async function handleDropdownChange() {
+  // Prevent the default behavior (e.g. scrolling to the top)
+  event.preventDefault();
   // Get the selected algorithm IDs from the dropdowns
   const firstAlgorithmId = Number(
     document.getElementById("formControlAlgorithm1").value
@@ -234,16 +289,14 @@ function handleDropdownChange() {
   const secondAlgorithmId = Number(
     document.getElementById("formControlAlgorithm2").value
   );
-
-  // Find the selected algorithms based on their IDs
-  const firstAlgorithm = getAlgorithmName(firstAlgorithmId);
-  const secondAlgorithm = getAlgorithmName(secondAlgorithmId);
-
-  // Update the chart title based on selected algorithms
-  chart.options.plugins.title.text = `Performance Comparison: ${firstAlgorithm} vs ${secondAlgorithm}`;
-  updateChart(firstAlgorithm, secondAlgorithm);
-
-  // Update the chart data
+  const results = await fetchPerformanceResults(
+    firstAlgorithmId,
+    secondAlgorithmId
+  );
+  if (results) {
+    updateXYValues(results);
+    updateChart(firstAlgorithmId, secondAlgorithmId);
+  }
 }
 
 // Event listeners for dropdown changes
@@ -254,5 +307,15 @@ document
   .getElementById("formControlAlgorithm2")
   .addEventListener("change", handleDropdownChange);
 
+// Event listener for performance metric dropdown
+document
+  .getElementById("formPerformanceMetric")
+  .addEventListener("change", handleDropdownChange);
+
+// Event listener for K value dropdown
+document
+  .getElementById("formKValue")
+  .addEventListener("change", handleDropdownChange);
+
 // Initial chart render
-updateChart("Algorithm 1", "Algorithm 2");
+updateChart(0, 1);
