@@ -18,6 +18,21 @@ export function getCompareResults() {
   return compareResults;
 }
 
+// function to fetch the dataset names
+export async function fetchDatasets() {
+  try {
+    const response = await fetch(datasetUrl);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    datasets = data.data;
+  } catch (error) {
+    console.error("Error fetching dataset data:", error);
+    return [];
+  }
+}
+
 export async function checkServerHealth() {
   const statusIndicator = document.getElementById("server-status");
   try {
@@ -107,4 +122,7 @@ export function getAlgorithmName(id) {
   return algorithm ? algorithm.name : "";
 }
 
-export function getDatasetName(id) {}
+export function getDatasetName(id) {
+  const dataset = datasets.find((ds) => ds.id === id);
+  return dataset ? dataset.name : "";
+}

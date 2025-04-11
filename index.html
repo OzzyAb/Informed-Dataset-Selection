@@ -20,6 +20,7 @@
         checkServerHealth,
         fetchAlgorithms,
         populateSelectAlgorithm,
+        fetchDatasets,
       } from "./apiService.js";
 
       document.addEventListener("DOMContentLoaded", async () => {
@@ -27,8 +28,10 @@
         const isServerOnline = await checkServerHealth();
 
         // If the server is online, fetch algorithm data
+        // and the datasets
         if (isServerOnline) {
           await fetchAlgorithms();
+          await fetchDatasets();
         }
 
         // Populate the dropdowns (can be called later as needed)

@@ -118,8 +118,7 @@ function updateChart(xLabel, yLabel) {
             const index = tooltipItem.index;
             const label = xyValues[index].label;
             return [
-              `Dataset ID: ${label}`,
-              `Dataset Name: ${getAlgorithmName(tooltipItem.index)}`,
+              `Dataset Name: ${getDatasetName(tooltipItem.index)}`,
               `X: ${xyValues[index].x}`,
               `Y: ${xyValues[index].y}`,
             ];
