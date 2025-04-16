@@ -1,5 +1,6 @@
 <?php
 include_once('db_conn.php');
+include_once('utils.php');
 
 header('Content-Type: application/json');
 
@@ -41,11 +42,12 @@ $stmt->execute();
 
 $data = $stmt->fetch(PDO::FETCH_ASSOC);
 if ($data) {
+    $formattedData = lowercaseFirstLetterKeys($data);
     http_response_code(200);
     echo json_encode([
         "isSuccess" => true,
         "statusCode" => 200,
-        "data" => $data
+        "data" => $formattedData
     ]);
 }
 else {

@@ -1,5 +1,6 @@
 <?php
 include_once('db_conn.php');
+include_once('utils.php');
 
 header('Content-Type: application/json');
 
@@ -20,9 +21,10 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute();
 
 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$formattedData = lowercaseFirstLetterKeysArray($data);
 echo json_encode([
     "isSuccess" => true,
     "statusCode" => 200,
-    "data" => $data
+    "data" => $formattedData
 ]);
 ?>
