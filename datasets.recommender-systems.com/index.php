@@ -1,0 +1,120 @@
+<?php
+include_once('apis/db-conn.php');
+include_once('apis/algorithm.php');
+include_once('apis/dataset.php');
+include_once('apis/performance-result.php');
+
+$pdo = Database::getConnection();  
+if ($pdo === null) {
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode([
+        "isSuccess" => false,
+        "statusCode" => 500,
+        "message" => "Connection to the DB failed"
+    ]);
+    exit();
+}
+
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : null;
+if ($action === null) {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        "isSuccess" => false,
+        "statusCode" => 400,
+        "message" => "Action is missing"
+    ]);
+    exit();
+}
+
+if ($action === 'algorithm') {
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
+    if ($id === null) {
+        Algorithm::getAll($pdo);
+    }
+    else {
+        if (!is_numeric($id)) {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 400,
+                "message" => "Wrong query parameter"
+            ]);
+            exit();
+        }
+
+        Algorithm::get($pdo, $id);
+    }
+}
+else if ($action === 'dataset') {
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
+    if ($id === null) {
+        Dataset::getAll($pdo);
+    }
+    else {
+        if (!is_numeric($id)) {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 400,
+                "message" => "Wrong query parameter"
+            ]);
+            exit();
+        }
+
+        Dataset::get($pdo, $id);
+    }
+}
+else if ($action === 'result') {
+    $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : null;
+    if ($task === 'compareAlgorithms') {
+        $x = isset($_GET['x']) ? $_GET['x'] : null;
+        $y = isset($_GET['y']) ? $_GET['y'] : null;
+        if ($x === null || $y === null) {
+            header('Content-Type: application/json');
+            http_response_code(404);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 404,
+                "message" => "Algorithm IDs are missing"
+            ]);
+            exit();
+        }
+        if (!is_numeric($x) || !is_numeric($y)) {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 400,
+                "message" => "Wrong algorithm IDs"
+            ]);
+            exit();
+        }
+        
+        PerformanceResult::compareAlgorithms($pdo, $x, $y);
+    }
+    else {
+        header('Content-Type: application/json');
+        http_response_code(400);
+        echo json_encode([
+            "isSuccess" => false,
+            "statusCode" => 400,
+            "message" => "Wrong task"
+        ]);
+        exit();
+    }
+}
+else {
+    header('Content-Type: application/json');
+    http_response_code(400);
+    echo json_encode([
+        "isSuccess" => false,
+        "statusCode" => 400,
+        "message" => "Wrong action"
+    ]);
+    exit();
+}
+?>

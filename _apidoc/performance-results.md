@@ -1,8 +1,9 @@
 ## Performance Results
+Anything related to performance results is under the endpoint starting with `/index.php?action=result`.
 > ### Compare 2 Algorithms
 ```URL```
 ```http
-GET /compare-algorithms.php?x=...&y=...
+GET ?task=compareAlgorithms?x=...&y=...
 ```
 ```Query Parameters```
 - ```x```: ID of the algorithm on the X axis

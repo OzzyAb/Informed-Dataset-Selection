@@ -1,8 +1,10 @@
 ## Datasets
-> ### Get all datasets' IDs and names
+
+Anything related to datasets is under the endpoint starting with `/index.php?action=dataset`.
+> ### Get all datasets
 ```URL```
 ```http
-GET /datasets.php
+GET /
 ```
 ```Response```
 ```js
@@ -34,10 +36,10 @@ GET /datasets.php
 ```
 
 ---
-> ### Get a dataset's ID and name
+> ### Get a dataset
 ```URL```
 ```http
-GET /dataset.php?id=...
+GET ?id=...
 ```
 ```Query Parameters```
 - ```id```: ID of the dataset to retreive

@@ -42,3 +42,15 @@ In general, the response can be expected in this this format:
 }
 ```
 If the backend returns any other response format rather than the defined ones above, it means an unhandled error happened in the backend. In this case, the request's response can be interpreted as ```500 Internal Server Error```.
+
+## Algorithms
+Anything related to algorithms is under the endpoint starting with `/index.php?action=algorithm`.
+
+## Datasets
+Anything related to datasets is under the endpoint starting with `/index.php?action=algorithm`.
+
+## Performance Results
+Anything related to performance results is under the endpoint starting with `/index.php?action=algorithm`.
+
+## Health
+This endpoint is used to check if the databse connection is alive. The endpoint starts with `/health.php`.

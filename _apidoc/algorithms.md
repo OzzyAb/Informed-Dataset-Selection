@@ -1,8 +1,9 @@
 ## Algorithms
-> ### Get all algorithms' IDs and names
+Anything related to algorithms is under the endpoint starting with `/index.php?action=algorithm`.
+> ### Get all algorithms
 ```URL```
 ```http
-GET /algorithms.php
+GET /
 ```
 ```Response```
 ```js
@@ -20,10 +21,10 @@ GET /algorithms.php
 }
 ```
 ---
-> ### Get an algorithm's ID and name
+> ### Get an algorithm
 ```URL```
 ```http
-GET /algorithm.php?id=...
+GET ?id=...
 ```
 ```Query Parameters```
 - ```id```: ID of the algorithm to retreive

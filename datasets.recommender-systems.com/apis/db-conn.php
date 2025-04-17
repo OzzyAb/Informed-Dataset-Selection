@@ -2,9 +2,6 @@
 class Database {
     private static $pdo = null;
 
-    private function __construct() {
-    }
-
     public static function checkConnection() {
         if (self::$pdo === null) {
             self::getConnection();
