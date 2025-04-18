@@ -47,10 +47,10 @@ If the backend returns any other response format rather than the defined ones ab
 Anything related to algorithms is under the endpoint starting with `/index.php?action=algorithm`.
 
 ## Datasets
-Anything related to datasets is under the endpoint starting with `/index.php?action=algorithm`.
+Anything related to datasets is under the endpoint starting with `/index.php?action=dataset`.
 
 ## Performance Results
-Anything related to performance results is under the endpoint starting with `/index.php?action=algorithm`.
+Anything related to performance results is under the endpoint starting with `/index.php?action=result`.
 
 ## Health
 This endpoint is used to check if the databse connection is alive. The endpoint starts with `/health.php`.

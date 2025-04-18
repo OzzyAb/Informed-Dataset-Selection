@@ -3,7 +3,7 @@ Anything related to performance results is under the endpoint starting with `/in
 > ### Compare 2 Algorithms
 ```URL```
 ```http
-GET ?task=compareAlgorithms?x=...&y=...
+GET &task=compareAlgorithms&x=...&y=...
 ```
 ```Query Parameters```
 - ```x```: ID of the algorithm on the X axis
