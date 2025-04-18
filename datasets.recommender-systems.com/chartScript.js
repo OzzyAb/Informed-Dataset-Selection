@@ -61,8 +61,8 @@ export function updateXYValues(compareResults) {
   if (compareResults) {
     xyValues = compareResults.map((result) => {
       return {
-        x: result.x[performanceMetric][kValue],
-        y: result.y[performanceMetric][kValue],
+        x: result.X[performanceMetric][kValue],
+        y: result.Y[performanceMetric][kValue],
         label: result.datasetId,
       };
     });
