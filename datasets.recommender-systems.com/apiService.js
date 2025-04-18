@@ -1,13 +1,15 @@
 // API base URL
-const apiUrl = "https://datasets-rec-sys-2nt6.onrender.com";
+const apiUrl = "https://datasets.recommender-systems.com";
+const dbPrefix = "/index.php?action=";
 // URL to fetch algorithm related data
-const algorithmUrl = `${apiUrl}/algorithm`;
+const algorithmUrl = `${apiUrl}${dbPrefix}algorithm`;
 // URL to fetch dataset related data
-const datasetUrl = `${apiUrl}/dataset`;
+const datasetUrl = `${apiUrl}${dbPrefix}dataset`;
 // URL to fetch server status
-const serverStatusUrl = `${apiUrl}/health`;
+const serverStatusUrl = `${apiUrl}/health.php`;
 // URL to fetch performance results of two algorithms
-const performanceUrl = (a1, a2) => `${apiUrl}/result/compare?x=${a1}&y=${a2}`;
+const performanceUrl = (a1, a2) =>
+  `${apiUrl}${dbPrefix}result&task=compareAlgorithms&x=${a1}&y=${a2}`;
 
 let algorithms = [];
 let datasets = [];
