@@ -1,21 +1,23 @@
 <?php
-function lowercaseFirstLetterKeysArray(array $rows): array {
-    return array_map(function ($row) {
-        $newRow = [];
-        foreach ($row as $key => $value) {
+function lowerFirstLetter($data) {
+    if (is_object($data)) {
+        $result = new stdClass();
+        foreach ($data as $key => $value) {
             $newKey = lcfirst($key);
-            $newRow[$newKey] = $value;
+            $result->$newKey = lowerFirstLetter($value);
         }
-        return $newRow;
-    }, $rows);
-}
-
-function lowercaseFirstLetterKeys(array $row): array {
-    $newRow = [];
-    foreach ($row as $key => $value) {
-        $newKey = lcfirst($key);
-        $newRow[$newKey] = $value;
+        return $result;
     }
-    return $newRow;
+
+    if (is_array($data)) {
+        $result = [];
+        foreach ($data as $key => $value) {
+            $newKey = lcfirst($key);
+            $result[$newKey] = lowerFirstLetter($value);
+        }
+        return $result;
+    }
+
+    return $data;
 }
 ?>

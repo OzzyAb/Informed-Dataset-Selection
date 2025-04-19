@@ -17,11 +17,10 @@ class Dataset {
         $stmt->execute();
 
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $formattedData = lowercaseFirstLetterKeysArray($data);
         echo json_encode([
             "isSuccess" => true,
             "statusCode" => 200,
-            "data" => $formattedData
+            "data" => lowerFirstLetter($data)
         ]);
     }
 
@@ -43,12 +42,11 @@ class Dataset {
 
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($data) {
-            $formattedData = lowercaseFirstLetterKeys($data);
             http_response_code(200);
             echo json_encode([
                 "isSuccess" => true,
                 "statusCode" => 200,
-                "data" => $formattedData
+                "data" => lowerFirstLetter($data)
             ]);
         }
         else {

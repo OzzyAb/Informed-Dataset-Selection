@@ -69,7 +69,7 @@ class PerformanceResult {
         echo json_encode([
             "isSuccess" => true,
             "statusCode" => 200,
-            "data" => $datasetPoints
+            "data" => lowerFirstLetter($datasetPoints)
         ]);
     }
 
