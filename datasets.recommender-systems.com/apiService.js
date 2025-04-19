@@ -28,6 +28,7 @@ export async function fetchDatasets() {
       throw new Error("Network response was not ok");
     }
     const data = await response.json();
+    data.data.sort((a, b) => a.name.localeCompare(b.name));
     datasets = data.data;
   } catch (error) {
     console.error("Error fetching dataset data:", error);
@@ -85,6 +86,7 @@ export async function fetchAlgorithms() {
       throw new Error("Network response was not ok");
     }
     const data = await response.json();
+    data.data.sort((a, b) => a.name.localeCompare(b.name));
     algorithms = data.data;
   } catch (error) {
     console.error("Error fetching algorithm data:", error);
