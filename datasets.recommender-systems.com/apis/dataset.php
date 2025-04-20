@@ -11,7 +11,7 @@ class Dataset {
         FeedbackType, 
         HighestNumberOfRatingBySingleUser, LowestNumberOfRatingBySingleUser, 
         HighestNumberOfRatingOnSingleItem, LowestNumberOfRatingOnSingleItem, 
-        MeanNumberOfRatingsByUser, MeanNumberOfRationsOnItem 
+        MeanNumberOfRatingsByUser, MeanNumberOfRatingsOnItem 
         FROM Datasets";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
@@ -33,7 +33,7 @@ class Dataset {
         FeedbackType, 
         HighestNumberOfRatingBySingleUser, LowestNumberOfRatingBySingleUser, 
         HighestNumberOfRatingOnSingleItem, LowestNumberOfRatingOnSingleItem, 
-        MeanNumberOfRatingsByUser, MeanNumberOfRationsOnItem 
+        MeanNumberOfRatingsByUser, MeanNumberOfRatingsOnItem 
         FROM Datasets
         WHERE Id = :id";
         $stmt = $pdo->prepare($sql);
