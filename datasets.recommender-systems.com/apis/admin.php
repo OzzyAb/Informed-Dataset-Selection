@@ -2,20 +2,52 @@
 include_once('utils.php');
 
 class Admin {
+    public static function getPerformanceResults($pdo, $headers) {
+        header('Content-Type: application/json');
+
+        self::checkAdminKey($headers);
+
+        $stmt = $pdo->prepare('SELECT * FROM PerformanceResults');
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        $transformed = [];
+
+        foreach ($results as $row) {
+            $rowArray = (array)$row;
+            $grouped = [];
+            $cleanRow = [];
+        
+            foreach ($rowArray as $key => $value) {
+                if (preg_match('/^(Hr|Ndcg|Recall)_(.+)$/', $key, $matches)) {
+                    $prefix = $matches[1];
+                    $suffix = $matches[2];
+                
+                    if (!isset($grouped[$prefix])) {
+                        $grouped[$prefix] = [];
+                    }
+                
+                    $grouped[$prefix][$suffix] = $value;
+                } else {
+                    $cleanRow[$key] = $value;
+                }
+            }
+        
+            $transformed[] = array_merge($cleanRow, $grouped);
+        }
+
+        http_response_code(200);
+        echo json_encode([
+            "isSuccess" => true,
+            "statusCode" => 200,
+            "data" => $transformed
+        ]);
+    }
+
     public static function addPerformanceResults($pdo, $headers, $body) {
         header('Content-Type: application/json');
 
-        $secrets = include('../configs/secrets.php');
-        $key = isset($headers[$secrets['Admin']['HeaderKey']]) ? $headers[$secrets['Admin']['HeaderKey']] : null;
-        if ($key === null || !hash_equals($secrets['Admin']['SecretKey'], $key)) {
-            http_response_code(400);
-            echo json_encode([
-                "isSuccess" => false,
-                "statusCode" => 400,
-                "message" => "Wrong key: {$secrets['Admin']['HeaderKey']}, {$secrets['Admin']['SecretKey']}. You gave: {$key}"
-            ]);
-            exit();
-        }
+        self::checkAdminKey($headers);
 
         if (!isset($body['results']) || count($body['results']) == 0) {
             http_response_code(400);
@@ -155,6 +187,20 @@ class Admin {
                 "statusCode" => 500,
                 "message" => $ex->getMessage()
             ]);
+        }
+    }
+
+    private static function checkAdminKey($headers) {
+        $secrets = include('../configs/secrets.php');
+        $key = isset($headers[$secrets['Admin']['HeaderKey']]) ? $headers[$secrets['Admin']['HeaderKey']] : null;
+        if ($key === null || !hash_equals($secrets['Admin']['SecretKey'], $key)) {
+            http_response_code(403);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 403,
+                "message" => "Wrong key"
+            ]);
+            exit();
         }
     }
 }

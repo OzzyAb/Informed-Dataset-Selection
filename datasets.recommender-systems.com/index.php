@@ -109,7 +109,6 @@ else if ($action === 'result') {
             "statusCode" => 400,
             "message" => "Wrong task"
         ]);
-        exit();
     }
 }
 else if ($action === 'admin') {
@@ -120,6 +119,10 @@ else if ($action === 'admin') {
         $body = json_decode($strBody, true);
         Admin::addPerformanceResults($pdo, $headers, $body);
     }
+    else if ($task === 'getResults') {
+        $headers = getallheaders();
+        Admin::getPerformanceResults($pdo, $headers);
+    }
     else {
         header('Content-Type: application/json');
         http_response_code(400);
@@ -128,7 +131,6 @@ else if ($action === 'admin') {
             "statusCode" => 400,
             "message" => "Wrong task"
         ]);
-        exit();
     }
 }
 else {
@@ -139,6 +141,5 @@ else {
         "statusCode" => 400,
         "message" => "Wrong action"
     ]);
-    exit();
 }
 ?>
