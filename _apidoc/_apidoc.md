@@ -54,3 +54,6 @@ Anything related to performance results is under the endpoint starting with `/in
 
 ## Health
 This endpoint is used to check if the databse connection is alive. The endpoint starts with `/health.php`.
+
+## Admin
+This endpoint is used for admin operations. The endpoint starts with `/index.php?action=admin`.

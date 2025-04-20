@@ -7,6 +7,7 @@ include_once('apis/db-conn.php');
 include_once('apis/algorithm.php');
 include_once('apis/dataset.php');
 include_once('apis/performance-result.php');
+include_once('apis/admin.php');
 
 $pdo = Database::getConnection();  
 if ($pdo === null) {
@@ -108,7 +109,34 @@ else if ($action === 'result') {
             "statusCode" => 400,
             "message" => "Wrong task"
         ]);
-        exit();
+    }
+}
+else if ($action === 'admin') {
+    $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : null;
+    if ($task === 'addResults') {
+        $headers = getallheaders();
+        $strBody = file_get_contents('php://input');
+        $body = json_decode($strBody, true);
+        Admin::addPerformanceResults($pdo, $headers, $body);
+    }
+    else if ($task === 'getResults') {
+        $headers = getallheaders();
+        Admin::getPerformanceResults($pdo, $headers);
+    }
+    else if ($task === 'updatePca') {
+        $headers = getallheaders();
+        $strBody = file_get_contents('php://input');
+        $body = json_decode($strBody, true);
+        Admin::updatePca($pdo, $headers, $body);
+    }
+    else {
+        header('Content-Type: application/json');
+        http_response_code(400);
+        echo json_encode([
+            "isSuccess" => false,
+            "statusCode" => 400,
+            "message" => "Wrong task"
+        ]);
     }
 }
 else {
@@ -119,6 +147,5 @@ else {
         "statusCode" => 400,
         "message" => "Wrong action"
     ]);
-    exit();
 }
 ?>
