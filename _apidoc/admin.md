@@ -5,7 +5,7 @@ This endpoint will add new performance results to the database. If the algoritms
 
 ```URL```
 ```http
-GET &task=addResults
+POST &task=addResults
 ```
 ```Headers```
 ```js
@@ -125,6 +125,139 @@ GET &task=getResults
             }
         },
     ],
+    metadata: any | null
+}
+```
+---
+> ### Update PCA Results
+This endpoint will remove all PCA results and add the new ones.
+
+```URL```
+```http
+POST &task=updatePca
+```
+```Headers```
+```js
+{
+    (Admin header here): (Admin secret key here)
+}
+```
+
+```Request Body```
+```js
+{
+    results: [
+        {
+            datasetId: number,
+            ndcg: {
+                one: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                three: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                five: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                ten: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                twenty: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+            },
+            hr: {
+                one: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                three: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                five: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                ten: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                twenty: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+            },
+            recall: {
+                one: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                three: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                five: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                ten: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                twenty: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+            }
+        },
+        ...
+    ]
+}
+```
+```Response```
+```js
+{
+    statusCode: number,
+    isSuccess: boolean,
+    data: {
+        numberOfDatasets: number,
+    },
     metadata: any | null
 }
 ```
