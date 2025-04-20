@@ -8,7 +8,7 @@ class PerformanceResult {
         $stmtX = $pdo->prepare("SELECT * FROM PerformanceResults WHERE AlgorithmId = :x");
         $stmtX->bindParam(':x', $x, PDO::PARAM_INT);
         $stmtX->execute();
-        $performanceResultsX = $stmtX->fetchAll(PDO::FETCH_ASSOC);
+        $performanceResultsX = $stmtX->fetchAll(PDO::FETCH_OBJ);
         if (count($performanceResultsX) === 0) {
             http_response_code(404);
             echo json_encode([
@@ -22,7 +22,7 @@ class PerformanceResult {
         $stmtY = $pdo->prepare("SELECT * FROM PerformanceResults WHERE AlgorithmId = :y");
         $stmtY->bindParam(':y', $y, PDO::PARAM_INT);
         $stmtY->execute();
-        $performanceResultsY = $stmtY->fetchAll(PDO::FETCH_ASSOC);
+        $performanceResultsY = $stmtY->fetchAll(PDO::FETCH_OBJ);
         if (count($performanceResultsY) === 0) {
             http_response_code(404);
             echo json_encode([
@@ -33,34 +33,78 @@ class PerformanceResult {
             exit();
         }
 
-        $groupedX = self::groupByAlgorithmAndDataset($performanceResultsX);
-        $groupedY = self::groupByAlgorithmAndDataset($performanceResultsY);
+        $datasetIdsX = array_map(fn($prX) => $prX->DatasetId, $performanceResultsX);
+        $datasetIdsY = array_map(fn($prY) => $prY->DatasetId, $performanceResultsY);
+        $commonDatasetIds = array_intersect($datasetIdsX, $datasetIdsY);
+        
+        $performanceResultsX = array_filter($performanceResultsX, fn($prX) => in_array($prX->DatasetId, $commonDatasetIds));
+        $performanceResultsY = array_filter($performanceResultsY, fn($prY) => in_array($prY->DatasetId, $commonDatasetIds));
+
+        $performanceResultsX = array_merge($performanceResultsX, $performanceResultsY);
+        $groupedByDatasetId = [];
+        foreach ($performanceResultsX as $result) {
+            $groupedByDatasetId[$result->DatasetId][] = $result;
+        }
 
         $datasetPoints = [];
-        foreach ($groupedX as $datasetId => $dataX) {
-            if (isset($groupedY[$datasetId])) {
-                $averagesX = [
-                    'Ndcg' => self::computeColumnAverages($dataX['Ndcg'], 'Ndcg'),
-                    'Hr' => self::computeColumnAverages($dataX['Hr'], 'Hr'),
-                    'Recall' => self::computeColumnAverages($dataX['Recall'], 'Recall')
-                ];
-                $averagesY = [
-                    'Ndcg' => self::computeColumnAverages($groupedY[$datasetId]['Ndcg'], 'Ndcg'),
-                    'Hr' => self::computeColumnAverages($groupedY[$datasetId]['Hr'], 'Hr'),
-                    'Recall' => self::computeColumnAverages($groupedY[$datasetId]['Recall'], 'Recall')
-                ];
-            
+        foreach ($groupedByDatasetId as $datasetId => $group) {
+            foreach ($group as $item) {
+                if ($item->AlgorithmId == $x) {
+                    $algorithmX = $item;
+                }
+                else if ($item->AlgorithmId == $y) {
+                    $algorithmY = $item;
+                }
+            }
+
+            if ($algorithmX && $algorithmY) {
                 $datasetPoints[] = [
                     'DatasetId' => $datasetId,
                     'X' => [
-                        'Ndcg' => $averagesX['Ndcg'],
-                        'Hr' => $averagesX['Hr'],
-                        'Recall' => $averagesX['Recall']
+                        'Ndcg' => [
+                            'One' =>  $algorithmX->Ndcg_One,
+                            'Three' =>  $algorithmX->Ndcg_Three,
+                            'Five' =>  $algorithmX->Ndcg_Five,
+                            'Ten' =>  $algorithmX->Ndcg_Ten,
+                            'Twenty' =>  $algorithmX->Ndcg_Twenty,
+                        ],
+                        'Hr' => [
+                            'One' =>  $algorithmX->Hr_One,
+                            'Three' =>  $algorithmX->Hr_Three,
+                            'Five' =>  $algorithmX->Hr_Five,
+                            'Ten' =>  $algorithmX->Hr_Ten,
+                            'Twenty' =>  $algorithmX->Hr_Twenty,
+                        ],
+                        'Recall' => [
+                            'One' =>  $algorithmX->Recall_One,
+                            'Three' =>  $algorithmX->Recall_Three,
+                            'Five' =>  $algorithmX->Recall_Five,
+                            'Ten' =>  $algorithmX->Recall_Ten,
+                            'Twenty' =>  $algorithmX->Recall_Twenty,
+                        ],
                     ],
                     'Y' => [
-                        'Ndcg' => $averagesY['Ndcg'],
-                        'Hr' => $averagesY['Hr'],
-                        'Recall' => $averagesY['Recall']
+                        'Ndcg' => [
+                            'One' =>  $algorithmY->Ndcg_One,
+                            'Three' =>  $algorithmY->Ndcg_Three,
+                            'Five' =>  $algorithmY->Ndcg_Five,
+                            'Ten' =>  $algorithmY->Ndcg_Ten,
+                            'Twenty' =>  $algorithmY->Ndcg_Twenty,
+                        ],
+                        'Hr' => [
+                            'One' =>  $algorithmY->Hr_One,
+                            'Three' =>  $algorithmY->Hr_Three,
+                            'Five' =>  $algorithmY->Hr_Five,
+                            'Ten' =>  $algorithmY->Hr_Ten,
+                            'Twenty' =>  $algorithmY->Hr_Twenty,
+                        ],
+                        'Recall' => [
+                            'One' =>  $algorithmY->Recall_One,
+                            'Three' =>  $algorithmY->Recall_Three,
+                            'Five' =>  $algorithmY->Recall_Five,
+                            'Ten' =>  $algorithmY->Recall_Ten,
+                            'Twenty' =>  $algorithmY->Recall_Twenty,
+                        ],
                     ]
                 ];
             }
@@ -71,53 +115,6 @@ class PerformanceResult {
             "statusCode" => 200,
             "data" => lowerFirstLetter($datasetPoints)
         ]);
-    }
-
-    private static function computeColumnAverages($results, $metricPrefix) {
-        $columns = ['One', 'Three', 'Five', 'Ten', 'Twenty'];
-        $averages = [];
-
-        foreach ($columns as $column) {
-            $averages[$column] = 0;
-        }
-    
-        $count = count($results);
-    
-        foreach ($results as $result) {
-            foreach ($columns as $column) {
-                $columnName = "{$metricPrefix}_{$column}";
-                $averages[$column] += isset($result[$columnName]) ? $result[$columnName] : 0;
-            }
-        }
-    
-        foreach ($columns as $column) {
-            $averages[$column] = $count > 0 ? $averages[$column] / $count : 0;
-        }
-    
-        return $averages;
-    }
-
-    private static function groupByAlgorithmAndDataset($results) {
-        $groupedResults = [];
-    
-        foreach ($results as $result) {
-            $datasetId = $result['DatasetId'];
-            $algorithmId = $result['AlgorithmId'];
-        
-            if (!isset($groupedResults[$datasetId])) {
-                $groupedResults[$datasetId] = [
-                    'Ndcg' => [],
-                    'Hr' => [],
-                    'Recall' => []
-                ];
-            }
-        
-            $groupedResults[$datasetId]['Ndcg'][] = $result;
-            $groupedResults[$datasetId]['Hr'][] = $result;
-            $groupedResults[$datasetId]['Recall'][] = $result;
-        }
-    
-        return $groupedResults;
     }
 }
 ?>
