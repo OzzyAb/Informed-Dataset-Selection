@@ -132,7 +132,7 @@ class Admin {
                 $stmt = $pdo->prepare('
                     INSERT INTO PerformanceResults 
                     (AlgorithmId, DatasetId, 
-                        Fold, AlgorithmConfigIndex, AlgorithmConfiguration, 
+                        AlgorithmConfigIndex, AlgorithmConfiguration, 
                         Hr_One, Hr_Three, Hr_Five, Hr_Ten, Hr_Twenty, 
                         Recall_One, Recall_Three, Recall_Five, Recall_Ten, Recall_Twenty, 
                         Ndcg_One, Ndcg_Three, Ndcg_Five, Ndcg_Ten, Ndcg_Twenty) 
@@ -145,7 +145,6 @@ class Admin {
                 $stmt->execute([
                     ':algorithmId' => $algorithmId,
                     ':datasetId' => $datasetId,
-                    ':fold' => $performanceResult['fold'],
                     ':algorithmConfigIndex' => $performanceResult['algorithmConfigIndex'],
                     ':algorithmConfiguration' => $performanceResult['algorithmConfiguration'],
                     ':hr_one' => $performanceResult['hr']['one'],

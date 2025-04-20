@@ -75,7 +75,7 @@ GET &task=addResults
     metadata: any | null
 }
 ```
-
+---
 > ### Get Performance Results
 ```URL```
 ```http
