@@ -123,6 +123,12 @@ else if ($action === 'admin') {
         $headers = getallheaders();
         Admin::getPerformanceResults($pdo, $headers);
     }
+    else if ($task === 'updatePca') {
+        $headers = getallheaders();
+        $strBody = file_get_contents('php://input');
+        $body = json_decode($strBody, true);
+        Admin::updatePca($pdo, $headers, $body);
+    }
     else {
         header('Content-Type: application/json');
         http_response_code(400);
