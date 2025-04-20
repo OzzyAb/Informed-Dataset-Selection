@@ -1,4 +1,4 @@
-## Performance Results
+## Admin
 This endpoint is used for admin operations. The endpoint starts with `/index.php?action=admin`.
 > ### Add New Performance Results w/ Algorithms and Datasets
 This endpoint will add new performance results to the database. If the algoritms and datasets in the results do not exist already in the database, they are also added automatically.
@@ -10,7 +10,7 @@ POST &task=addResults
 ```Headers```
 ```js
 {
-    (Admin header here): (Admin secret key here)
+    (Admin header key here): (Admin secret key here)
 }
 ```
 
@@ -84,7 +84,7 @@ GET &task=getResults
 ```Headers```
 ```js
 {
-    (Admin header here): (Admin secret key here)
+    (Admin header key here): (Admin secret key here)
 }
 ```
 
@@ -139,7 +139,7 @@ POST &task=updatePca
 ```Headers```
 ```js
 {
-    (Admin header here): (Admin secret key here)
+    (Admin header key here): (Admin secret key here)
 }
 ```
 
@@ -179,7 +179,7 @@ POST &task=updatePca
                     y: number | null,
                     varianceX: number | null,
                     varianceY: number | null
-                },
+                }
             },
             hr: {
                 one: {
@@ -211,7 +211,7 @@ POST &task=updatePca
                     y: number | null,
                     varianceX: number | null,
                     varianceY: number | null
-                },
+                }
             },
             recall: {
                 one: {
@@ -243,7 +243,7 @@ POST &task=updatePca
                     y: number | null,
                     varianceX: number | null,
                     varianceY: number | null
-                },
+                }
             }
         },
         ...

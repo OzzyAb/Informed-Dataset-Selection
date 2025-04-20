@@ -114,7 +114,7 @@ GET &task=pcaResults
                     y: number | null,
                     varianceX: number | null,
                     varianceY: number | null
-                },
+                }
             },
             hr: {
                 one: {
@@ -146,7 +146,7 @@ GET &task=pcaResults
                     y: number | null,
                     varianceX: number | null,
                     varianceY: number | null
-                },
+                }
             },
             recall: {
                 one: {
