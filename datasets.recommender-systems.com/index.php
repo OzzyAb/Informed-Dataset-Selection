@@ -101,6 +101,9 @@ else if ($action === 'result') {
         
         PerformanceResult::compareAlgorithms($pdo, $x, $y);
     }
+    else if ($task === 'pcaResults') {
+        PerformanceResult::getPcaResults($pdo);
+    }
     else {
         header('Content-Type: application/json');
         http_response_code(400);

@@ -69,3 +69,120 @@ GET &task=compareAlgorithms&x=...&y=...
     metadata: any | null
 }
 ```
+---
+> ### Get PCA Results
+```URL```
+```http
+GET &task=pcaResults
+```
+
+```Response```
+```js
+{
+    statusCode: number,
+    isSuccess: boolean,
+    data: [
+        {
+            datasetId: number,
+            ndcg: {
+                one: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                three: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                five: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                ten: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                twenty: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+            },
+            hr: {
+                one: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                three: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                five: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                ten: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                twenty: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+            },
+            recall: {
+                one: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                three: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                five: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                ten: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                },
+                twenty: {
+                    x: number | null,
+                    y: number | null,
+                    varianceX: number | null,
+                    varianceY: number | null
+                }
+            }
+        },
+        ...
+    ],
+    metadata: any | null
+}
+```

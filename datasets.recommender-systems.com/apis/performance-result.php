@@ -2,6 +2,124 @@
 include_once('utils.php');
 
 class PerformanceResult {
+    public static function getPcaResults($pdo) {
+        header('Content-Type: application/json');
+
+        $stmt = $pdo->prepare("SELECT * FROM PcaResults");
+        $stmt->execute();
+        $pcaResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $results = [];
+        foreach ($pcaResults as $result) {
+            $results[] = [
+                'datasetId' => $result['DatasetId'],
+                'ndcg' => [
+                    'one' => [
+                        'x' => (float)$result['Ndcg_One_X'],
+                        'y' => (float)$result['Ndcg_One_Y'],
+                        'varianceX' => (float)$result['Ndcg_One_VarianceX'],
+                        'varianceY' => (float)$result['Ndcg_One_VarianceY'] 
+                    ],
+                    'three' => [
+                        'x' => (float)$result['Ndcg_Three_X'],
+                        'y' => (float)$result['Ndcg_Three_Y'],
+                        'varianceX' => (float)$result['Ndcg_Three_VarianceX'],
+                        'varianceY' => (float)$result['Ndcg_Three_VarianceY']
+                    ],
+                    'five' => [
+                        'x' => (float)$result['Ndcg_Five_X'],
+                        'y' => (float)$result['Ndcg_Five_Y'],
+                        'varianceX' => (float)$result['Ndcg_Five_VarianceX'],
+                        'varianceY' => (float)$result['Ndcg_Five_VarianceY']
+                    ],
+                    'ten' => [
+                        'x' => (float)$result['Ndcg_Ten_X'],
+                        'y' => (float)$result['Ndcg_Ten_Y'],
+                        'varianceX' => (float)$result['Ndcg_Ten_VarianceX'],
+                        'varianceY' => (float)$result['Ndcg_Ten_VarianceY']
+                    ],
+                    'twenty' => [
+                        'x' => (float)$result['Ndcg_Twenty_X'],
+                        'y' => (float)$result['Ndcg_Twenty_Y'],
+                        'varianceX' => (float)$result['Ndcg_Twenty_VarianceX'],
+                        'varianceY' => (float)$result['Ndcg_Twenty_VarianceY']
+                    ]
+                ],
+                'hr' => [
+                    'one' => [
+                        'x' => (float)$result['Hr_One_X'],
+                        'y' => (float)$result['Hr_One_Y'],
+                        'varianceX' => (float)$result['Hr_One_VarianceX'],
+                        'varianceY' => (float)$result['Hr_One_VarianceY'] 
+                    ],
+                    'three' => [
+                        'x' => (float)$result['Hr_Three_X'],
+                        'y' => (float)$result['Hr_Three_Y'],
+                        'varianceX' => (float)$result['Hr_Three_VarianceX'],
+                        'varianceY' => (float)$result['Hr_Three_VarianceY']
+                    ],
+                    'five' => [
+                        'x' => (float)$result['Hr_Five_X'],
+                        'y' => (float)$result['Hr_Five_Y'],
+                        'varianceX' => (float)$result['Hr_Five_VarianceX'],
+                        'varianceY' => (float)$result['Hr_Five_VarianceY']
+                    ],
+                    'ten' => [
+                        'x' => (float)$result['Hr_Ten_X'],
+                        'y' => (float)$result['Hr_Ten_Y'],
+                        'varianceX' => (float)$result['Hr_Ten_VarianceX'],
+                        'varianceY' => (float)$result['Hr_Ten_VarianceY']
+                    ],
+                    'twenty' => [
+                        'x' => (float)$result['Hr_Twenty_X'],
+                        'y' => (float)$result['Hr_Twenty_Y'],
+                        'varianceX' => (float)$result['Hr_Twenty_VarianceX'],
+                        'varianceY' => (float)$result['Hr_Twenty_VarianceY']
+                    ]
+                ],
+                'recall' => [
+                    'one' => [
+                        'x' => (float)$result['Recall_One_X'],
+                        'y' => (float)$result['Recall_One_Y'],
+                        'varianceX' => (float)$result['Recall_One_VarianceX'],
+                        'varianceY' => (float)$result['Recall_One_VarianceY'] 
+                    ],
+                    'three' => [
+                        'x' => (float)$result['Recall_Three_X'],
+                        'y' => (float)$result['Recall_Three_Y'],
+                        'varianceX' => (float)$result['Recall_Three_VarianceX'],
+                        'varianceY' => (float)$result['Recall_Three_VarianceY']
+                    ],
+                    'five' => [
+                        'x' => (float)$result['Recall_Five_X'],
+                        'y' => (float)$result['Recall_Five_Y'],
+                        'varianceX' => (float)$result['Recall_Five_VarianceX'],
+                        'varianceY' => (float)$result['Recall_Five_VarianceY']
+                    ],
+                    'ten' => [
+                        'x' => (float)$result['Recall_Ten_X'],
+                        'y' => (float)$result['Recall_Ten_Y'],
+                        'varianceX' => (float)$result['Recall_Ten_VarianceX'],
+                        'varianceY' => (float)$result['Recall_Ten_VarianceY']
+                    ],
+                    'twenty' => [
+                        'x' => (float)$result['Recall_Twenty_X'],
+                        'y' => (float)$result['Recall_Twenty_Y'],
+                        'varianceX' => (float)$result['Recall_Twenty_VarianceX'],
+                        'varianceY' => (float)$result['Recall_Twenty_VarianceY']
+                    ]
+                ],
+            ];
+        }
+
+        http_response_code(200);
+        echo json_encode([
+            "isSuccess" => true,
+            "statusCode" => 200,
+            "data" => lowerFirstLetter($results)
+        ]);
+    }
+
     public static function compareAlgorithms($pdo, $x, $y) {
         header('Content-Type: application/json');
         
