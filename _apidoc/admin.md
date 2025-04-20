@@ -10,7 +10,7 @@ GET &task=addResults
 ```Headers```
 ```js
 {
-    {Admin header here}: {Admin secret key here}
+    (Admin header here): (Admin secret key here)
 }
 ```
 
@@ -72,6 +72,59 @@ GET &task=addResults
         createdAlgorithms: string[],
         createdDatasets: string[]
     },
+    metadata: any | null
+}
+```
+
+> ### Get Performance Results
+```URL```
+```http
+GET &task=getResults
+```
+```Headers```
+```js
+{
+    (Admin header here): (Admin secret key here)
+}
+```
+
+```Response```
+```js
+{
+    statusCode: number,
+    isSuccess: boolean,
+    data: [
+        {
+            id: number,
+            fold: number,
+            algorithmConfigIndex: number,
+            algorithmConfiguration: string,
+            algorithmId: number,
+            datasetId: number,
+            createdDate: string,
+            hr: {
+                one: number | null,
+                three: number | null,
+                five: number | null,
+                ten: number | null,
+                twenty: number | null
+            },
+            ndcg: {
+                one: number | null,
+                three: number | null,
+                five: number | null,
+                ten: number | null,
+                twenty: number | null
+            },
+            recall: {
+                one: number | null,
+                three: number | null,
+                five: number | null,
+                ten: number | null,
+                twenty: number | null
+            }
+        },
+    ],
     metadata: any | null
 }
 ```
