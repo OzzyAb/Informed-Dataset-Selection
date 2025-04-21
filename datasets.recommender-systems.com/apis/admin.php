@@ -326,7 +326,17 @@ class Admin {
     private static function checkAdminKey($headers) {
         $secrets = include('../configs/secrets.php');
         $key = isset($headers[$secrets['Admin']['HeaderKey']]) ? $headers[$secrets['Admin']['HeaderKey']] : null;
-        if ($key === null || !hash_equals($secrets['Admin']['SecretKey'], $key)) {
+
+        if ($key === null) {
+            http_response_code(403);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 403,
+                "message" => "Not allowed"
+            ]);
+            exit();
+        }
+        if (!hash_equals($secrets['Admin']['SecretKey'], $key)) {
             http_response_code(403);
             echo json_encode([
                 "isSuccess" => false,
