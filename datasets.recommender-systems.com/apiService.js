@@ -10,6 +10,8 @@ const serverStatusUrl = `${apiUrl}/health.php`;
 // URL to fetch performance results of two algorithms
 const performanceUrl = (a1, a2) =>
   `${apiUrl}${dbPrefix}result&task=compareAlgorithms&x=${a1}&y=${a2}`;
+// URL to fetch PCA results
+const pcaUrl = `${apiUrl}result&task=pcaResults`;
 
 let algorithms = [];
 let datasets = [];
@@ -115,6 +117,21 @@ export function populateSelectAlgorithm() {
     option2.textContent = algorithm.name;
     secondAlgorithm.appendChild(option2);
   });
+}
+
+export async function fetchPcaResults() {
+  try {
+    const response = await fetch(pcaUrl);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    //console.log(data);
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching PCA results:", error);
+    return null;
+  }
 }
 
 export function getAlgorithms() {
