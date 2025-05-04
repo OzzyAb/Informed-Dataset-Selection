@@ -70,7 +70,7 @@ export function updateXYValues(compareResults) {
 }
 
 // Function to initialize or update the chart
-function updateChart(firstAlgorithmId, secondAlgorithmId) {
+export function updateChart(firstAlgorithmId, secondAlgorithmId) {
   const ctx = document.getElementById("myChart");
 
   // Find the selected algorithms based on their IDs
@@ -280,8 +280,6 @@ function updateChart(firstAlgorithmId, secondAlgorithmId) {
 
 // function to handle dropdown changes
 async function handleDropdownChange() {
-  // Prevent the default behavior (e.g. scrolling to the top)
-  event.preventDefault();
   // Get the selected algorithm IDs from the dropdowns
   const firstAlgorithmId = Number(
     document.getElementById("formControlAlgorithm1").value
@@ -299,23 +297,23 @@ async function handleDropdownChange() {
   }
 }
 
-// Event listeners for dropdown changes
-document
-  .getElementById("formControlAlgorithm1")
-  .addEventListener("change", handleDropdownChange);
-document
-  .getElementById("formControlAlgorithm2")
-  .addEventListener("change", handleDropdownChange);
+// Function to set up event listeners for dropdown changes
+export function setupChartEventListeners() {
+  // Event listeners for dropdown changes
+  document
+    .getElementById("formControlAlgorithm1")
+    .addEventListener("change", handleDropdownChange);
+  document
+    .getElementById("formControlAlgorithm2")
+    .addEventListener("change", handleDropdownChange);
 
-// Event listener for performance metric dropdown
-document
-  .getElementById("formPerformanceMetric")
-  .addEventListener("change", handleDropdownChange);
+  // Event listener for performance metric dropdown
+  document
+    .getElementById("formPerformanceMetric")
+    .addEventListener("change", handleDropdownChange);
 
-// Event listener for K value dropdown
-document
-  .getElementById("formKValue")
-  .addEventListener("change", handleDropdownChange);
-
-// Initial chart render
-updateChart(0, 1);
+  // Event listener for K value dropdown
+  document
+    .getElementById("formKValue")
+    .addEventListener("change", handleDropdownChange);
+}

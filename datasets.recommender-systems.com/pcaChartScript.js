@@ -1,4 +1,4 @@
-import { fetchPcaResults, checkServerHealth } from "./apiService.js©";
+import { fetchPcaResults, checkServerHealth } from "./apiService.js";
 
 let pcaChart;
 

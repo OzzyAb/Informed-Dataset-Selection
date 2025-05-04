@@ -11,7 +11,7 @@ const serverStatusUrl = `${apiUrl}/health.php`;
 const performanceUrl = (a1, a2) =>
   `${apiUrl}${dbPrefix}result&task=compareAlgorithms&x=${a1}&y=${a2}`;
 // URL to fetch PCA results
-const pcaUrl = `${apiUrl}result&task=pcaResults`;
+const pcaUrl = `${apiUrl}${dbPrefix}result&task=pcaResults`;
 
 let algorithms = [];
 let datasets = [];
@@ -96,6 +96,11 @@ export async function fetchAlgorithms() {
   }
 }
 
+/*
+  function to populate the algorithm select dropdowns
+  with the fetched algorithms
+  initially select the first two algorithms
+ */
 export function populateSelectAlgorithm() {
   const firstAlgorithm = document.getElementById("formControlAlgorithm1");
   const secondAlgorithm = document.getElementById("formControlAlgorithm2");
@@ -117,6 +122,12 @@ export function populateSelectAlgorithm() {
     option2.textContent = algorithm.name;
     secondAlgorithm.appendChild(option2);
   });
+
+  // Select the first two algorithms by default
+  if (algorithms.length > 1) {
+    firstAlgorithm.value = algorithms[0].id;
+    secondAlgorithm.value = algorithms[1].id;
+  }
 }
 
 export async function fetchPcaResults() {
