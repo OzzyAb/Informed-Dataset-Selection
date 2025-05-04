@@ -10,15 +10,13 @@ const serverStatusUrl = `${apiUrl}/health.php`;
 // URL to fetch performance results of two algorithms
 const performanceUrl = (a1, a2) =>
   `${apiUrl}${dbPrefix}result&task=compareAlgorithms&x=${a1}&y=${a2}`;
+// URL to fetch PCA results
+const pcaUrl = `${apiUrl}${dbPrefix}result&task=pcaResults`;
 
+// Global variables to store algorithms and datasets
 let algorithms = [];
 let datasets = [];
-let compareResults = {};
-
-// function get the compare results
-export function getCompareResults() {
-  return compareResults;
-}
+let pcaData = [];
 
 // function to fetch the dataset names
 export async function fetchDatasets() {
@@ -30,9 +28,10 @@ export async function fetchDatasets() {
     const data = await response.json();
     data.data.sort((a, b) => a.name.localeCompare(b.name));
     datasets = data.data;
+    return response.status; // Return the status code
   } catch (error) {
     console.error("Error fetching dataset data:", error);
-    return [];
+    return error.response?.status || 500; // Return the error status code
   }
 }
 
@@ -71,7 +70,6 @@ export async function fetchPerformanceResults(
       throw new Error("Network response was not ok");
     }
     const data = await response.json();
-    //console.log(data);
     return data.data;
   } catch (error) {
     console.error("Error fetching performance results:", error);
@@ -94,6 +92,11 @@ export async function fetchAlgorithms() {
   }
 }
 
+/*
+  function to populate the algorithm select dropdowns
+  with the fetched algorithms
+  initially select the first two algorithms
+ */
 export function populateSelectAlgorithm() {
   const firstAlgorithm = document.getElementById("formControlAlgorithm1");
   const secondAlgorithm = document.getElementById("formControlAlgorithm2");
@@ -115,6 +118,31 @@ export function populateSelectAlgorithm() {
     option2.textContent = algorithm.name;
     secondAlgorithm.appendChild(option2);
   });
+
+  // Select the first two algorithms by default
+  if (algorithms.length > 1) {
+    firstAlgorithm.value = algorithms[0].id;
+    secondAlgorithm.value = algorithms[1].id;
+  }
+}
+
+export async function fetchPcaResults() {
+  try {
+    const response = await fetch(pcaUrl);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    pcaData = data.data;
+    return response.status; // Return the status code
+  } catch (error) {
+    console.error("Error fetching PCA results:", error);
+    return error.response?.status || 500; // Return the error status code
+  }
+}
+
+export function getPcaData() {
+  return pcaData;
 }
 
 export function getAlgorithms() {

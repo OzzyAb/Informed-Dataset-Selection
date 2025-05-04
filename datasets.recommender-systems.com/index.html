@@ -15,29 +15,7 @@
       integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7"
       crossorigin="anonymous"
     />
-    <script type="module">
-      import {
-        checkServerHealth,
-        fetchAlgorithms,
-        populateSelectAlgorithm,
-        fetchDatasets,
-      } from "./apiService.js";
-
-      document.addEventListener("DOMContentLoaded", async () => {
-        // Check server health
-        const isServerOnline = await checkServerHealth();
-
-        // If the server is online, fetch algorithm data
-        // and the datasets
-        if (isServerOnline) {
-          await fetchAlgorithms();
-          await fetchDatasets();
-        }
-
-        // Populate the dropdowns (can be called later as needed)
-        populateSelectAlgorithm();
-      });
-    </script>
+    <script type="module" src="./main.js"></script>
     <script>
       function toggleTheme() {
         const currentTheme =
@@ -46,7 +24,8 @@
         document.documentElement.setAttribute("data-bs-theme", newTheme);
       }
     </script>
-    <script type="module" src="chartScript.js"></script>
+    <script type="module" src="./chartScript.js"></script>
+    <script type="module" src="./pcaChartScript.js"></script>
   </head>
   <body>
     <header class="py-3 mb-4 border-bottom">
@@ -79,7 +58,7 @@
             <a
               class="nav-link active"
               href="https://github.com/culso/Informed-Dataset-Selection-Website"
-              ><i class="fa-brands fa-github"></i> Sourcecode</a
+              ><i class="fa-brands fa-github"></i> Source</a
             >
           </li>
         </ul>
@@ -139,6 +118,7 @@
           aria-labelledby="compare-tab"
           tabindex="0"
         >
+          <!-- "Compare two algorithms" tab content begins here" -->
           <div class="d-flex align-items-center">
             <h2>Compare two algorithms</h2>
             <div class="ms-auto"></div>
@@ -151,6 +131,7 @@
             Select different options to control the contents of the diagram.
           </p>
 
+          <!-- Form controls to select two algorithms -->
           <div class="row mb-3">
             <div class="col">
               <label for="formControlAlgorithm1" class="form-label"
@@ -173,6 +154,7 @@
               ></select>
             </div>
           </div>
+          <!-- Form controls to select performance metric and K value -->
           <div class="row mb-3">
             <div class="col">
               <label for="formPerformanceMetric" class="form-label"
@@ -204,6 +186,7 @@
             </div>
           </div>
 
+          <!-- Textual information in a collapsible -->
           <div class="accordion" id="accordionAPS">
             <div class="accordion-item">
               <h2 class="accordion-header" id="headingOne">
@@ -249,6 +232,7 @@
           aria-labelledby="aps-tab"
           tabindex="0"
         >
+          <!-- APS Tab content begins here -->
           <h2>Algorithm Performance Space</h2>
           <p>
             <b
@@ -260,6 +244,40 @@
             Generally, we suggest using datasets for recommender-system
             experiments that are diverse.
           </p>
+
+          <!-- Form controls to select performance metric an k value for the PCA -->
+          <div class="row mb-3">
+            <div class="col">
+              <label for="formPerformanceMetricPca" class="form-label"
+                >Performance Metric</label
+              >
+              <select
+                id="formPerformanceMetricPca"
+                class="form-select"
+                aria-label="Select performance metric"
+              >
+                <option value="ndcg">nDCG</option>
+                <option value="hr">Hit Ratio (HR)</option>
+                <option value="recall">Recall</option>
+              </select>
+            </div>
+            <div class="col">
+              <label for="formKValuePca" class="form-label">K-Value</label>
+              <select
+                id="formKValuePca"
+                class="form-select"
+                aria-label="Select k-value"
+              >
+                <option value="one">@1</option>
+                <option value="three">@3</option>
+                <option value="five">@5</option>
+                <option value="ten">@10</option>
+                <option value="twenty">@20</option>
+              </select>
+            </div>
+          </div>
+
+          <canvas id="pca-chart" class="my-3"></canvas>
         </div>
         <div
           class="tab-pane fade"
@@ -268,6 +286,7 @@
           aria-labelledby="dataset-info-tab"
           tabindex="0"
         >
+          <!-- Dataset information tab content begins here -->
           <h2>Dataset information</h2>
         </div>
       </div>

@@ -1,5 +1,11 @@
 import { getDatasetName, getAlgorithmName } from "./apiService.js";
 import { fetchPerformanceResults } from "./apiService.js";
+import {
+  getFirstAlgorithmId,
+  getSecondAlgorithmId,
+  getKValue,
+  getPerformanceMetric,
+} from "./formUtils.js";
 
 // Initial random datapoints
 let xyValues = [
@@ -38,22 +44,6 @@ const performanceMetricsMap = {
 // Chart instance variable
 let chart;
 
-function getKValue() {
-  return document.getElementById("formKValue").value;
-}
-
-function getPerformanceMetric() {
-  return document.getElementById("formPerformanceMetric").value;
-}
-
-function getFirstAlgorithmId() {
-  return Number(document.getElementById("formControlAlgorithm1").value);
-}
-
-function getSecondAlgorithmId() {
-  return Number(document.getElementById("formControlAlgorithm2").value);
-}
-
 // function to update xyValues with the latest performance results
 export function updateXYValues(compareResults) {
   const kValue = getKValue();
@@ -70,7 +60,7 @@ export function updateXYValues(compareResults) {
 }
 
 // Function to initialize or update the chart
-function updateChart(firstAlgorithmId, secondAlgorithmId) {
+export function updateChart(firstAlgorithmId, secondAlgorithmId) {
   const ctx = document.getElementById("myChart");
 
   // Find the selected algorithms based on their IDs
@@ -178,7 +168,7 @@ function updateChart(firstAlgorithmId, secondAlgorithmId) {
             label: function (context) {
               const index = context.dataIndex;
               return [
-                `Dataset Name: ${getDatasetName(index)}`,
+                `Dataset Name: ${getDatasetName(xyValues[index].label)}`,
                 `X: ${xyValues[index].x}`,
                 `Y: ${xyValues[index].y}`,
               ];
@@ -280,15 +270,9 @@ function updateChart(firstAlgorithmId, secondAlgorithmId) {
 
 // function to handle dropdown changes
 async function handleDropdownChange() {
-  // Prevent the default behavior (e.g. scrolling to the top)
-  event.preventDefault();
   // Get the selected algorithm IDs from the dropdowns
-  const firstAlgorithmId = Number(
-    document.getElementById("formControlAlgorithm1").value
-  );
-  const secondAlgorithmId = Number(
-    document.getElementById("formControlAlgorithm2").value
-  );
+  const firstAlgorithmId = getFirstAlgorithmId();
+  const secondAlgorithmId = getSecondAlgorithmId();
   const results = await fetchPerformanceResults(
     firstAlgorithmId,
     secondAlgorithmId
@@ -299,23 +283,23 @@ async function handleDropdownChange() {
   }
 }
 
-// Event listeners for dropdown changes
-document
-  .getElementById("formControlAlgorithm1")
-  .addEventListener("change", handleDropdownChange);
-document
-  .getElementById("formControlAlgorithm2")
-  .addEventListener("change", handleDropdownChange);
+// Function to set up event listeners for dropdown changes
+export function setupChartEventListeners() {
+  // Event listeners for dropdown changes
+  document
+    .getElementById("formControlAlgorithm1")
+    .addEventListener("change", handleDropdownChange);
+  document
+    .getElementById("formControlAlgorithm2")
+    .addEventListener("change", handleDropdownChange);
 
-// Event listener for performance metric dropdown
-document
-  .getElementById("formPerformanceMetric")
-  .addEventListener("change", handleDropdownChange);
+  // Event listener for performance metric dropdown
+  document
+    .getElementById("formPerformanceMetric")
+    .addEventListener("change", handleDropdownChange);
 
-// Event listener for K value dropdown
-document
-  .getElementById("formKValue")
-  .addEventListener("change", handleDropdownChange);
-
-// Initial chart render
-updateChart(0, 1);
+  // Event listener for K value dropdown
+  document
+    .getElementById("formKValue")
+    .addEventListener("change", handleDropdownChange);
+}
