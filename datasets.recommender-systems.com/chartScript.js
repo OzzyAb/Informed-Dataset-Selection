@@ -95,6 +95,13 @@ export function updateChart(firstAlgorithmId, secondAlgorithmId) {
           max: 1,
           ticks: {
             stepSize: 0.25, // Controls the interval between tick marks
+            callback: function (value) {
+              if (value === 0.25 || value === 0.75) {
+                return value.toFixed(2); // Format the tick labels to 2 decimal places
+              } else {
+                return value;
+              }
+            },
           },
           title: {
             display: true,
@@ -112,6 +119,13 @@ export function updateChart(firstAlgorithmId, secondAlgorithmId) {
           max: 1,
           ticks: {
             stepSize: 0.25,
+            callback: function (value) {
+              if (value === 0.25 || value === 0.75) {
+                return value.toFixed(2); // Format the tick labels to 2 decimal places
+              } else {
+                return value;
+              }
+            },
           },
           title: {
             display: true,
