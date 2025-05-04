@@ -1,5 +1,11 @@
 import { getDatasetName, getAlgorithmName } from "./apiService.js";
 import { fetchPerformanceResults } from "./apiService.js";
+import {
+  getFirstAlgorithmId,
+  getSecondAlgorithmId,
+  getKValue,
+  getPerformanceMetric,
+} from "./formUtils.js";
 
 // Initial random datapoints
 let xyValues = [
@@ -37,22 +43,6 @@ const performanceMetricsMap = {
 
 // Chart instance variable
 let chart;
-
-function getKValue() {
-  return document.getElementById("formKValue").value;
-}
-
-function getPerformanceMetric() {
-  return document.getElementById("formPerformanceMetric").value;
-}
-
-function getFirstAlgorithmId() {
-  return Number(document.getElementById("formControlAlgorithm1").value);
-}
-
-function getSecondAlgorithmId() {
-  return Number(document.getElementById("formControlAlgorithm2").value);
-}
 
 // function to update xyValues with the latest performance results
 export function updateXYValues(compareResults) {
@@ -281,12 +271,8 @@ export function updateChart(firstAlgorithmId, secondAlgorithmId) {
 // function to handle dropdown changes
 async function handleDropdownChange() {
   // Get the selected algorithm IDs from the dropdowns
-  const firstAlgorithmId = Number(
-    document.getElementById("formControlAlgorithm1").value
-  );
-  const secondAlgorithmId = Number(
-    document.getElementById("formControlAlgorithm2").value
-  );
+  const firstAlgorithmId = getFirstAlgorithmId();
+  const secondAlgorithmId = getSecondAlgorithmId();
   const results = await fetchPerformanceResults(
     firstAlgorithmId,
     secondAlgorithmId

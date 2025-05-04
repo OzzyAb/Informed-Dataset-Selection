@@ -1,33 +1,30 @@
-import { fetchPcaResults, checkServerHealth } from "./apiService.js";
+import { getPcaData } from "./apiService.js";
+import { getKValuePca, getPerformanceMetricPca } from "./formUtils.js";
+import { getDatasetName } from "./apiService.js";
 
 let pcaChart;
 
-async function initializePcaChart() {
-  // Check if the server is online
-  const serverIsOnline = await checkServerHealth();
-  if (!serverIsOnline) {
-    console.error("Server is offline. Cannot fetch PCA results.");
-    return;
-  }
+export async function updatePcaChart() {
+  // Get the previously fetched PCA data
+  const pcaData = getPcaData();
+  const kValue = getKValuePca();
+  const performanceMetric = getPerformanceMetricPca();
 
-  try {
-    // Fetch PCA results from the server
-    const pcaData = await fetchPcaResults();
-    console.log(pcaData);
+  // Prepare the data for the chart
+  const chartData = pcaData.map((point) => ({
+    x: point[performanceMetric][kValue].x,
+    y: point[performanceMetric][kValue].y,
+    label: point.datasetId,
+  }));
 
-    // Prepare the data for the chart
-    const chartData = pcaData.map((point) => ({
-      x: point.x, // Replace with the actual x-coordinate field from the server response
-      y: point.y, // Replace with the actual y-coordinate field from the server response
-    }));
-
+  // Destroy the existing chart if it exists
+  if (pcaChart) {
+    // Update the existing chart's data
+    pcaChart.data.datasets[0].data = chartData;
+    pcaChart.update();
+  } else {
     // Get the chart context
     const ctx = document.getElementById("pca-chart");
-
-    // Destroy the existing chart if it exists
-    if (pcaChart) {
-      pcaChart.destroy();
-    }
 
     // Create a new chart
     pcaChart = new Chart(ctx, {
@@ -49,22 +46,48 @@ async function initializePcaChart() {
             position: "bottom",
             title: {
               display: true,
-              text: "Principal Component 1",
+              text: "Component 1",
+              font: {
+                size: 14,
+                weight: "bold",
+              },
             },
           },
           y: {
             title: {
               display: true,
-              text: "Principal Component 2",
+              text: "Component 2",
+              font: {
+                size: 14,
+                weight: "bold",
+              },
+            },
+          },
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const index = context.dataIndex;
+                return [
+                  `Dataset Name: ${getDatasetName(index)}`,
+                  `X: ${chartData[index].x}`,
+                  `Y: ${chartData[index].y}`,
+                ];
+              },
             },
           },
         },
       },
     });
-  } catch (error) {
-    console.error("Error initializing PCA chart:", error);
   }
 }
 
-// Initialize the PCA chart when the page loads
-window.addEventListener("load", initializePcaChart);
+export function setupPcaChartEventListeners() {
+  document
+    .getElementById("formKValuePca")
+    .addEventListener("change", updatePcaChart);
+  document
+    .getElementById("formPerformanceMetricPca")
+    .addEventListener("change", updatePcaChart);
+}

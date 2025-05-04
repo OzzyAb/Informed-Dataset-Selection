@@ -13,14 +13,10 @@ const performanceUrl = (a1, a2) =>
 // URL to fetch PCA results
 const pcaUrl = `${apiUrl}${dbPrefix}result&task=pcaResults`;
 
+// Global variables to store algorithms and datasets
 let algorithms = [];
 let datasets = [];
-let compareResults = {};
-
-// function get the compare results
-export function getCompareResults() {
-  return compareResults;
-}
+let pcaData = [];
 
 // function to fetch the dataset names
 export async function fetchDatasets() {
@@ -32,9 +28,10 @@ export async function fetchDatasets() {
     const data = await response.json();
     data.data.sort((a, b) => a.name.localeCompare(b.name));
     datasets = data.data;
+    return response.status; // Return the status code
   } catch (error) {
     console.error("Error fetching dataset data:", error);
-    return [];
+    return error.response?.status || 500; // Return the error status code
   }
 }
 
@@ -73,7 +70,6 @@ export async function fetchPerformanceResults(
       throw new Error("Network response was not ok");
     }
     const data = await response.json();
-    //console.log(data);
     return data.data;
   } catch (error) {
     console.error("Error fetching performance results:", error);
@@ -137,12 +133,16 @@ export async function fetchPcaResults() {
       throw new Error("Network response was not ok");
     }
     const data = await response.json();
-    //console.log(data);
-    return data.data;
+    pcaData = data.data;
+    return response.status; // Return the status code
   } catch (error) {
     console.error("Error fetching PCA results:", error);
-    return null;
+    return error.response?.status || 500; // Return the error status code
   }
+}
+
+export function getPcaData() {
+  return pcaData;
 }
 
 export function getAlgorithms() {

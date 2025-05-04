@@ -118,7 +118,7 @@
           aria-labelledby="compare-tab"
           tabindex="0"
         >
-          <!-- "Compare Two Algorithms Tab Content begins here" -->
+          <!-- "Compare two algorithms" tab content begins here" -->
           <div class="d-flex align-items-center">
             <h2>Compare two algorithms</h2>
             <div class="ms-auto"></div>
@@ -131,6 +131,7 @@
             Select different options to control the contents of the diagram.
           </p>
 
+          <!-- Form controls to select two algorithms -->
           <div class="row mb-3">
             <div class="col">
               <label for="formControlAlgorithm1" class="form-label"
@@ -153,6 +154,7 @@
               ></select>
             </div>
           </div>
+          <!-- Form controls to select performance metric and K value -->
           <div class="row mb-3">
             <div class="col">
               <label for="formPerformanceMetric" class="form-label"
@@ -184,6 +186,7 @@
             </div>
           </div>
 
+          <!-- Textual information in a collapsible -->
           <div class="accordion" id="accordionAPS">
             <div class="accordion-item">
               <h2 class="accordion-header" id="headingOne">
@@ -241,6 +244,38 @@
             Generally, we suggest using datasets for recommender-system
             experiments that are diverse.
           </p>
+
+          <!-- Form controls to select performance metric an k value for the PCA -->
+          <div class="row mb-3">
+            <div class="col">
+              <label for="formPerformanceMetricPca" class="form-label"
+                >Performance Metric</label
+              >
+              <select
+                id="formPerformanceMetricPca"
+                class="form-select"
+                aria-label="Select performance metric"
+              >
+                <option value="ndcg">nDCG</option>
+                <option value="hr">Hit Ratio (HR)</option>
+                <option value="recall">Recall</option>
+              </select>
+            </div>
+            <div class="col">
+              <label for="formKValuePca" class="form-label">K-Value</label>
+              <select
+                id="formKValuePca"
+                class="form-select"
+                aria-label="Select k-value"
+              >
+                <option value="one">@1</option>
+                <option value="three">@3</option>
+                <option value="five">@5</option>
+                <option value="ten">@10</option>
+                <option value="twenty">@20</option>
+              </select>
+            </div>
+          </div>
 
           <canvas id="pca-chart" class="my-3"></canvas>
         </div>

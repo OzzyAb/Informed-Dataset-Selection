@@ -13,6 +13,10 @@ import {
   updateChart,
 } from "./chartScript.js";
 
+import { setupPcaChartEventListeners } from "./pcaChartScript.js";
+
+import { updatePcaChart } from "./pcaChartScript.js";
+
 // This function is called once the DOM is fully loaded
 // It initializes the chart and fetches data from the server
 document.addEventListener("DOMContentLoaded", async () => {
@@ -37,6 +41,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateChart(1, 2); // Render the chart
   }
 
-  // 4. Set up event listeners for chart dropdowns
+  // 5. Initialize the PCA chart
+  updatePcaChart();
+
+  // 6. Set up event listeners for chart dropdowns
   setupChartEventListeners();
+
+  // 7. Set up event listeners for PCA chart dropdowns
+  setupPcaChartEventListeners();
 });
