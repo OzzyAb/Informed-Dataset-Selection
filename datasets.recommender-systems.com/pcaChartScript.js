@@ -70,7 +70,7 @@ export async function updatePcaChart() {
               label: function (context) {
                 const index = context.dataIndex;
                 return [
-                  `Dataset Name: ${getDatasetName(index)}`,
+                  `Dataset Name: ${getDatasetName(chartData[index].label)}`,
                   `X: ${chartData[index].x}`,
                   `Y: ${chartData[index].y}`,
                 ];

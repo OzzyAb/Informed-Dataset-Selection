@@ -168,7 +168,7 @@ export function updateChart(firstAlgorithmId, secondAlgorithmId) {
             label: function (context) {
               const index = context.dataIndex;
               return [
-                `Dataset Name: ${getDatasetName(index)}`,
+                `Dataset Name: ${getDatasetName(xyValues[index].label)}`,
                 `X: ${xyValues[index].x}`,
                 `Y: ${xyValues[index].y}`,
               ];
