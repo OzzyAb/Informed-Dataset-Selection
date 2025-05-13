@@ -1,21 +1,64 @@
-import {
-  checkServerHealth,
-  fetchAlgorithms,
-  fetchDatasets,
-  fetchPcaResults,
-  populateSelectAlgorithm,
-  fetchPerformanceResults,
-} from "./apiService.js";
+var tabContentElement = null;
 
-import {
-  setupChartEventListeners,
-  updateXYValues,
-  updateChart,
-} from "./chartScript.js";
+document.addEventListener('DOMContentLoaded', async () => {
+  tabContentElement = document.getElementById('tabContent');
+  await loadTab('./tabs/compareAlgorithms/compareAlgorithms.html');
+});
 
-import { setupPcaChartEventListeners } from "./pcaChartScript.js";
+var activeTabScript = null;
+async function loadTab(fileName) {
+  Loading.showLoading();
 
-import { updatePcaChart } from "./pcaChartScript.js";
+  if (activeTabScript !== null) {
+    activeTabScript.parentNode.removeChild(activeTabScript);
+    activeTabScript.onload = null;
+    activeTabScript = null;
+  }
+  
+  await DynamicContent.loadContentToElement(fileName, tabContentElement);
+
+  // Load the JS file related to the loaded tab
+  const jsFileName = fileName.split('.html')[0] + '.js';
+  const script = document.createElement('script');
+  script.onload = async () => {
+    await initialize();
+    Loading.hideLoading();
+  }
+  script.src = jsFileName;
+  script.id = jsFileName;
+  document.head.appendChild(script);
+
+  activeTabScript = script;
+}
+
+
+
+
+
+
+
+
+
+
+
+//import {
+//  checkServerHealth,
+//  fetchAlgorithms,
+//  fetchDatasets,
+//  fetchPcaResults,
+//  populateSelectAlgorithm,
+//  fetchPerformanceResults,
+//} from "./apiService.js";
+//
+//import {
+//  setupChartEventListeners,
+//  updateXYValues,
+//  updateChart,
+//} from "./chartScript.js";
+//
+//import { setupPcaChartEventListeners } from "./pcaChartScript.js";
+//
+//import { updatePcaChart } from "./pcaChartScript.js";
 
 // This function is called once the DOM is fully loaded
 // It initializes the chart and fetches data from the server

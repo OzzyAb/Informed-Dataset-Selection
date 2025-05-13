@@ -1,0 +1,36 @@
+<div class="tab-pane fade show active" id="aps-tab-pane" role="tabpanel" aria-labelledby="aps-tab" tabindex="0">
+    <!-- APS Tab content begins here -->
+    <h2>Algorithm Performance Space</h2>
+    <p>
+        <b>The Algorithm performance space for Recommender-System
+            Datasets.</b>
+        The chart is based on 2 algorithms, reduced to two dimensions via
+        PCA. The further apart two datasets, the more diverse they are.
+        Generally, we suggest using datasets for recommender-system
+        experiments that are diverse.
+    </p>
+
+    <!-- Form controls to select performance metric an k value for the PCA -->
+    <div class="row mb-3">
+        <div class="col">
+            <label for="formPerformanceMetricPca" class="form-label">Performance Metric</label>
+            <select id="formPerformanceMetricPca" class="form-select" aria-label="Select performance metric">
+                <option value="ndcg">nDCG</option>
+                <option value="hr">Hit Ratio (HR)</option>
+                <option value="recall">Recall</option>
+            </select>
+        </div>
+        <div class="col">
+            <label for="formKValuePca" class="form-label">K-Value</label>
+            <select id="formKValuePca" class="form-select" aria-label="Select k-value">
+                <option value="one">@1</option>
+                <option value="three">@3</option>
+                <option value="five">@5</option>
+                <option value="ten">@10</option>
+                <option value="twenty">@20</option>
+            </select>
+        </div>
+    </div>
+
+    <canvas id="pca-chart" class="my-3"></canvas>
+</div>

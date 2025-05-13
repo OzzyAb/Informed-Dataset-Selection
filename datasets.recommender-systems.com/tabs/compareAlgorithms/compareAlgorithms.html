@@ -1,0 +1,70 @@
+<div class="tab-pane fade show active" id="compare-tab-pane" role="tabpanel" aria-labelledby="compare-tab" tabindex="0">
+    <!-- "Compare two algorithms" tab content begins here" -->
+    <h2>Compare two algorithms</h2>
+
+    <p>
+        Select different options to control the contents of the diagram.
+    </p>
+
+    <!-- Form controls to select two algorithms -->
+    <div class="row mb-3">
+        <div class="col">
+            <label for="formControlAlgorithm1" class="form-label">Algorithm 1</label>
+            <select id="formControlAlgorithm1" class="form-select" aria-label="Select algorithm 1" onchange="compareAlgorithms()"></select>
+        </div>
+        <div class="col">
+            <label for="formControlAlgorithm2" class="form-label">Algorithm 2</label>
+            <select id="formControlAlgorithm2" class="form-select" aria-label="Select algorithm 2" onchange="compareAlgorithms()"></select>
+        </div>
+    </div>
+    <!-- Form controls to select performance metric and K value -->
+    <div class="row mb-3">
+        <div class="col">
+            <label for="formPerformanceMetric" class="form-label">Performance Metric</label>
+            <select id="formPerformanceMetric" class="form-select" aria-label="Select performance metric">
+                <option value="ndcg">nDCG</option>
+                <option value="hr">Hit Ratio (HR)</option>
+                <option value="recall">Recall</option>
+            </select>
+        </div>
+        <div class="col">
+            <label for="formKValue" class="form-label">K-Value</label>
+            <select id="formKValue" class="form-select" aria-label="Select k-value">
+                <option value="one">@1</option>
+                <option value="three">@3</option>
+                <option value="five">@5</option>
+                <option value="ten">@10</option>
+                <option value="twenty">@20</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Textual information in a collapsible -->
+    <div class="accordion" id="accordionAPS">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                    aria-expanded="true" aria-controls="collapseOne">
+                    The Algorithm Performance Space (APS) for Recommender-System
+                    Datasets
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+                data-bs-parent="#accordionAPS">
+                <div class="accordion-body">
+                    The x-axis and y-axis represent the performance (w.r.t. the
+                    selected metric) of two different algorithms (w.r.t. the
+                    selected algorithms). The red circles indicate datasets.
+                    Datasets in the top right corner of the APS are considered
+                    'solved problems', as both algorithms perform well on them. On
+                    the other hand, datasets in the bottom left corner lack
+                    well-performing algorithms. The further apart two datasets
+                    are, the more diverse they are. Generally, we suggest using
+                    datasets for recommender-system experiments that are diverse.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="compare-algo-chart" class="my-3"></canvas>
+</div>
