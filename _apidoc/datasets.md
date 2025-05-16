@@ -27,7 +27,7 @@ GET /
             highestNumberOfRatingOnSingleItem: number | null,
             lowestNumberOfRatingOnSingleItem: number | null,
             meanNumberOfRatingsByUser: number | null,
-            meanNumberOfRationsOnItem: number | null
+            meanNumberOfRatingsOnItem: number | null
         },
         ...
     ],
