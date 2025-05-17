@@ -10,6 +10,11 @@ class ChartHelper {
      *   data: {
      *     datasets: any[]
      *   },
+     *   drawEllipseAroundDots: {
+     *     show: boolean 
+     *     color: string,
+     *     legendTitle: string,
+     *   },
      *   aspectRatio: number,
      *   title: string,
      *   labels: {
@@ -20,15 +25,7 @@ class ChartHelper {
      *       value: any
      *     }
      *   },
-     *   legend: {
-     *     showDefault: boolean,
-     *     customLegends: [
-     *       title: string,
-     *       lineWidth: number,
-     *       lineColor: string,
-     *       fillColor: string
-     *     ]
-     *   },
+     *   legend: boolean,
      *   zoom: boolean,
      *   points: {
      *     x: {
@@ -58,9 +55,6 @@ class ChartHelper {
      * ```
      * 
      * For custom labels, make sure you add 'id' in your 'data'.
-     * 
-     * Every variables in 'options' is optional, except 'type' in the 'shapes' section
-     * if and only if any shape needs to be drawn.
      * 
      * For drawin shapes, the usages of the variables are as following:
      * - 'type' can be either 'line' or 'circle'.
@@ -124,59 +118,56 @@ class ChartHelper {
                             }
                         }
                     },
-                    legend: {
+                    legend: options.legend && {
                         position: 'bottom',
-                        display: options.legend ? true : false,
+                        display: true,
                         labels: {
                             generateLabels: function (chart) {
-                                let defaultLegends = [];
-                                if (options.legend.showDefault) {
-                                    defaultLegends = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                    defaultLegends = defaultLegends.map((value) => {
-                                        const fillAlpha = '0.5';
-                                        const lineAlpha = '0.75';
+                                let legends = Chart.defaults.plugins.legend.labels.generateLabels(chart).map((value) => {
+                                    const fillAlpha = '0.5';
+                                    const lineAlpha = '0.75';
 
-                                        let color = [];
-                                        let start = value.fillStyle.indexOf('rgb');
-                                        if (start !== -1) {
-                                            let open = value.fillStyle.indexOf('(', start);
-                                            let close = value.fillStyle.indexOf(')', open);
-                                            if (open !== -1 || close !== -1) {
-                                                let values = value.fillStyle.slice(open + 1, close).split(',').map(v => v.trim());
-                                                color.push(values[0]);
-                                                color.push(values[1]);
-                                                color.push(values[2]);
-                                                value.fillStyle = `rgba(${values[0]},${values[1]},${values[2]},${fillAlpha})`;
-                                            }
+                                    let color = [];
+                                    let start = value.fillStyle.indexOf('rgb');
+                                    if (start !== -1) {
+                                        let open = value.fillStyle.indexOf('(', start);
+                                        let close = value.fillStyle.indexOf(')', open);
+                                        if (open !== -1 || close !== -1) {
+                                            let values = value.fillStyle.slice(open + 1, close).split(',').map(v => v.trim());
+                                            color.push(values[0]);
+                                            color.push(values[1]);
+                                            color.push(values[2]);
+                                            value.fillStyle = `rgba(${values[0]},${values[1]},${values[2]},${fillAlpha})`;
                                         }
+                                    }
 
-                                        if (color.length !== 0) {
-                                            value.lineWidth = 1;
-                                            value.strokeStyle = `rgba(${color[0]},${color[1]},${color[2]},${lineAlpha})`;
-                                        }
+                                    if (color.length !== 0) {
+                                        value.lineWidth = 1;
+                                        value.strokeStyle = `rgba(${color[0]},${color[1]},${color[2]},${lineAlpha})`;
+                                    }
 
-                                        return value;
-                                    });
-                                }
+                                    return value;
+                                });
 
-                                let customLegends = [];
-                                if (options.legend?.customLegends !== undefined) {
-                                    customLegends = options.legend.customLegends.map((value) => {
-                                        return {
-                                            text: value.title,
-                                            lineWidth: value.lineWidth ?? 1,
-                                            strokeStyle: value.lineColor ?? 'rgba(0, 0, 0, 0)',
-                                            fillStyle: value.fillColor ?? 'rgba(0, 0, 0, 0)',
-                                            hidden: false
-                                        };
-                                    });
-                                }
-                                
-                                return [
-                                    ...defaultLegends,
-                                    ...customLegends
-                                ];
+                                return legends;
                             },
+                        },
+                        onClick: (e, legendItem, legend) => {
+                            const index = legendItem.datasetIndex;
+                            const chart = legend.chart;
+
+                            const ellipseOptions = chart.options?.plugins?.drawEllipseAroundDots;
+                            if (ellipseOptions && legendItem.text === ellipseOptions.legendTitle) {
+                                ellipseOptions.show = !ellipseOptions.show;
+                            }
+
+                            if (chart.isDatasetVisible(index)) {
+                                chart.hide(index);
+                                legendItem.hidden = true;
+                            } else {
+                                chart.show(index);
+                                legendItem.hidden = false;
+                            };
                         }
                     },
                     zoom: options.zoom && {
@@ -193,6 +184,11 @@ class ChartHelper {
                             },
                             mode: 'xy',
                         }
+                    },
+                    drawEllipseAroundDots: options.drawEllipseAroundDots && {
+                        show: options.drawEllipseAroundDots.show,
+                        color: options.drawEllipseAroundDots.color,
+                        legendTitle: options.drawEllipseAroundDots.legendTitle
                     }
                 },
                 scales: {
@@ -214,7 +210,9 @@ class ChartHelper {
                     }
                 }
             },
-            plugins: options.shapes && options.shapes.map((shape, index) => {
+            plugins: [
+                ...(options.drawEllipseAroundDots ? [drawEllipseAroundDots] : []),
+                ...(options.shapes ? options.shapes.map((shape, index) => {
                     return {
                         id: `shape_${index}`,
                         beforeDraw(chart) {
@@ -262,7 +260,7 @@ class ChartHelper {
                                 ctx.lineWidth = shape.lineWidth ?? 1;
                                 ctx.strokeStyle = shape.lineColor ?? 'black';
                                 ctx.fillStyle = shape.fillColor ?? 'rgba(0, 0, 0, 0)';
-                                
+
                                 ctx.beginPath();
                                 ctx.arc(
                                     scales.x.getPixelForValue(shape.features[1]),
@@ -283,7 +281,8 @@ class ChartHelper {
                             }
                         }
                     }
-                })
+                }) : [])
+            ]
         });
 
         existingCanvas.chart = newChart;
@@ -296,3 +295,44 @@ class ChartHelper {
         }
     }
 }
+
+const drawEllipseAroundDots = {
+    id: 'drawEllipseAroundDots',
+    afterDatasetsDraw(chart, args, options) {
+        if (!options.show)
+            return;
+
+        const { ctx, chartArea, scales } = chart;  // added chartArea and scales here
+
+        ctx.save();
+
+        // Clip drawing to chart area (bounded by axes)
+        ctx.beginPath();
+        ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+        ctx.clip();
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex);
+            const xScale = scales.x;
+            const yScale = scales.y;
+
+            meta.data.forEach((point, index) => {
+                const dataPoint = dataset.data[index];
+
+                const ellipseX = dataPoint.ellipseX;
+                const ellipseY = dataPoint.ellipseY;
+
+                const radiusX = Math.abs(xScale.getPixelForValue(dataPoint.x + ellipseX) - point.x);
+                const radiusY = Math.abs(yScale.getPixelForValue(dataPoint.y + ellipseY) - point.y);
+
+                ctx.beginPath();
+                ctx.ellipse(point.x, point.y, radiusX, radiusY, 0, 0, 2 * Math.PI);
+                ctx.strokeStyle = options.color;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+        });
+
+        ctx.restore();
+    }
+};
