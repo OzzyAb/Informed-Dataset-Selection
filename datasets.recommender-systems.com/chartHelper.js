@@ -15,7 +15,10 @@ class ChartHelper {
      *   labels: {
      *     showX: boolean,
      *     showY: boolean,
-     *     customLabels: string[]
+     *     customLabels: {
+     *       id: any,
+     *       value: any
+     *     }
      *   },
      *   legend: {
      *     showDefault: boolean,
@@ -53,6 +56,8 @@ class ChartHelper {
      *   ]
      * }
      * ```
+     * 
+     * For custom labels, make sure you add 'id' in your 'data'.
      * 
      * Every variables in 'options' is optional, except 'type' in the 'shapes' section
      * if and only if any shape needs to be drawn.
@@ -102,13 +107,11 @@ class ChartHelper {
                     tooltip: {
                         callbacks: options.labels && {
                             label: (context) => {
-                                const index = context.dataIndex;
                                 const labels = [];
 
                                 if (options.labels.customLabels) {
-                                    options.labels.customLabels.forEach(element => {
-                                        labels.push(element[index]);
-                                    });
+                                    const id = context.raw?.id;
+                                    labels.push(options.labels.customLabels[id]);
                                 }
                                 if (options.labels.showX) {
                                     labels.push(`X: ${context.parsed.x}`);
