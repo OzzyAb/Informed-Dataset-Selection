@@ -4,23 +4,10 @@
     <p>
         Algorithm Performance Space (APS) is a tool to help researchers pick better, more diverse datasets for testing
         recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on
-        how different algorithms perform on them. By using this tool:
-        <ul style="list-style: none; padding-left: 1rem;">
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">You can identify datasets where algorithms struggle.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 1rem;">
-                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">You can avoid spending much time on datasets where all algorithms already do well.</span>
-            </li>
-        </ul>
-        The graph below visualizes this by reducing complex performance results into two dimensions by using Principal Component Analysis (PCA)
-        using the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
+        how different algorithms perform on them. By using this tool, You can see which datasets are very similar and
+        might not add much new information for training and benchmarking. The graph below visualizes this by reducing
+        complex performance results into two dimensions by using Principal Component Analysis (PCA) using the evaluations
+        of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
         <br style="margin-bottom: 1rem;">
         Similarity between datasets is determined by how close their points are in a two-dimensional performance space
         using Euclidean distance:
