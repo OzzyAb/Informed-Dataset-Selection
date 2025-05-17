@@ -320,7 +320,7 @@ function fillTables(separatedResults, algoName1, algoName2) {
 
             td.colSpan = 3;
             td.style = 'text-align: center; vertical-align: middle;';
-            td.textContent = "(No dataset)";
+            td.textContent = "(No datasets)";
 
             tr.appendChild(td);
             tableBodyElement.appendChild(tr);
