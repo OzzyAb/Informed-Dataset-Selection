@@ -2,7 +2,7 @@ var tabContentElement = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   tabContentElement = document.getElementById('tabContent');
-  await loadTab('./tabs/compareAlgorithms/compareAlgorithms.html');
+  await loadTab('./tabs/aps/aps.html');
 });
 
 var activeTabScript = null;
