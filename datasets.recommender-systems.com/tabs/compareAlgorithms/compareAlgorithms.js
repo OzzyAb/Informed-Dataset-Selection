@@ -124,7 +124,7 @@ async function compareAlgorithms() {
     fillTables(separatedResults, algoName1, algoName2);
 }
 
-function onFilterDataset(e) {
+async function onFilterDataset(e) {
     const datasetId = Number(e.target.id);
     if (e.target.checked) {
         selectedDatasets.push(datasetId);
@@ -148,7 +148,7 @@ function onFilterDataset(e) {
         }
     }
 
-    compareAlgorithms();
+    await compareAlgorithms();
 }
 
 function separateResults(filteredResults) {
