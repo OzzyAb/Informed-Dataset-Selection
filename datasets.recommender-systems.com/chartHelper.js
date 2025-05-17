@@ -180,6 +180,10 @@ class ChartHelper {
                         }
                     },
                     zoom: options.zoom && {
+                        pan: {
+                            enabled: true,
+                            mode: 'xy'
+                        },
                         zoom: {
                             wheel: {
                                 enabled: true,
