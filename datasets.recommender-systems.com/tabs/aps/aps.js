@@ -64,7 +64,9 @@ async function initialize() {
 
 async function updatePca() {
     const performanceMetric = performanceMetricElement.value;
+    const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text;
     const kValue = kValueElement.value;
+    const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
     const results = await ApiService.getPcaResults();
     
@@ -79,7 +81,7 @@ async function updatePca() {
         };
     });
 
-    drawChart(mappedResults);
+    drawChart(mappedResults, performanceMetricName, kValueName);
 
     const similarDatasets = findSimilarDatasets(mappedResults);
     showSimilarDatasets(similarDatasets);
@@ -112,7 +114,7 @@ async function onFilterDataset(e) {
     await updatePca();
 }
 
-function drawChart(mappedResults) {
+function drawChart(mappedResults, performanceMetricName, kValueName) {
     chartHelper.createChart(canvasElement, {
         datasets: [
             {
@@ -132,7 +134,7 @@ function drawChart(mappedResults) {
             color: 'rgba(255, 0, 0, 0.5)',
             legendTitle: 'Variances'
         },
-        title: `Algorithm Performance Space (APS)`,
+        title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
         labels: {
             showX: true,
             showY: true,
