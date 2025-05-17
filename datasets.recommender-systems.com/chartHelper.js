@@ -217,12 +217,18 @@ class ChartHelper {
                         id: `shape_${index}`,
                         beforeDraw(chart) {
                             const { ctx, chartArea, scales } = chart;
+
                             if (shape.type === 'line') {
                                 ctx.save();
+
+                                ctx.beginPath();
+                                ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+                                ctx.clip();
 
                                 if (shape.style === 'dashed') {
                                     ctx.setLineDash([5, 5]);
                                 }
+
                                 ctx.lineWidth = shape.lineWidth ?? 1;
                                 ctx.strokeStyle = shape.lineColor ?? 'black';
                                 ctx.fillStyle = shape.fillColor ?? 'rgba(0, 0, 0, 0)';
@@ -237,21 +243,24 @@ class ChartHelper {
                                     ctx.lineTo(
                                         scales.x.getPixelForValue(shape.features[i]),
                                         scales.y.getPixelForValue(shape.features[i + 1])
-                                    )
+                                    );
                                 }
 
                                 if (shape.features[0]) {
                                     ctx.closePath();
                                     ctx.fill();
-                                }
-                                else {
+                                } else {
                                     ctx.stroke();
                                 }
 
                                 ctx.restore();
-                            }
-                            else if (shape.type === 'circle') {
+
+                            } else if (shape.type === 'circle') {
                                 ctx.save();
+
+                                ctx.beginPath();
+                                ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+                                ctx.clip();
 
                                 if (shape.style === 'dashed') {
                                     ctx.setLineDash([5, 5]);
@@ -261,25 +270,25 @@ class ChartHelper {
                                 ctx.strokeStyle = shape.lineColor ?? 'black';
                                 ctx.fillStyle = shape.fillColor ?? 'rgba(0, 0, 0, 0)';
 
+                                const centerX = scales.x.getPixelForValue(shape.features[1]);
+                                const centerY = scales.y.getPixelForValue(shape.features[2]);
+                                const radiusPixels = shape.features[3] * (chartArea.right - chartArea.left);
+                                const startAngle = shape.features[4] ? shape.features[4] * (Math.PI / 180) : 0;
+                                const endAngle = shape.features[5] ? 2 * Math.PI * shape.features[5] : 2 * Math.PI;
+
                                 ctx.beginPath();
-                                ctx.arc(
-                                    scales.x.getPixelForValue(shape.features[1]),
-                                    scales.y.getPixelForValue(shape.features[2]),
-                                    shape.features[3] * (chartArea.right - chartArea.left),
-                                    shape.features[4] ? shape.features[4] * (Math.PI / 180) : 0,
-                                    shape.features[5] ? 2 * Math.PI * shape.features[5] : 2 * Math.PI
-                                );
+                                ctx.arc(centerX, centerY, radiusPixels, startAngle, endAngle);
 
                                 if (shape.features[0]) {
                                     ctx.fill();
-                                }
-                                else {
+                                } else {
                                     ctx.stroke();
                                 }
 
                                 ctx.restore();
                             }
                         }
+                        
                     }
                 }) : [])
             ]
@@ -302,11 +311,10 @@ const drawEllipseAroundDots = {
         if (!options.show)
             return;
 
-        const { ctx, chartArea, scales } = chart;  // added chartArea and scales here
+        const { ctx, chartArea, scales } = chart;
 
         ctx.save();
 
-        // Clip drawing to chart area (bounded by axes)
         ctx.beginPath();
         ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
         ctx.clip();
