@@ -7,6 +7,7 @@ var performanceMetricElement = null;
 var kValueElement = null;
 var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
+var datasetFilterCheckboxes = [];
 var canvasElement = null;
 
 var chartHelper = null;
@@ -74,6 +75,7 @@ async function initialize() {
         wrapper.appendChild(label);
 
         datasetFilterArea.appendChild(wrapper);
+        datasetFilterCheckboxes.push(checkbox);
         selectedDatasets.push(dataset.id);
     });
 
@@ -223,12 +225,24 @@ function onFilterDataset(e) {
     const datasetId = Number(e.target.id);
     if (e.target.checked) {
         selectedDatasets.push(datasetId);
-        console.log(datasetId + ' - ' + datasets.find(d => d.id == datasetId).name + ' is added');
+
+        if (selectedDatasets.length === datasets.length) {
+            datasetFilterHeaderElement.innerText = '(All selected)';
+        }
+        else {
+            datasetFilterHeaderElement.innerText = '(Some selected)';
+        }
     }
     else {
         const index = selectedDatasets.indexOf(datasetId);
         selectedDatasets.splice(index, 1);
-        console.log(datasetId + ' - ' + datasets.find(d => d.id == datasetId).name + ' is removed');
+
+        if (selectedDatasets.length === 0) {
+            datasetFilterHeaderElement.innerText = '(None selected)';
+        }
+        else {
+            datasetFilterHeaderElement.innerText = '(Some selected)';
+        }
     }
 
     compareAlgorithms();
