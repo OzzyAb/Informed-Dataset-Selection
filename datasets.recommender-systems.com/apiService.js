@@ -55,7 +55,6 @@ class ApiService {
         return null;
       
       const data = await response.json();
-      data.data.sort((a, b) => a.name.localeCompare(b.name));
       this.#pcaResults = data.data;
     }
 
