@@ -4,48 +4,26 @@
     <p>
         Algorithm Performance Space (APS) is a tool to help researchers pick better, more diverse datasets for testing
         recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on
-        how different algorithms perform on them. By using this tool, You can see which datasets are very similar and
+        how different algorithms perform on them. By using this tool, you can see which datasets are very similar and
         might not add much new information for training and benchmarking. The graph below visualizes this by reducing
-        complex performance results into two dimensions by using Principal Component Analysis (PCA) using the evaluations
+        performance results into two dimensions using Principal Component Analysis (PCA) based on the evaluations
         of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
         <br style="margin-bottom: 1rem;">
-        Similarity between datasets is determined by how close their points are in a two-dimensional performance space
+        Similarity between datasets is then determined by how close their points are in this two-dimensional performance space
         using Euclidean distance:
         <br style="margin-bottom: 0.5rem;">
         <code class="text-danger">distance = √((x₂ - x₁)² + (y₂ - y₁)²)</code>
         <br style="margin-bottom: 0.5rem;">
         The closer two datasets are, the more similar their algorithm performance results. However, each point also has associated
-        variance values that indicate the uncertainty or spread in its position. Instead of relying only on distances, similarity
-        is assessed based on whether the distance between datasets falls within their combined variance (ellipses in the graph).
+        variance values that indicate the uncertainty or spread in its position. Instead of relying only on Euclidean distance,
+        similarity is measured based on whether the distance between datasets falls within their combined variance (ellipses in the graph).
         <br style="margin-bottom: 0.5rem;">
-        <code class="text-danger">variance = √(varX₁² + varY₁² + varX₂² + varY₂²)</code>
+        <code class="text-danger">combined variance = √(varX₁² + varY₁² + varX₂² + varY₂²)</code>
         <br style="margin-bottom: 0.5rem;">
         The smaller the distance relative to the combined variance, the higher the confidence in their similarity. Confidence levels are
-        then calculated and used to rank and categorize dataset pairs.
+        then calculated and used to display similar datasets.
         <br style="margin-bottom: 0.5rem;">
         <code class="text-danger">confidence = 1 - (distance / combinedVariance)</code>
-        <ul style="list-style: none; padding-left: 1rem; margin-top: 1rem; margin-bottom: 1rem;">
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">If a confidence is higher than 0.9, the similarity between datasets is very high.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">If a confidence is between 0.75 and 0.9, the similarity between datasets is high.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">If a confidence is between 0.5 and 0.75, the similarity between datasets is moderate.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">If a confidence is between 0.25 and 0.5, the similarity between datasets is low.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 1rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">If a confidence is lower than 0.25, the similarity between datasets is very low.</span>
-            </li>
-        </ul>
     </p>
 
     <hr>
