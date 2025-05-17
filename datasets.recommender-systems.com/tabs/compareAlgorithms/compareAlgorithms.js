@@ -9,6 +9,15 @@ var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
 var datasetFilterCheckboxes = [];
 var canvasElement = null;
+var solvedProblemsBodyElement = null;
+var solvedByXBodyElement = null;
+var solvedByYBodyElement = null;
+var mediocresBodyElement = null;
+var trueChallengesBodyElement = null;
+var tableAlgoXNameElements = null;
+var tableAlgoYNameElements = null;
+var tableSolvedByXHeaderElements = null;
+var tableSolvedByYHeaderElements = null;
 
 var chartHelper = null;
 var selectedDatasets = [];
@@ -21,6 +30,15 @@ async function initialize() {
     datasetFilterHeaderElement = document.getElementById('compare-algo-filter-header');
     datasetFilterArea = document.getElementById('compare-algo-filter');
     canvasElement = document.getElementById('compare-algo-chart');
+    solvedProblemsBodyElement = document.getElementById('compare-algo-solved');
+    solvedByXBodyElement = document.getElementById('compare-algo-solved-by-x');
+    solvedByYBodyElement = document.getElementById('compare-algo-solved-by-y');
+    mediocresBodyElement = document.getElementById('compare-algo-mediocres');
+    trueChallengesBodyElement = document.getElementById('compare-algo-true-challenges');
+    tableAlgoXNameElements = document.querySelectorAll('.compare-algo-x-name');
+    tableAlgoYNameElements = document.querySelectorAll('.compare-algo-y-name');
+    tableSolvedByXHeaderElements = document.getElementById('compare-algo-solved-by-x-header');
+    tableSolvedByYHeaderElements = document.getElementById('compare-algo-solved-by-y-header');
 
     chartHelper = new ChartHelper();
 
@@ -94,7 +112,7 @@ async function compareAlgorithms() {
 
     const results = await ApiService.getPerformanceResults(algoId1, algoId2);
     const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
-    const { trueChallenges, solvedProblems, solvedByAlgo1, solvedByAlgo2, mediocres } = separateResults(filteredResults.map((result) => {
+    const separatedResults = separateResults(filteredResults.map((result) => {
         return {
             id: result.datasetId,
             x: result.x[performanceMetric][kValue],
@@ -102,6 +120,79 @@ async function compareAlgorithms() {
         }
     }));
 
+    drawChart(filteredResults, separatedResults, algoName1, algoName2, performanceMetricName, kValueName);
+    fillTables(separatedResults, algoName1, algoName2);
+}
+
+function onFilterDataset(e) {
+    const datasetId = Number(e.target.id);
+    if (e.target.checked) {
+        selectedDatasets.push(datasetId);
+
+        if (selectedDatasets.length === datasets.length) {
+            datasetFilterHeaderElement.innerText = '(All selected)';
+        }
+        else {
+            datasetFilterHeaderElement.innerText = '(Some selected)';
+        }
+    }
+    else {
+        const index = selectedDatasets.indexOf(datasetId);
+        selectedDatasets.splice(index, 1);
+
+        if (selectedDatasets.length === 0) {
+            datasetFilterHeaderElement.innerText = '(None selected)';
+        }
+        else {
+            datasetFilterHeaderElement.innerText = '(Some selected)';
+        }
+    }
+
+    compareAlgorithms();
+}
+
+function separateResults(filteredResults) {
+    function isPointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
+        function triangleArea(x1, y1, x2, y2, x3, y3) {
+            return Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2;
+        }
+
+        const areaABC = triangleArea(ax, ay, bx, by, cx, cy);
+        const areaPAB = triangleArea(px, py, ax, ay, bx, by);
+        const areaPBC = triangleArea(px, py, bx, by, cx, cy);
+        const areaPCA = triangleArea(px, py, cx, cy, ax, ay);
+
+        return Math.abs(areaABC - (areaPAB + areaPBC + areaPCA)) < 1e-9;
+    }
+
+    const trueChallenges = [];
+    const solvedProblems = [];
+    const solvedByAlgo1 = [];
+    const solvedByAlgo2 = [];
+    const mediocres = [];
+
+    filteredResults.forEach((result) => {
+        if (isPointInTriangle(result.x, result.y, 0, 0, 0, 0.5, 0.5, 0)) {
+            trueChallenges.push(result);
+        }
+        else if (isPointInTriangle(result.x, result.y, 1, 1, 1, 0.5, 0.5, 1)) {
+            solvedProblems.push(result);
+        }
+        else if (isPointInTriangle(result.x, result.y, 0.5, 0, 1, 0, 1, 0.5)) {
+            solvedByAlgo1.push(result);
+        }
+        else if (isPointInTriangle(result.x, result.y, 0, 0.5, 0, 1, 0.5, 1)) {
+            solvedByAlgo2.push(result);
+        }
+        else {
+            mediocres.push(result);
+        }
+    });
+
+    return { trueChallenges, solvedProblems, solvedByAlgo1, solvedByAlgo2, mediocres };
+}
+
+function drawChart(filteredResults, separatedResults, algoName1, algoName2, performanceMetricName, kValueName) {
     chartHelper.createChart(canvasElement, {
         datasets: [
             {
@@ -109,35 +200,35 @@ async function compareAlgorithms() {
                 pointRadius: 5,
                 pointBackgroundColor: 'rgb(255, 30, 0)',
                 pointBorderWidth: 0,
-                data: trueChallenges
+                data: separatedResults.trueChallenges
             },
             {
                 label: 'Solved Problems',
                 pointRadius: 5,
                 pointBackgroundColor: 'rgb(0, 150, 30)',
                 pointBorderWidth: 0,
-                data: solvedProblems
+                data: separatedResults.solvedProblems
             },
             {
                 label: `Solved By ${algoName1}`,
                 pointRadius: 5,
                 pointBackgroundColor: 'rgb(0, 70, 128)',
                 pointBorderWidth: 0,
-                data: solvedByAlgo1
+                data: separatedResults.solvedByAlgo1
             },
             {
                 label: `Solved By ${algoName2}`,
                 pointRadius: 5,
                 pointBackgroundColor: 'rgb(180, 180, 0)',
                 pointBorderWidth: 0,
-                data: solvedByAlgo2
+                data: separatedResults.solvedByAlgo2
             },
             {
                 label: 'Mediocres',
                 pointRadius: 5,
                 pointBackgroundColor: 'rgb(150, 150, 150)',
                 pointBorderWidth: 0,
-                data: mediocres
+                data: separatedResults.mediocres
             }
         ],
         title: `Performance of ${algoName1} and ${algoName2} (${performanceMetricName}${kValueName})`,
@@ -221,70 +312,63 @@ async function compareAlgorithms() {
     });
 }
 
-function onFilterDataset(e) {
-    const datasetId = Number(e.target.id);
-    if (e.target.checked) {
-        selectedDatasets.push(datasetId);
+function fillTables(separatedResults, algoName1, algoName2) {
+    function fill(tableBodyElement, results) {
+        if (results.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
 
-        if (selectedDatasets.length === datasets.length) {
-            datasetFilterHeaderElement.innerText = '(All selected)';
+            td.colSpan = 3;
+            td.style = 'text-align: center; vertical-align: middle;';
+            td.textContent = "(No dataset)";
+
+            tr.appendChild(td);
+            tableBodyElement.appendChild(tr);
         }
         else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
+            results.forEach(result => {
+                const dataset = datasets.find(dataset => dataset.id === result.id);
+
+                const tr = document.createElement('tr');
+                const tdDataset = document.createElement('td');
+                const tdX = document.createElement('td');
+                const tdY = document.createElement('td');
+
+                tdDataset.style = 'text-align: left; vertical-align: middle; white-space: nowrap;';
+                tdDataset.textContent = dataset.name;
+
+                tdX.style = 'text-align: center; vertical-align: middle;';
+                tdX.textContent = result.x.toFixed(5);
+
+                tdY.style = 'text-align: center; vertical-align: middle;';
+                tdY.textContent = result.y.toFixed(5);
+
+                tr.appendChild(tdDataset);
+                tr.appendChild(tdX);
+                tr.appendChild(tdY);
+                tableBodyElement.appendChild(tr);
+            });
         }
     }
-    else {
-        const index = selectedDatasets.indexOf(datasetId);
-        selectedDatasets.splice(index, 1);
 
-        if (selectedDatasets.length === 0) {
-            datasetFilterHeaderElement.innerText = '(None selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
-    }
+    solvedProblemsBodyElement.innerHTML = '';
+    solvedByXBodyElement.innerHTML = '';
+    solvedByYBodyElement.innerHTML = '';
+    mediocresBodyElement.innerHTML = '';
+    trueChallengesBodyElement.innerHTML = '';
 
-    compareAlgorithms();
-}
-
-function separateResults(filteredResults) {
-    function isPointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
-        function triangleArea(x1, y1, x2, y2, x3, y3) {
-            return Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2;
-        }
-
-        const areaABC = triangleArea(ax, ay, bx, by, cx, cy);
-        const areaPAB = triangleArea(px, py, ax, ay, bx, by);
-        const areaPBC = triangleArea(px, py, bx, by, cx, cy);
-        const areaPCA = triangleArea(px, py, cx, cy, ax, ay);
-
-        return Math.abs(areaABC - (areaPAB + areaPBC + areaPCA)) < 1e-9;
-    }
-
-    const trueChallenges = [];
-    const solvedProblems = [];
-    const solvedByAlgo1 = [];
-    const solvedByAlgo2 = [];
-    const mediocres = [];
-
-    filteredResults.forEach((result) => {
-        if (isPointInTriangle(result.x, result.y, 0, 0, 0, 0.5, 0.5, 0)) {
-            trueChallenges.push(result);
-        }
-        else if (isPointInTriangle(result.x, result.y, 1, 1, 1, 0.5, 0.5, 1)) {
-            solvedProblems.push(result);
-        }
-        else if (isPointInTriangle(result.x, result.y, 0.5, 0, 1, 0, 1, 0.5)) {
-            solvedByAlgo1.push(result);
-        }
-        else if (isPointInTriangle(result.x, result.y, 0, 0.5, 0, 1, 0.5, 1)) {
-            solvedByAlgo2.push(result);
-        }
-        else {
-            mediocres.push(result);
-        }
+    tableSolvedByXHeaderElements.textContent = 'Solved By ' + algoName1;
+    tableAlgoXNameElements.forEach(element => {
+        element.textContent = algoName1;
+    });
+    tableSolvedByYHeaderElements.textContent = 'Solved By ' + algoName2;
+    tableAlgoYNameElements.forEach(element => {
+        element.textContent = algoName2;
     });
 
-    return { trueChallenges, solvedProblems, solvedByAlgo1, solvedByAlgo2, mediocres };
+    fill(solvedProblemsBodyElement, separatedResults.solvedProblems);
+    fill(solvedByXBodyElement, separatedResults.solvedByAlgo1);
+    fill(solvedByYBodyElement, separatedResults.solvedByAlgo2);
+    fill(mediocresBodyElement, separatedResults.mediocres);
+    fill(trueChallengesBodyElement, separatedResults.trueChallenges);
 }
