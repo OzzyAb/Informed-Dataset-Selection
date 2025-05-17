@@ -2,19 +2,72 @@
     <!-- APS Tab content begins here -->
     <h2>Algorithm Performance Space</h2>
     <p>
-        <b>The Algorithm performance space for Recommender-System
-            Datasets.</b>
-        The chart is based on 2 algorithms, reduced to two dimensions via
-        PCA. The further apart two datasets, the more diverse they are.
-        Generally, we suggest using datasets for recommender-system
-        experiments that are diverse.
+        Algorithm Performance Space (APS) is a tool to help researchers pick better, more diverse datasets for testing
+        recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on
+        how different algorithms perform on them. By using this tool:
+        <ul style="list-style: none; padding-left: 1rem;">
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can identify datasets where algorithms struggle.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 1rem;">
+                <span style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can avoid spending much time on datasets where all algorithms already do well.</span>
+            </li>
+        </ul>
+        The graph below visualizes this by reducing complex performance results into two dimensions by using Principal Component Analysis (PCA)
+        using the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
+        <br style="margin-bottom: 1rem;">
+        Similarity between datasets is determined by how close their points are in a two-dimensional performance space
+        using Euclidean distance:
+        <br style="margin-bottom: 0.5rem;">
+        <code class="text-danger">distance = √((x₂ - x₁)² + (y₂ - y₁)²)</code>
+        <br style="margin-bottom: 0.5rem;">
+        The closer two datasets are, the more similar their algorithm performance results. However, each point also has associated
+        variance values that indicate the uncertainty or spread in its position. Instead of relying only on distances, similarity
+        is assessed based on whether the distance between datasets falls within their combined variance (ellipses in the graph).
+        <br style="margin-bottom: 0.5rem;">
+        <code class="text-danger">variance = √(varX₁² + varY₁² + varX₂² + varY₂²)</code>
+        <br style="margin-bottom: 0.5rem;">
+        The smaller the distance relative to the combined variance, the higher the confidence in their similarity. Confidence levels are
+        then calculated and used to rank and categorize dataset pairs.
+        <br style="margin-bottom: 0.5rem;">
+        <code class="text-danger">confidence = 1 - (distance / combinedVariance)</code>
+        <ul style="list-style: none; padding-left: 1rem; margin-top: 1rem; margin-bottom: 1rem;">
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">If a confidence is higher than 0.9, the similarity between datasets is very high.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">If a confidence is between 0.75 and 0.9, the similarity between datasets is high.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">If a confidence is between 0.5 and 0.75, the similarity between datasets is moderate.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">If a confidence is between 0.25 and 0.5, the similarity between datasets is low.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 1rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">If a confidence is lower than 0.25, the similarity between datasets is very low.</span>
+            </li>
+        </ul>
     </p>
+
+    <hr>
 
     <!-- Form controls to select performance metric an k value for the PCA -->
     <div class="row mb-3">
         <div class="col">
             <label for="formPerformanceMetricPca" class="form-label">Performance Metric</label>
-            <select id="formPerformanceMetricPca" class="form-select" aria-label="Select performance metric">
+            <select id="formPerformanceMetricPca" class="form-select" aria-label="Select performance metric" onchange="updatePca()">
                 <option value="ndcg">nDCG</option>
                 <option value="hr">Hit Ratio (HR)</option>
                 <option value="recall">Recall</option>
@@ -22,7 +75,7 @@
         </div>
         <div class="col">
             <label for="formKValuePca" class="form-label">K-Value</label>
-            <select id="formKValuePca" class="form-select" aria-label="Select k-value">
+            <select id="formKValuePca" class="form-select" aria-label="Select k-value" onchange="updatePca()">
                 <option value="one">@1</option>
                 <option value="three">@3</option>
                 <option value="five">@5</option>
@@ -32,5 +85,57 @@
         </div>
     </div>
 
-    <canvas id="pca-chart" class="my-3"></canvas>
+    <div class="accordion" id="accordionAPSAlgo" style="margin-bottom: 1rem;">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#apsAlgoNames" aria-expanded="false" aria-controls="apsAlgoNames">
+                    Algorithms
+                </button>
+            </h2>
+            <div id="apsAlgoNames" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                data-bs-parent="#accordionAPSAlgo">
+                <div id="aps-algo" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <!-- Algorithm names -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="accordionAPS">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    <span>Dataset Filter</span>
+                    <span id="aps-filter-header" style="margin-left: auto;">(All selected)</span>
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                data-bs-parent="#accordionAPS">
+                <div id="aps-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <!-- Dataset filter checkboxes -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="aps-chart" class="my-3" style="touch-action: none; user-select: none;"></canvas>
+
+    <hr style="margin-bottom: 1.5rem;">
+
+    <div class="mb-3">
+        <h5 style="font-weight: bold;">Similarity Confidence Levels:</h5>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
+            <span class="badge bg-success">Very High (&gt;= 0.9)</span>
+            <span class="badge bg-primary">High (0.75 - 0.9)</span>
+            <span class="badge bg-warning text-dark">Moderate (0.5 - 0.75)</span>
+            <span class="badge bg-danger">Low (0.25 - 0.5)</span>
+            <span class="badge bg-secondary">Very Low (&lt;= 0.25)</span>
+        </div>
+    </div>
+
+    <div id="similar-datasets">
+        
+    </div>
 </div>
