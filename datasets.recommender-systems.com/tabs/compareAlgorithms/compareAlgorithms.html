@@ -3,8 +3,34 @@
     <h2>Compare two algorithms</h2>
 
     <p>
-        Select different options to control the contents of the diagram.
+        The graph presents a direct comparison between two recommender system algorithms across multiple datasets using the evaluations
+        of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value. The results are further divided into
+        five distinct regions to provide deeper insights into their comparative performance.
+        <ul style="list-style: none; padding-left: 20px;">
+            <li style="position: relative; padding-left: 20px; margin-bottom: 8px;">
+                <span style="position: absolute; left: 0; top: 6px; width: 12px; height: 12px; background-color: #0D80FE; border-radius: 50%; display: inline-block;"></span>
+                The red area identifies datasets where both algorithms struggle.
+            </li>
+            <li style="position: relative; padding-left: 20px; margin-bottom: 8px;">
+                <span style="position: absolute; left: 0; top: 6px; width: 12px; height: 12px; background-color: #0D80FE; border-radius: 50%; display: inline-block;"></span>
+                The green area identifies datasets where both algorithms perform well.
+            </li>
+            <li style="position: relative; padding-left: 20px; margin-bottom: 8px;">
+                <span style="position: absolute; left: 0; top: 6px; width: 12px; height: 12px; background-color: #0D80FE; border-radius: 50%; display: inline-block;"></span>
+                The blue and yellow areas identify datasets where only one algorithm outperforms the other.
+            </li>
+            <li style="position: relative; padding-left: 20px; margin-bottom: 8px;">
+                <span style="position: absolute; left: 0; top: 6px; width: 12px; height: 12px; background-color: #0D80FE; border-radius: 50%; display: inline-block;"></span>
+                The white area identifies datasets where both algorithms perform moderately.
+            </li>
+        </ul>
+        By dividing the results into these regions, the graph gives detailed information of where each algorithm succeeds or fails
+        relative to the other. This helps identify specific datasets that favor one approach over the other. However, since the
+        comparison involves only two algorithms, conclusions about overall dataset difficulty or general algorithm suitability
+        need be evaluated carefully, as other algorithms may behave differently.
     </p>
+
+    <hr>
 
     <!-- Form controls to select two algorithms -->
     <div class="row mb-3">
@@ -43,24 +69,16 @@
     <div class="accordion" id="accordionAPS">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
-                    aria-expanded="true" aria-controls="collapseOne">
-                    The Algorithm Performance Space (APS) for Recommender-System
-                    Datasets
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                    aria-expanded="false" aria-controls="collapseOne">
+                    <span>Dataset Filter</span>
+                    <span id="compare-algo-filter-header" style="margin-left: auto;">(All selected)</span>
                 </button>
             </h2>
-            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
                 data-bs-parent="#accordionAPS">
-                <div class="accordion-body">
-                    The x-axis and y-axis represent the performance (w.r.t. the
-                    selected metric) of two different algorithms (w.r.t. the
-                    selected algorithms). The red circles indicate datasets.
-                    Datasets in the top right corner of the APS are considered
-                    'solved problems', as both algorithms perform well on them. On
-                    the other hand, datasets in the bottom left corner lack
-                    well-performing algorithms. The further apart two datasets
-                    are, the more diverse they are. Generally, we suggest using
-                    datasets for recommender-system experiments that are diverse.
+                <div id="compare-algo-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <!-- Dataset filter checkboxes -->
                 </div>
             </div>
         </div>

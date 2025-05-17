@@ -5,15 +5,20 @@ var firstAlgorithmElement = null;
 var secondAlgorithmElement = null;
 var performanceMetricElement = null;
 var kValueElement = null;
+var datasetFilterHeaderElement = null;
+var datasetFilterArea = null;
 var canvasElement = null;
 
 var chartHelper = null;
+var selectedDatasets = [];
 
 async function initialize() {
     firstAlgorithmElement = document.getElementById("formControlAlgorithm1");
     secondAlgorithmElement = document.getElementById("formControlAlgorithm2");
     performanceMetricElement = document.getElementById("formPerformanceMetric");
     kValueElement = document.getElementById("formKValue");
+    datasetFilterHeaderElement = document.getElementById('compare-algo-filter-header');
+    datasetFilterArea = document.getElementById('compare-algo-filter');
     canvasElement = document.getElementById('compare-algo-chart');
 
     chartHelper = new ChartHelper();
@@ -48,6 +53,30 @@ async function initialize() {
         secondAlgorithmElement.value = algorithms[0].id;
     }
 
+    datasetFilterHeaderElement.innerText = '(All selected)';
+    datasetFilterArea.innerHTML = '';
+    datasets.forEach(dataset => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = dataset.id;
+        checkbox.name = 'datasetCheckbox';
+        checkbox.value = dataset.name;
+        checkbox.checked = true;
+        checkbox.onchange = onFilterDataset;
+
+        const label = document.createElement('label');
+        label.htmlFor = dataset.id;
+        label.textContent = dataset.name;
+        label.style.marginLeft = '0.25rem';
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        datasetFilterArea.appendChild(wrapper);
+        selectedDatasets.push(dataset.id);
+    });
+
     await compareAlgorithms();
 }
 
@@ -62,8 +91,10 @@ async function compareAlgorithms() {
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
     const results = await ApiService.getPerformanceResults(algoId1, algoId2);
-    const { trueChallenges, solvedProblems, solvedByAlgo1, solvedByAlgo2, mediocres } = separateResults(results.map((result) => {
+    const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
+    const { trueChallenges, solvedProblems, solvedByAlgo1, solvedByAlgo2, mediocres } = separateResults(filteredResults.map((result) => {
         return {
+            id: result.datasetId,
             x: result.x[performanceMetric][kValue],
             y: result.y[performanceMetric][kValue]
         }
@@ -111,9 +142,11 @@ async function compareAlgorithms() {
         labels: {
             showX: true,
             showY: true,
-            customLabels: [
-                results.map((result) => datasets.find((dataset) => dataset.id === result.datasetId).name)
-            ]
+            customLabels: filteredResults.reduce((data, result) => {
+                const dataset = datasets.find(dataset => dataset.id == result.datasetId);
+                data[dataset.id] = dataset.name;
+                return data;
+            }, {})
         },
         legend: {
             showDefault: true
@@ -186,7 +219,22 @@ async function compareAlgorithms() {
     });
 }
 
-function separateResults(results) {
+function onFilterDataset(e) {
+    const datasetId = Number(e.target.id);
+    if (e.target.checked) {
+        selectedDatasets.push(datasetId);
+        console.log(datasetId + ' - ' + datasets.find(d => d.id == datasetId).name + ' is added');
+    }
+    else {
+        const index = selectedDatasets.indexOf(datasetId);
+        selectedDatasets.splice(index, 1);
+        console.log(datasetId + ' - ' + datasets.find(d => d.id == datasetId).name + ' is removed');
+    }
+
+    compareAlgorithms();
+}
+
+function separateResults(filteredResults) {
     function isPointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
         function triangleArea(x1, y1, x2, y2, x3, y3) {
             return Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2;
@@ -206,7 +254,7 @@ function separateResults(results) {
     const solvedByAlgo2 = [];
     const mediocres = [];
 
-    results.forEach((result) => {
+    filteredResults.forEach((result) => {
         if (isPointInTriangle(result.x, result.y, 0, 0, 0, 0.5, 0.5, 0)) {
             trueChallenges.push(result);
         }
@@ -226,5 +274,3 @@ function separateResults(results) {
 
     return { trueChallenges, solvedProblems, solvedByAlgo1, solvedByAlgo2, mediocres };
 }
-
-
