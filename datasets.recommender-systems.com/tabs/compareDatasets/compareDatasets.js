@@ -146,9 +146,9 @@ function compareDatasets() {
 
     tableHeadElement.innerHTML = `
       <tr>
-        <th style="text-align: center; vertical-align: middle; width: 100px; background-color: #ECF5FC;">Metadata</th>
-        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #ECF5FC;">${dataset1.name}</th>
-        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #ECF5FC;">${dataset2.name}</th>
+        <th style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Metadata</th>
+        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset1.name}</th>
+        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset2.name}</th>
       </tr>
     `;
     tableBodyElement.innerHTML = '';
