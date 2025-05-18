@@ -1,13 +1,13 @@
 var tabContentElement = null;
 
-var verisonNumber = '1.0';
+var versionNumber = '1.0';
 
 document.addEventListener('DOMContentLoaded', async () => {
   tabContentElement = document.getElementById('tabContent');
   await loadTab('./tabs/aps/aps.html');
 
   const versionNumberElement = document.getElementById('version-number');
-  versionNumberElement.textContent = 'Version ' + verisonNumber;
+  versionNumberElement.textContent = 'Version ' + versionNumber;
 });
 
 var activeTabScript = null;
