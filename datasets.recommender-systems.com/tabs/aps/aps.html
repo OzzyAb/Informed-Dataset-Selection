@@ -22,21 +22,90 @@
         The graph below visualizes this by reducing performance results into two dimensions using Principal Component Analysis (PCA) based on
         the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
         <br style="margin-bottom: 1rem;">
-        Similarity between datasets is then determined by how close their points are in this two-dimensional performance space
-        using Euclidean distance:
-        <br style="margin-bottom: 0.5rem;">
-        <code class="text-danger">distance = √((x₂ - x₁)² + (y₂ - y₁)²)</code>
-        <br style="margin-bottom: 0.5rem;">
-        The closer two datasets are, the more similar their algorithm performance results. However, each point also has associated
-        variance values that indicate the uncertainty or spread in its position. Instead of relying only on Euclidean distance,
-        similarity is measured based on whether the distance between datasets falls within their combined variance (ellipses in the graph).
-        <br style="margin-bottom: 0.5rem;">
-        <code class="text-danger">combined variance = √(varX₁² + varY₁² + varX₂² + varY₂²)</code>
-        <br style="margin-bottom: 0.5rem;">
-        The smaller the distance relative to the combined variance, the higher the confidence in their similarity. Confidence levels are
-        then calculated and used to display similar datasets.
-        <br style="margin-bottom: 0.5rem;">
-        <code class="text-danger">confidence = 1 - (distance / combinedVariance)</code>
+        Similarity between datasets is calculated not just by their distance between them in this PCA graph, but also by the uncertainty
+        in their positions, which is represented by ellipses around each point. Each ellipse demonstrates variance in X and Y for each dataset.
+        In order to compare datasets similarities, <strong>Mahalanobis Distance</strong> is used, which measures how close two points
+        are relative to their combined uncertainty:
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
+            <msup>
+                <mi>d</mi>
+                <mn>2</mn>
+            </msup>
+            <mo>=</mo>
+            <mfrac>
+                <msup>
+                    <mrow>
+                        <mo>(</mo>
+                        <msub>
+                            <mi>x</mi>
+                            <mn>2</mn>
+                        </msub>
+                        <mo>-</mo>
+                        <msub>
+                            <mi>x</mi>
+                            <mn>1</mn>
+                        </msub>
+                        <mo>)</mo>
+                    </mrow>
+                    <mn>2</mn>
+                </msup>
+                <mrow>
+                    <msub>
+                        <mi>varX</mi>
+                        <mn>1</mn>
+                    </msub>
+                    <mo>+</mo>
+                    <msub>
+                        <mi>varX</mi>
+                        <mn>2</mn>
+                    </msub>
+                </mrow>
+            </mfrac>
+            <mo>+</mo>
+            <mfrac>
+                <msup>
+                    <mrow>
+                        <mo>(</mo>
+                        <msub>
+                            <mi>y</mi>
+                            <mn>2</mn>
+                        </msub>
+                        <mo>-</mo>
+                        <msub>
+                            <mi>y</mi>
+                            <mn>1</mn>
+                        </msub>
+                        <mo>)</mo>
+                    </mrow>
+                    <mn>2</mn>
+                </msup>
+                <mrow>
+                    <msub>
+                        <mi>varY</mi>
+                        <mn>1</mn>
+                    </msub>
+                    <mo>+</mo>
+                    <msub>
+                        <mi>varY</mi>
+                        <mn>2</mn>
+                    </msub>
+                </mrow>
+            </mfrac>
+        </math>
+        This distance calculation takes the uncertainty of positions into account. A smaller Mahalanobis distance means that two datasets
+        behave similarly despite uncertainty. A confidence score is then calculated from this distance using an exponential decay:
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
+            <mi>confidence</mi>
+            <mo>=</mo>
+            <msup>
+                <mi>e</mi>
+                <mrow>
+                    <mo>-</mo>
+                    <mi>distance</mi>
+                </mrow>
+            </msup>
+        </math>
+        Higher confidence indicates greater similarity in algorithm performance between datasets.
     </p>
 
     <hr>

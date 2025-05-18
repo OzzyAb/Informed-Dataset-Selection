@@ -226,8 +226,8 @@ function findSimilarDatasets(mappedResults) {
 
     for (let i = 0; i < mappedResults.length; i++) {
         const a = mappedResults[i];
-        
         const similar = [];
+
         for (let j = 0; j < mappedResults.length; j++) {
             if (i === j)
                 continue;
@@ -236,21 +236,19 @@ function findSimilarDatasets(mappedResults) {
 
             const dx = a.x - b.x;
             const dy = a.y - b.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
 
-            const vx = (a.ellipseX ?? 0) ** 2 + (b.ellipseX ?? 0) ** 2;
-            const vy = (a.ellipseY ?? 0) ** 2 + (b.ellipseY ?? 0) ** 2;
-            const combinedVariance = Math.sqrt(vx + vy);
+            const varX = (a.ellipseX ?? 0) ** 2 + (b.ellipseX ?? 0) ** 2;
+            const varY = (a.ellipseY ?? 0) ** 2 + (b.ellipseY ?? 0) ** 2;
 
-            if (distance <= combinedVariance) {
-                const normDx = vx > 0 ? dx / Math.sqrt(vx) : dx;
-                const normDy = vy > 0 ? dy / Math.sqrt(vy) : dy;
-                const normDistance = Math.sqrt(normDx * normDx + normDy * normDy);
-                const confidence = Math.exp(-normDistance);
+            if (varX === 0 || varY === 0)
+                continue;
 
+            const mDist = Math.sqrt((dx * dx) / varX + (dy * dy) / varY);
+            const confidence = Math.exp(-mDist);
+            if (confidence > 0.01) {
                 similar.push({
                     id: b.id,
-                    confidence: parseFloat(confidence.toFixed(3))
+                    confidence: parseFloat(confidence.toFixed(3)),
                 });
             }
         }
