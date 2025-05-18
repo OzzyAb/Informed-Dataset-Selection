@@ -43,6 +43,7 @@ export async function initialize() {
     tableSolvedByXHeaderElements = document.getElementById('compare-algo-solved-by-x-header');
     tableSolvedByYHeaderElements = document.getElementById('compare-algo-solved-by-y-header');
 
+    document.getElementById('aps-redirect').addEventListener('click', apsRedirect);
     document.getElementById('compare-algo-export-btn').addEventListener('click', exportPng);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.addEventListener('change', compareAlgorithms);
@@ -106,6 +107,10 @@ export async function initialize() {
     });
 
     await compareAlgorithms();
+}
+
+function apsRedirect() {
+    document.getElementById('aps-tab-btn').click();
 }
 
 async function compareAlgorithms() {
@@ -391,6 +396,7 @@ function fillTables(separatedResults, algoName1, algoName2) {
 }
 
 export function dispose() {
+    document.getElementById('aps-redirect').removeEventListener('click', apsRedirect);
     document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPng);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.removeEventListener('change', compareAlgorithms);
