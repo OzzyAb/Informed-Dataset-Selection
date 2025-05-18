@@ -250,7 +250,7 @@ function drawChart(filteredResults, separatedResults, algoName1, algoName2, perf
             }, {})
         },
         legend: {
-            showDefault: true
+            show: true
         },
         shapes: [
             {
