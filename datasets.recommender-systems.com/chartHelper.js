@@ -297,7 +297,7 @@ class ChartHelper {
         existingCanvas.chart = newChart;
     }
 
-    resetZoom(canvas) {
+    resetChart(canvas) {
         let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
         if (existingCanvas !== undefined) {
             existingCanvas.chart.resetZoom();
