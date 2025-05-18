@@ -15,8 +15,11 @@ export class ChartHelper {
      *   drawEllipseAroundDots: {
      *     show: boolean 
      *     color: string,
-     *     legendTitle: string,
+     *     legendTitle: string
      *   },
+     *   verticalGradientBar: {
+     *     topColor: string
+     *   }
      *   aspectRatio: number,
      *   title: string,
      *   labels: {
@@ -27,7 +30,10 @@ export class ChartHelper {
      *       value: any
      *     }
      *   },
-     *   legend: boolean,
+     *   legend: {
+     *     show: true,
+     *     filter: string[]
+     *   },
      *   zoom: boolean,
      *   points: {
      *     x: {
@@ -122,13 +128,18 @@ export class ChartHelper {
                     },
                     legend: options.legend && {
                         position: 'bottom',
-                        display: true,
+                        display: options.legend.show,
                         labels: {
                             generateLabels: function (chart) {
-                                let legends = Chart.defaults.plugins.legend.labels.generateLabels(chart).map((value) => {
-                                    const fillAlpha = '0.5';
-                                    const lineAlpha = '0.75';
+                                const fillAlpha = '0.5';
+                                const lineAlpha = '0.75';
 
+                                let defaultLegends = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                if (options.legend.filter !== undefined) {
+                                    defaultLegends = defaultLegends.filter(label => !options.legend.filter.includes(label.text));
+                                }
+
+                                const legends = defaultLegends.map((value) => {
                                     let color = [];
                                     let start = value.fillStyle.indexOf('rgb');
                                     if (start !== -1) {
@@ -191,6 +202,9 @@ export class ChartHelper {
                         show: options.drawEllipseAroundDots.show,
                         color: options.drawEllipseAroundDots.color,
                         legendTitle: options.drawEllipseAroundDots.legendTitle
+                    },
+                    verticalGradientBar: options.verticalGradientBar && {
+                        topColor: options.verticalGradientBar.topColor
                     }
                 },
                 scales: {
@@ -210,10 +224,16 @@ export class ChartHelper {
                             callback: (value) => value.toFixed(options.points?.y?.decimal ?? 2)
                         }
                     }
+                },
+                layout: options.verticalGradientBar && {
+                    padding: {
+                        right: 30
+                    }
                 }
             },
             plugins: [
                 ...(options.drawEllipseAroundDots ? [drawEllipseAroundDots] : []),
+                ...(options.verticalGradientBar ? [verticalGradientBar] : []),
                 ...(options.shapes ? options.shapes.map((shape, index) => {
                     return {
                         id: `shape_${index}`,
@@ -381,6 +401,26 @@ const drawEllipseAroundDots = {
             });
         });
 
+        ctx.restore();
+    }
+};
+
+const verticalGradientBar = {
+    id: 'verticalGradientBar',
+    afterDraw(chart, args, options) {
+        const { ctx, chartArea } = chart;
+        const { top, bottom, right } = chartArea;
+
+        const gradient = ctx.createLinearGradient(0, bottom, 0, top);
+        gradient.addColorStop(0, 'black');
+        gradient.addColorStop(1, options.topColor);
+
+        const barWidth = 20;
+        const x = right + 10;
+
+        ctx.save();
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, top, barWidth, bottom - top);
         ctx.restore();
     }
 };
