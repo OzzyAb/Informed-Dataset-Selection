@@ -161,6 +161,14 @@ function drawChart(mappedResults, performanceMetricName, kValueName) {
     });
 }
 
+function resetGraph() {
+    chartHelper.resetChart(canvasElement);
+}
+
+function exportPng() {
+    chartHelper.exportChartAsPng('aps', canvasElement);
+}
+
 function findSimilarDatasets(mappedResults) {
     const result = {};
 
