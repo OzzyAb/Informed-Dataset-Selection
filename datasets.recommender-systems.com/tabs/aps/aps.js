@@ -11,6 +11,7 @@ var datasetFilterArea = null;
 var datasetFilterCheckboxes = [];
 var canvasElement = null;
 var similarityElement = null;
+var difficultyElement = null;
 
 var chartHelper = null;
 var selectedDatasets = [];
@@ -22,6 +23,7 @@ export async function initialize() {
     datasetFilterArea = document.getElementById('aps-filter');
     canvasElement = document.getElementById('aps-chart');
     similarityElement = document.getElementById('similar-datasets');
+    difficultyElement = document.getElementById('dataset-difficulty');
 
     document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').addEventListener('click', exportPng);
@@ -90,10 +92,17 @@ async function updatePca() {
         };
     });
 
-    drawChart(mappedResults, performanceMetricName, kValueName);
+    const minX = Math.min(...mappedResults.map(result => result.x));
+    const maxX = Math.max(...mappedResults.map(result => result.x));
+    const minY = Math.min(...mappedResults.map(result => result.y));
+    const maxY = Math.max(...mappedResults.map(result => result.y));
+
+    drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY);
 
     const similarDatasets = findSimilarDatasets(mappedResults);
     showSimilarDatasets(similarDatasets);
+
+    showDatasetDifficulties(mappedResults, minX, maxX, minY, maxY);
 }
 
 async function onFilterDataset(e) {
@@ -123,14 +132,43 @@ async function onFilterDataset(e) {
     await updatePca();
 }
 
-function drawChart(mappedResults, performanceMetricName, kValueName) {
+function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY) {
+    const difficultyBarTopColor = 'rgb(0, 180, 40)';
+
+    function getDatasetDifficultyColor(point, minX, maxX, minY, maxY) {
+        let topColor = [];
+        let topColorStart = difficultyBarTopColor.indexOf('rgb');
+        let topColorOpen = difficultyBarTopColor.indexOf('(', topColorStart);
+        let topColorClose = difficultyBarTopColor.indexOf(')', topColorOpen);
+        let topColorValues = difficultyBarTopColor.slice(topColorOpen + 1, topColorClose).split(',').map(v => v.trim());
+        topColor.push(Number(topColorValues[0]));
+        topColor.push(Number(topColorValues[1]));
+        topColor.push(Number(topColorValues[2]));
+
+        let normX = (point.x - minX) / (maxX - minX);
+        let normY = (point.y - minY) / (maxY - minY);
+        normX = Math.min(Math.max(normX, 0), 1);
+        normY = Math.min(Math.max(normY, 0), 1);
+        const ratio = (normX + normY) / 2;
+
+        const r = Math.round(topColor[0] * ratio);
+        const g = Math.round(topColor[1] * ratio);
+        const b = Math.round(topColor[2] * ratio);
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
     chartHelper.createChart(canvasElement, {
         datasets: [
             {
+                label: 'Dataset Difficulty',
+                pointBackgroundColor: difficultyBarTopColor
+            },
+            {
                 label: 'Datasets',
                 pointRadius: 5,
-                pointBackgroundColor: 'rgb(0, 128, 0)',
+                pointBackgroundColor: mappedResults.map(result => getDatasetDifficultyColor(result, minX, maxX, minY, maxY)),
                 pointBorderWidth: 0,
+                backgroundColor: 'red',
                 data: mappedResults
             },
             {
@@ -143,6 +181,9 @@ function drawChart(mappedResults, performanceMetricName, kValueName) {
             color: 'rgba(255, 0, 0, 0.5)',
             legendTitle: 'Variances'
         },
+        verticalGradientBar: {
+            topColor: difficultyBarTopColor
+        },
         title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
         labels: {
             showX: true,
@@ -153,17 +194,19 @@ function drawChart(mappedResults, performanceMetricName, kValueName) {
                 return data;
             }, {})
         },
-        legend: true,
+        legend: {
+            show: true
+        },
         zoom: true,
         points: {
             x: {
-                min: Math.min(...mappedResults.map(result => result.x)) - 0.1,
-                max: Math.max(...mappedResults.map(result => result.x)) + 0.1,
+                min: minX - 0.1,
+                max: maxX + 0.1,
                 stepSize: 0.1,
             },
             y: {
-                min: Math.min(...mappedResults.map(result => result.y)) - 0.1,
-                max: Math.max(...mappedResults.map(result => result.y)) + 0.1,
+                min: minY - 0.1,
+                max: maxY + 0.1,
                 stepSize: 0.1
             }
         },
@@ -279,6 +322,68 @@ function showSimilarDatasets(similarDatasets) {
         item.appendChild(collapse);
         wrapper.appendChild(item);
         similarityElement.appendChild(wrapper);
+    });
+}
+
+function showDatasetDifficulties(mappedResults, minX, maxX, minY, maxY) {
+    difficultyElement.innerHTML = '';
+
+    mappedResults.forEach(result => {
+        const dataset = datasets.find(d => d.id === result.id);
+
+        const normX = (result.x - minX) / (maxX - minX);
+        const normY = (result.y - minY) / (maxY - minY);
+
+        const difficultyScore = (normX + normY) / 2;
+        const difficultyPercent = Math.round(difficultyScore * 100);
+        const difficultyDisplay = difficultyScore.toFixed(5);
+
+        let level = '', color = '';
+        if (difficultyScore >= 0.7) {
+            level = 'Very Easy';
+            color = 'bg-success';
+        }
+        else if (difficultyScore >= 0.4) {
+            level = 'Easy';
+            color = 'bg-primary';
+        }
+        else if (difficultyScore >= 0.3) {
+            level = 'Medium';
+            color = 'bg-warning text-dark';
+        } 
+        else if (difficultyScore >= 0.2) {
+            level = 'Hard';
+            color = 'bg-danger';
+        }
+        else {
+            level = 'Very Hard';
+            color = 'bg-dark';
+        }
+
+        const container = document.createElement('div');
+        container.style.marginBottom = '1rem';
+
+        const nameEl = document.createElement('div');
+        nameEl.innerHTML = `<strong>${dataset.name}</strong>`;
+        container.appendChild(nameEl);
+
+        const progressWrapper = document.createElement('div');
+        progressWrapper.className = 'progress';
+        progressWrapper.style.height = '20px';
+
+        const progressBar = document.createElement('div');
+        progressBar.className = `progress-bar ${color}`;
+        progressBar.role = 'progressbar';
+        progressBar.style.width = `${difficultyPercent}%`;
+        progressBar.setAttribute('aria-valuenow', difficultyPercent);
+        progressBar.setAttribute('aria-valuemin', 0);
+        progressBar.setAttribute('aria-valuemax', 100);
+        progressBar.innerText = `${level} (${difficultyDisplay})`;
+
+        progressWrapper.appendChild(progressBar);
+        container.appendChild(progressWrapper);
+
+        difficultyElement.appendChild(container);
     });
 }
 

@@ -2,12 +2,25 @@
     <!-- APS Tab content begins here -->
     <h2>Algorithm Performance Space</h2>
     <p>
-        Algorithm Performance Space (APS) is a tool to help researchers pick better, more diverse datasets for testing
+        Algorithm Performance Space (APS) is a tool to help you pick better, more diverse datasets for testing your
         recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on
-        how different algorithms perform on them. By using this tool, you can see which datasets are very similar and
-        might not add much new information for training and benchmarking. The graph below visualizes this by reducing
-        performance results into two dimensions using Principal Component Analysis (PCA) based on the evaluations
-        of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
+        how different algorithms perform on them. By using this tool:
+        <ul style="list-style: none; padding-left: 1rem;">
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can identify datasets where algorithms struggle.</span>
+            </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can avoid spending much time on datasets where all algorithms already do well.</span>
+            </li>
+        </ul>
+        The graph below visualizes this by reducing performance results into two dimensions using Principal Component Analysis (PCA) based on
+        the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
         <br style="margin-bottom: 1rem;">
         Similarity between datasets is then determined by how close their points are in this two-dimensional performance space
         using Euclidean distance:
@@ -93,18 +106,68 @@
 
     <hr style="margin-bottom: 1.5rem;">
 
-    <div class="mb-3">
-        <h5 style="font-weight: bold;">Similarity Confidence Levels:</h5>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
-            <span class="badge bg-success">Very High (&gt;= 0.9)</span>
-            <span class="badge bg-primary">High (0.75 - 0.9)</span>
-            <span class="badge bg-warning text-dark">Moderate (0.5 - 0.75)</span>
-            <span class="badge bg-danger">Low (0.25 - 0.5)</span>
-            <span class="badge bg-secondary">Very Low (&lt;= 0.25)</span>
+    <div class="accordion" id="aps-dataset-similarities-container">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#aps-dataset-similarities" aria-expanded="false" aria-controls="collapseOne"
+                    style="display: flex; justify-content: space-between; width: 100%;">
+                    Similarities
+                </button>
+            </h2>
+            <div id="aps-dataset-similarities" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                data-bs-parent="#accordionAPS">
+                <div id="aps-dataset-similarities-body" class="accordion-body" style="display: flex; flex-direction: column;">
+                    <div>
+                        <h5 style="font-weight: bold;">Similarity Confidence Levels:</h5>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <span class="badge bg-secondary">Very Low (&lt;= 0.25)</span>
+                            <span class="badge bg-danger">Low (0.25 - 0.5)</span>
+                            <span class="badge bg-warning text-dark">Moderate (0.5 - 0.75)</span>
+                            <span class="badge bg-primary">High (0.75 - 0.9)</span>
+                            <span class="badge bg-success">Very High (&gt;= 0.9)</span>
+                        </div>
+                    </div>
+                    <div id="similar-datasets" style="margin-top: 2rem;">
+                        <!-- Similar Datasets -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="similar-datasets">
-        
+    <div class="accordion" id="aps-dataset-difficulties-container" style="margin-top: 1rem;">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
+                    style="display: flex; justify-content: space-between; width: 100%;">
+                    Difficulties
+                </button>
+            </h2>
+            <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                data-bs-parent="#accordionAPS">
+                <div id="aps-dataset-difficulties-body" class="accordion-body" style="display: flex; flex-direction: column;">
+                    <div>
+                        <h5 style="font-weight: bold;">Difficulty Levels:</h5>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <span class="badge bg-dark">Very Hard (&lt;= 0.2)</span>
+                            <span class="badge bg-danger">Hard (0.2 - 0.3)</span>
+                            <span class="badge bg-warning text-dark">Medium (0.3 - 0.4)</span>
+                            <span class="badge bg-primary">Easy (0.4 - 0.7)</span>
+                            <span class="badge bg-success">Very Easy (&gt;= 0.7)</span>
+                        </div>
+                    </div>
+                    <div id="dataset-difficulty" style="margin-top: 2rem;">
+                        <!-- Dataset Difficulties -->
+                        <div><strong>Dataset D</strong></div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0"
+                                aria-valuemax="100">Hard</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
