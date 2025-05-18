@@ -325,7 +325,7 @@ class ChartHelper {
             finalCtx.drawImage(img, 0, 0);
 
             finalCtx.fillStyle = 'black';
-            finalCtx.font = '16px Arial';
+            finalCtx.font = '18px Arial';
 
             const margin = 10;
             const versionText = `Version: ${window.versionNumber}`;
@@ -342,8 +342,6 @@ class ChartHelper {
         };
     }
 }
-
-console.log(window.versionNumber);
 
 const drawEllipseAroundDots = {
     id: 'drawEllipseAroundDots',

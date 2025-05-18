@@ -312,6 +312,15 @@ function drawChart(filteredResults, separatedResults, algoName1, algoName2, perf
     });
 }
 
+function exportPng() {
+    const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
+    const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
+    const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
+    const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+
+    chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
+}
+
 function fillTables(separatedResults, algoName1, algoName2) {
     function fill(tableBodyElement, results) {
         if (results.length === 0) {
