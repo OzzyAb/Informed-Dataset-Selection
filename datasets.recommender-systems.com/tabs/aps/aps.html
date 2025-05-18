@@ -32,7 +32,7 @@
     <div class="row mb-3">
         <div class="col">
             <label for="formPerformanceMetricPca" class="form-label">Performance Metric</label>
-            <select id="formPerformanceMetricPca" class="form-select" aria-label="Select performance metric" onchange="updatePca()">
+            <select id="formPerformanceMetricPca" class="form-select updatePca" aria-label="Select performance metric">
                 <option value="ndcg">nDCG</option>
                 <option value="hr">Hit Ratio (HR)</option>
                 <option value="recall">Recall</option>
@@ -40,7 +40,7 @@
         </div>
         <div class="col">
             <label for="formKValuePca" class="form-label">K-Value</label>
-            <select id="formKValuePca" class="form-select" aria-label="Select k-value" onchange="updatePca()">
+            <select id="formKValuePca" class="form-select updatePca" aria-label="Select k-value">
                 <option value="one">@1</option>
                 <option value="three">@3</option>
                 <option value="five">@5</option>
@@ -87,8 +87,8 @@
 
     <canvas id="aps-chart" class="my-3" style="touch-action: none; user-select: none;"></canvas>
     <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 1rem;">
-        <button type="button" class="btn btn-primary" onclick="resetGraph()">Reset Graph</button>
-        <button type="button" class="btn btn-primary" onclick="exportPng()">Export as PNG</button>
+        <button id="aps-reset-graph-btn" type="button" class="btn btn-primary">Reset Graph</button>
+        <button id="aps-export-png-btn" type="button" class="btn btn-primary">Export as PNG</button>
     </div>
 
     <hr style="margin-bottom: 1.5rem;">

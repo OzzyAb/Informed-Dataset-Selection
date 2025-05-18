@@ -1,4 +1,6 @@
-class ChartHelper {
+import { versionNumber } from "./main.js";
+
+export class ChartHelper {
     #charts = [];
 
     /**
@@ -328,7 +330,7 @@ class ChartHelper {
             finalCtx.font = '18px Arial';
 
             const margin = 10;
-            const versionText = `Version: ${window.versionNumber}`;
+            const versionText = `Version: ${versionNumber}`;
             const sourceText = 'Source: datasets.recommender-systems.com';
 
             finalCtx.fillText(sourceText, margin, finalCanvas.height - 15);
@@ -336,7 +338,7 @@ class ChartHelper {
             finalCtx.fillText(versionText, finalCanvas.width - versionWidth - margin, finalCanvas.height - 15);
 
             const link = document.createElement('a');
-            link.download = `${chartName}-v${window.versionNumber}.png`;
+            link.download = `${chartName}-v${versionNumber}.png`;
             link.href = finalCanvas.toDataURL();
             link.click();
         };

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingContainer = document.getElementById('loadingContainer');
 });
 
-class Loading {
+export class Loading {
     static #isLoading = false;
 
     static showLoading() {

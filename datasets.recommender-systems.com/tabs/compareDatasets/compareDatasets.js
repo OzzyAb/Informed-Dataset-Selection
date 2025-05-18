@@ -1,3 +1,6 @@
+import { ApiService } from "../../apiService.js";
+import { capitalizeFirstLetter } from "../../util.js";
+
 var datasets = null;
 
 var dataset1SelectElement = null;
@@ -93,7 +96,7 @@ var metadataElements = [
     }
 ];
 
-async function initialize() {
+export async function initialize() {
     infoElements['user-item-ratio-info'] = document.getElementById('user-item-ratio-info');
     infoElements['user-item-ratio-info-p'] = document.getElementById('user-item-ratio-info-p');
     infoElements['mean-ratings-per-user-info'] = document.getElementById('mean-ratings-per-user-info');
@@ -110,6 +113,10 @@ async function initialize() {
     const table = document.querySelector("#dataset-table");
     tableHeadElement = table.querySelector("thead");
     tableBodyElement = table.querySelector("tbody");
+
+    document.querySelectorAll('.compareDatasets').forEach(element => {
+        element.addEventListener('change', compareDatasets);
+    });
     
     datasets = await ApiService.getDatasets();
 
@@ -263,5 +270,11 @@ function compareDatasets() {
         tr.appendChild(tdDataset1);
         tr.appendChild(tdDataset2);
         tableBodyElement.appendChild(tr);
+    });
+}
+
+export function dispose() {
+    document.querySelectorAll('.compareDatasets').forEach(element => {
+        element.removeEventListener('change', compareDatasets);
     });
 }

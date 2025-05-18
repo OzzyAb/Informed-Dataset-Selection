@@ -1,4 +1,4 @@
-class DynamicContent {
+export class DynamicContent {
     static async loadContentAndFindElementById(htmlFileName, parentElementId) {
         const file = await fetch(htmlFileName);
         const element = document.getElementById(parentElementId);

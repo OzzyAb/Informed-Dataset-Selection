@@ -1,3 +1,6 @@
+import { ChartHelper } from "../../chartHelper.js";
+import { ApiService } from "../../apiService.js";
+
 var algorithms = null;
 var datasets = null;
 
@@ -22,7 +25,7 @@ var tableSolvedByYHeaderElements = null;
 var chartHelper = null;
 var selectedDatasets = [];
 
-async function initialize() {
+export async function initialize() {
     firstAlgorithmElement = document.getElementById("formControlAlgorithm1");
     secondAlgorithmElement = document.getElementById("formControlAlgorithm2");
     performanceMetricElement = document.getElementById("formPerformanceMetric");
@@ -39,6 +42,11 @@ async function initialize() {
     tableAlgoYNameElements = document.querySelectorAll('.compare-algo-y-name');
     tableSolvedByXHeaderElements = document.getElementById('compare-algo-solved-by-x-header');
     tableSolvedByYHeaderElements = document.getElementById('compare-algo-solved-by-y-header');
+
+    document.getElementById('compare-algo-export-btn').addEventListener('click', exportPng);
+    document.querySelectorAll('.compareAlgorithms').forEach(element => {
+        element.addEventListener('change', compareAlgorithms);
+    });
 
     chartHelper = new ChartHelper();
 
@@ -380,4 +388,11 @@ function fillTables(separatedResults, algoName1, algoName2) {
     fill(solvedByYBodyElement, separatedResults.solvedByAlgo2);
     fill(mediocresBodyElement, separatedResults.mediocres);
     fill(trueChallengesBodyElement, separatedResults.trueChallenges);
+}
+
+export function dispose() {
+    document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPng);
+    document.querySelectorAll('.compareAlgorithms').forEach(element => {
+        element.removeEventListener('change', compareAlgorithms);
+    });
 }

@@ -1,4 +1,4 @@
-class ApiService {
+export class ApiService {
   static #apiUrl = 'https://datasets.recommender-systems.com/index.php?action=';
 
   static #algorithms = null;

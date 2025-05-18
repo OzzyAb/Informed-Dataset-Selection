@@ -1,3 +1,6 @@
+import { ChartHelper } from "../../chartHelper.js";
+import { ApiService } from "../../apiService.js";
+
 var datasets = null;
 var algorithms = null;
 
@@ -12,13 +15,19 @@ var similarityElement = null;
 var chartHelper = null;
 var selectedDatasets = [];
 
-async function initialize() {
+export async function initialize() {
     performanceMetricElement = document.getElementById("formPerformanceMetricPca");
     kValueElement = document.getElementById("formKValuePca");
     datasetFilterHeaderElement = document.getElementById('aps-filter-header');
     datasetFilterArea = document.getElementById('aps-filter');
     canvasElement = document.getElementById('aps-chart');
     similarityElement = document.getElementById('similar-datasets');
+
+    document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
+    document.getElementById('aps-export-png-btn').addEventListener('click', exportPng);
+    document.querySelectorAll('.updatePca').forEach(element => {
+        element.addEventListener('change', updatePca);
+    });
 
     chartHelper = new ChartHelper();
 
@@ -279,4 +288,12 @@ function getConfidence(confidence) {
     if (confidence >= 0.5) return { label: "Moderate", className: "bg-warning text-dark" };
     if (confidence >= 0.25) return { label: "Low", className: "bg-danger" };
     return { label: "Very Low", className: "bg-secondary" };
+}
+
+export function dispose() {
+    document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
+    document.getElementById('aps-export-png-btn').removeEventListener('click', exportPng);
+    document.querySelectorAll('.updatePca').forEach(element => {
+        element.removeEventListener('change', updatePca);
+    });
 }
