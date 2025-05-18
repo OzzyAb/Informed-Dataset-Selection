@@ -47,6 +47,7 @@ export async function initialize() {
 
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
+    selectedDatasets = [];
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -80,7 +81,6 @@ async function updatePca() {
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
     const results = await ApiService.getPcaResults();
-    
     const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
     const mappedResults = filteredResults.map(result => {
         return {
@@ -243,8 +243,8 @@ function findSimilarDatasets(mappedResults) {
             if (varX === 0 || varY === 0)
                 continue;
 
-            const mDist = Math.sqrt((dx * dx) / varX + (dy * dy) / varY);
-            const confidence = Math.exp(-mDist);
+            const distance = Math.sqrt((dx * dx) / varX + (dy * dy) / varY);
+            const confidence = Math.exp(-distance);
             if (confidence > 0.01) {
                 similar.push({
                     id: b.id,

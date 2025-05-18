@@ -8,27 +8,33 @@
         <ul style="list-style: none; padding-left: 1rem;">
             <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
                 <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
                 <span style="margin-left: 0.5rem;">You can identify datasets where algorithms struggle.</span>
             </li>
             <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
                 <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
                 <span style="margin-left: 0.5rem;">You can avoid spending much time on datasets where all algorithms already do well.</span>
             </li>
+            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
+            </li>
         </ul>
-        The graph below visualizes this by reducing performance results into two dimensions using Principal Component Analysis (PCA) based on
-        the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
+        The graph below visualizes this by reducing the performance results of datasets into two dimensions using Principal Component Analysis
+        (PCA) based on the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
         <br style="margin-bottom: 1rem;">
-        Similarity between datasets is calculated not just by their distance between them in this PCA graph, but also by the uncertainty
+        The difficulty levels of datasets are defined relative to their positions on the graph, where the axes are not normalized.
+        Instead, the scale of each axis varies depending on the selected datasets. In order to identify the difficult levels of those datasets,
+        the minimum values along the X and Y axes are calculated independently across all of them, which gives a reference point for the
+        highest difficulty. Therefore, this calculation is relative to the selected datasets because the range of the axes is affected by
+        the overall distribution, which can change how difficult a particular dataset appears in comparison to the others.
+        <br style="margin-bottom: 1rem;">
+        Similarity between datasets is calculated not just by their distance between them on the graph, but also by the uncertainty
         in their positions, which is represented by ellipses around each point. Each ellipse demonstrates variance in X and Y for each dataset.
-        In order to compare datasets similarities, <strong>Mahalanobis Distance</strong> is used, which measures how close two points
-        are relative to their combined uncertainty:
+        In order to compare datasets similarities, variance-normalized distance metric similar to <strong>Mahalanobis Distance</strong> is used,
+        which measures how close two points are relative to their combined uncertainty:
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <msup>
-                <mi>d</mi>
+                <mi>distance</mi>
                 <mn>2</mn>
             </msup>
             <mo>=</mo>
@@ -92,8 +98,9 @@
                 </mrow>
             </mfrac>
         </math>
-        This distance calculation takes the uncertainty of positions into account. A smaller Mahalanobis distance means that two datasets
-        behave similarly despite uncertainty. A confidence score is then calculated from this distance using an exponential decay:
+        A smaller distance means that two datasets are more similar, while taking their relative uncertainty along each axis into account.
+        A confidence score is then calculated by applying an exponential transformation to the distance, which mapps smaller distances to
+        higher confidence values:
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <mi>confidence</mi>
             <mo>=</mo>
@@ -175,7 +182,43 @@
 
     <hr style="margin-bottom: 1.5rem;">
 
-    <div class="accordion" id="aps-dataset-similarities-container">
+    <div class="accordion" id="aps-dataset-difficulties-container">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
+                    style="display: flex; justify-content: space-between; width: 100%;">
+                    Difficulties
+                </button>
+            </h2>
+            <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                data-bs-parent="#accordionAPS">
+                <div id="aps-dataset-difficulties-body" class="accordion-body"
+                    style="display: flex; flex-direction: column;">
+                    <div>
+                        <h5 style="font-weight: bold;">Difficulty Levels:</h5>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <span class="badge bg-dark">Very Hard (&lt;= 0.2)</span>
+                            <span class="badge bg-danger">Hard (0.2 - 0.3)</span>
+                            <span class="badge bg-warning text-dark">Medium (0.3 - 0.4)</span>
+                            <span class="badge bg-primary">Easy (0.4 - 0.7)</span>
+                            <span class="badge bg-success">Very Easy (&gt;= 0.7)</span>
+                        </div>
+                    </div>
+                    <div id="dataset-difficulty" style="margin-top: 2rem;">
+                        <!-- Dataset Difficulties -->
+                        <div><strong>Dataset D</strong></div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 85%;" aria-valuenow="85"
+                                aria-valuemin="0" aria-valuemax="100">Hard</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="aps-dataset-similarities-container" style="margin-top: 1rem;">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
@@ -199,41 +242,6 @@
                     </div>
                     <div id="similar-datasets" style="margin-top: 2rem;">
                         <!-- Similar Datasets -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="accordion" id="aps-dataset-difficulties-container" style="margin-top: 1rem;">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
-                    style="display: flex; justify-content: space-between; width: 100%;">
-                    Difficulties
-                </button>
-            </h2>
-            <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne"
-                data-bs-parent="#accordionAPS">
-                <div id="aps-dataset-difficulties-body" class="accordion-body" style="display: flex; flex-direction: column;">
-                    <div>
-                        <h5 style="font-weight: bold;">Difficulty Levels:</h5>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
-                            <span class="badge bg-dark">Very Hard (&lt;= 0.2)</span>
-                            <span class="badge bg-danger">Hard (0.2 - 0.3)</span>
-                            <span class="badge bg-warning text-dark">Medium (0.3 - 0.4)</span>
-                            <span class="badge bg-primary">Easy (0.4 - 0.7)</span>
-                            <span class="badge bg-success">Very Easy (&gt;= 0.7)</span>
-                        </div>
-                    </div>
-                    <div id="dataset-difficulty" style="margin-top: 2rem;">
-                        <!-- Dataset Difficulties -->
-                        <div><strong>Dataset D</strong></div>
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0"
-                                aria-valuemax="100">Hard</div>
-                        </div>
                     </div>
                 </div>
             </div>
