@@ -303,7 +303,47 @@ class ChartHelper {
             existingCanvas.chart.resetZoom();
         }
     }
+
+    exportChartAsPng(chartName, canvas) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined)
+            return;
+
+        const graphImage = existingCanvas.canvas.toDataURL('image/png');
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = existingCanvas.canvas.width;
+        finalCanvas.height = existingCanvas.canvas.height + 50;
+        const finalCtx = finalCanvas.getContext('2d');
+
+        finalCtx.fillStyle = 'white';
+        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+        const img = new Image();
+        img.src = graphImage;
+        img.onload = () => {
+            finalCtx.drawImage(img, 0, 0);
+
+            finalCtx.fillStyle = 'black';
+            finalCtx.font = '16px Arial';
+
+            const margin = 10;
+            const versionText = `Version: ${window.versionNumber}`;
+            const sourceText = 'Source: datasets.recommender-systems.com';
+
+            finalCtx.fillText(sourceText, margin, finalCanvas.height - 15);
+            const versionWidth = finalCtx.measureText(versionText).width;
+            finalCtx.fillText(versionText, finalCanvas.width - versionWidth - margin, finalCanvas.height - 15);
+
+            const link = document.createElement('a');
+            link.download = `${chartName}-v${window.versionNumber}.png`;
+            link.href = finalCanvas.toDataURL();
+            link.click();
+        };
+    }
 }
+
+console.log(window.versionNumber);
 
 const drawEllipseAroundDots = {
     id: 'drawEllipseAroundDots',
