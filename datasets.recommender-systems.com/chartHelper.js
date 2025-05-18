@@ -18,7 +18,9 @@ export class ChartHelper {
      *     legendTitle: string
      *   },
      *   verticalGradientBar: {
-     *     topColor: string
+     *     topColor: string,
+     *     topText, string,
+     *     bottomText: string
      *   }
      *   aspectRatio: number,
      *   title: string,
@@ -204,7 +206,9 @@ export class ChartHelper {
                         legendTitle: options.drawEllipseAroundDots.legendTitle
                     },
                     verticalGradientBar: options.verticalGradientBar && {
-                        topColor: options.verticalGradientBar.topColor
+                        topColor: options.verticalGradientBar.topColor,
+                        topText: options.verticalGradientBar.topText,
+                        bottomText: options.verticalGradientBar.bottomText
                     }
                 },
                 scales: {
@@ -419,8 +423,22 @@ const verticalGradientBar = {
         const x = right + 10;
 
         ctx.save();
+
         ctx.fillStyle = gradient;
         ctx.fillRect(x, top, barWidth, bottom - top);
+
+        if (options.topText !== undefined || options.bottomText !== undefined) {
+            ctx.fillStyle = 'black';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+
+            const topText = options.topText ?? '';
+            ctx.fillText(topText, x + barWidth / 2, top - 13);
+
+            const bottomText = options.bottomText ?? '';
+            ctx.fillText(bottomText, x + barWidth / 2, bottom + 15);
+        }
+
         ctx.restore();
     }
 };

@@ -133,7 +133,7 @@ async function onFilterDataset(e) {
 }
 
 function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY) {
-    const difficultyBarTopColor = 'rgb(0, 180, 40)';
+    const difficultyBarTopColor = 'rgb(253, 196, 125)';
 
     function getDatasetDifficultyColor(point, minX, maxX, minY, maxY) {
         let topColor = [];
@@ -151,9 +151,9 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
         normY = Math.min(Math.max(normY, 0), 1);
         const ratio = (normX + normY) / 2;
 
-        const r = Math.round(topColor[0] * ratio);
-        const g = Math.round(topColor[1] * ratio);
-        const b = Math.round(topColor[2] * ratio);
+        const r = Math.round(topColor[0] * (1 - ratio));
+        const g = Math.round(topColor[1] * (1 - ratio));
+        const b = Math.round(topColor[2] * (1 - ratio));
         return `rgb(${r}, ${g}, ${b})`;
     }
 
@@ -182,7 +182,9 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
             legendTitle: 'Variances'
         },
         verticalGradientBar: {
-            topColor: difficultyBarTopColor
+            topColor: difficultyBarTopColor,
+            topText: '1.0',
+            bottomText: '0.0'
         },
         title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
         labels: {
