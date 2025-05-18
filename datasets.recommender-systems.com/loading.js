@@ -9,10 +9,12 @@ export class Loading {
 
     static showLoading() {
         this.#isLoading = true;
+        loadingContainer.style.display = 'flex';
         loadingContainer.className = 'loading';
     }
     
     static hideLoading() {
+        loadingContainer.style.display = 'none';
         loadingContainer.className = 'loaded';
         this.#isLoading = false;
     }
