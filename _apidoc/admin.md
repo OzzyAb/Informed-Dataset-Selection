@@ -21,7 +21,6 @@ POST &task=addResults
         {
             algorithmName: string,
             datasetName: string,
-            fold: number,
             algorithmConfigIndex: number,
             algorithmConfiguration: string,
             numberOfUsers: number | null,
@@ -96,7 +95,6 @@ GET &task=getResults
     data: [
         {
             id: number,
-            fold: number,
             algorithmConfigIndex: number,
             algorithmConfiguration: string,
             algorithmId: number,

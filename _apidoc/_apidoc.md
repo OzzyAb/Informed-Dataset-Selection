@@ -5,7 +5,7 @@ The base URL for all requests is: `https://datasets.recommender-systems.com`
 
 ## Response Structure
 Every HTTP request to the backend will return in one of these specified formats.
-- ```Success```: if the response returns with a status code of ```2xx``` and no body
+- ```Success```: if the response returns with a status code of ```2xx``` and no data
 ```js
 {
     statusCode: number,
@@ -13,7 +13,7 @@ Every HTTP request to the backend will return in one of these specified formats.
     metadata: any | null
 }
 ```
-- ```Payload```: if the response returns with a status code of ```2xx``` and a body
+- ```Payload```: if the response returns with a status code of ```2xx``` and data
 ```js
 {
     statusCode: number,

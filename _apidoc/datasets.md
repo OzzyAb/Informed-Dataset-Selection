@@ -42,7 +42,7 @@ GET /
 GET ?id=...
 ```
 ```Query Parameters```
-- ```id```: ID of the dataset to retreive
+- ```id```: ID of the dataset to fetch
 
 ```Response```
 ```js

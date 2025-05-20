@@ -27,7 +27,7 @@ GET /
 GET ?id=...
 ```
 ```Query Parameters```
-- ```id```: ID of the algorithm to retreive
+- ```id```: ID of the algorithm to fetch
 
 ```Response```
 ```js
