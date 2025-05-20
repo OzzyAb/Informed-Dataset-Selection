@@ -24,6 +24,20 @@ export class ChartHelper {
      *   }
      *   aspectRatio: number,
      *   title: string,
+     *   axisTitles: {
+     *     x: {
+     *       text: string,
+     *       size: number,
+     *       bold: boolean,
+     *       color: string,
+     *     },
+     *     y: {
+     *       text: string,
+     *       size: number,
+     *       bold: boolean,
+     *       color: string,
+     *     }
+     *   }
      *   labels: {
      *     showX: boolean,
      *     showY: boolean,
@@ -213,6 +227,15 @@ export class ChartHelper {
                 },
                 scales: {
                     x: {
+                        title: options.axisTitles?.x && {
+                            display: true,
+                            text: options.axisTitles.x.text,
+                            color: options.axisTitles.x.color,
+                            font: {
+                                size: options.axisTitles.x.size,
+                                weight: options.axisTitles.x.bold ? 'bold' : 'normal'
+                            }
+                        },
                         min: options.points?.x?.min ?? 0,
                         max: options.points?.x?.max ?? 1,
                         ticks: {
@@ -221,6 +244,15 @@ export class ChartHelper {
                         }
                     },
                     y: {
+                        title: options.axisTitles?.y && {
+                            display: true,
+                            text: options.axisTitles.y.text,
+                            color: options.axisTitles.y.color,
+                            font: {
+                                size: options.axisTitles.y.size,
+                                weight: options.axisTitles.y.bold ? 'bold' : 'normal'
+                            }
+                        },
                         min: options.points?.y?.min ?? 0,
                         max: options.points?.y?.max ?? 1,
                         ticks: {

@@ -246,6 +246,18 @@ function drawChart(filteredResults, separatedResults, algoName1, algoName2, perf
             }
         ],
         title: `Performance of ${algoName1} and ${algoName2} (${performanceMetricName}${kValueName})`,
+        axisTitles: {
+            x: {
+                text: `Performance of ${algoName1}`,
+                size: 14,
+                bold: true
+            },
+            y: {
+                text: `Performance of ${algoName2}`,
+                size: 14,
+                bold: true
+            }
+        },
         labels: {
             showX: true,
             showY: true,

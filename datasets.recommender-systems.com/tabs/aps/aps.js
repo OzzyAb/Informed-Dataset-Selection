@@ -187,6 +187,18 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
             bottomText: '0.0'
         },
         title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
+        axisTitles: {
+            x: {
+                text: 'Component 1',
+                size: 14,
+                bold: true
+            },
+            y: {
+                text: 'Component 2',
+                size: 14,
+                bold: true
+            }
+        },
         labels: {
             showX: true,
             showY: true,
