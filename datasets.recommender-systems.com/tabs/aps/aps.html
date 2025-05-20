@@ -2,9 +2,9 @@
     <!-- APS Tab content begins here -->
     <h2>Algorithm Performance Space</h2>
     <p>
-        Algorithm Performance Space (APS) is a tool to help you pick better, more diverse datasets for testing your
-        recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on
-        how different algorithms perform on them. By using this tool:
+        <strong>Algorithm Performance Space (APS)</strong> is a tool to help you pick better, more diverse datasets for testing your
+        recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on how different algorithms
+        perform on them. By using this tool:
         <ul style="list-style: none; padding-left: 1rem;">
             <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
                 <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
@@ -19,19 +19,23 @@
                 <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
             </li>
         </ul>
-        The graph below visualizes this by reducing the performance results of datasets into two dimensions using Principal Component Analysis
-        (PCA) based on the evaluations of a selected performance metric such as nDCG, Hit Ratio or Recall with a K-value.
+        The graph below visualizes this by reducing the performance results of datasets into two dimensions using
+        <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such nDCG, Hit Ratio (HR) or Recall
+        and the selected K-value.
         <br style="margin-bottom: 1rem;">
-        The difficulty levels of datasets are defined relative to their positions on the graph, where the axes are not normalized.
-        Instead, the scale of each axis varies depending on the selected datasets. In order to identify the difficult levels of those datasets,
-        the minimum values along the X and Y axes are calculated independently across all of them, which gives a reference point for the
-        highest difficulty. Therefore, this calculation is relative to the selected datasets because the range of the axes is affected by
-        the overall distribution, which can change how difficult a particular dataset appears in comparison to the others.
+        The difficulty levels of datasets are then defined based on their positions on the graph, where each point represents a dataset.
+        The PCA axes are not normalized but are scaled according to the variance captured in the selected datasets, due to the
+        variance-preserving nature of PCA. To determine the difficulty levels of the selected datasets, the minimum values along the X and Y
+        axes are computed independently across all datasets. This minima defines a reference point corresponding to the highest difficulty.
+        Each dataset's position is then evaluated relative to this reference, which makes the difficulty levels inherently relative to
+        the selected datasets. This is because the range and distribution of the PCA graph change depending on the overall dataset composition,
+        which influences how difficult a dataset appears in comparison to others.
         <br style="margin-bottom: 1rem;">
-        Similarity between datasets is calculated not just by their distance between them on the graph, but also by the uncertainty
-        in their positions, which is represented by ellipses around each point. Each ellipse demonstrates variance in X and Y for each dataset.
-        In order to compare datasets similarities, variance-normalized distance metric similar to <strong>Mahalanobis Distance</strong> is used,
-        which measures how close two points are relative to their combined uncertainty:
+        Furthermore, dataset similarity is calculated not only by their <strong>Euclidean distances</strong> in PCA space but also by the
+        uncertainty in their positions, which is visualized as ellipses around each point. These ellipses represent the variance of each
+        dataset along the X and Y axes. Given the uncertainty in dataset positions, a variance-normalized distance metric that is similar
+        to the <strong>Mahalanobis distance</strong> is used. This approach measures how close two datasets are relative to their combined
+        positional uncertainty.
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <msup>
                 <mi>distance</mi>
@@ -98,9 +102,9 @@
                 </mrow>
             </mfrac>
         </math>
-        A smaller distance means that two datasets are more similar, while taking their relative uncertainty along each axis into account.
-        A confidence score is then calculated by applying an exponential transformation to the distance, which mapps smaller distances to
-        higher confidence values:
+        A smaller distance indicates greater similarity between two datasets, while taking their relative uncertainty along each axis into
+        account. A confidence score is then calculated by applying an <strong>exponential transformation</strong> to this distance,
+        which maps smaller distances to higher confidence values:
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <mi>confidence</mi>
             <mo>=</mo>
@@ -112,7 +116,7 @@
                 </mrow>
             </msup>
         </math>
-        Higher confidence indicates greater similarity in algorithm performance between datasets.
+        Higher confidence represents stronger similarity in algorithm performance between the datasets.
     </p>
 
     <hr>
