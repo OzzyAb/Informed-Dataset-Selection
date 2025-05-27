@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 var activeTabScript = null;
 async function loadTab(fileName) {
+  if (Loading.isLoading())
+    return;
+
   Loading.showLoading();
 
   if (activeTabScript !== null) {

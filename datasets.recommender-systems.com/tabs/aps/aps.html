@@ -20,22 +20,22 @@
             </li>
         </ul>
         The graph below visualizes this by reducing the performance results of datasets into two dimensions using
-        <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such nDCG, Hit Ratio (HR) or Recall
+        <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such as nDCG, Hit Ratio (HR) or Recall
         and the selected K-value.
         <br style="margin-bottom: 1rem;">
-        The difficulty levels of datasets are then defined based on their positions on the graph, where each point represents a dataset.
-        The PCA axes are not normalized but are scaled according to the variance captured in the selected datasets, due to the
-        variance-preserving nature of PCA. To determine the difficulty levels of the selected datasets, the minimum values along the X and Y
-        axes are computed independently across all datasets. This minima defines a reference point corresponding to the highest difficulty.
-        Each dataset's position is then evaluated relative to this reference, which makes the difficulty levels inherently relative to
-        the selected datasets. This is because the range and distribution of the PCA graph change depending on the overall dataset composition,
-        which influences how difficult a dataset appears in comparison to others.
+        <strong>Difficulties:</strong> The difficulty levels of datasets are defined based on their positions on the graph, where each point
+        represents a dataset. The PCA's axes are not normalized but are scaled according to the variance captured in the selected datasets,
+        due to the variance-preserving nature of PCA. To determine the difficulty levels of the selected datasets, the minimum values
+        along the X and Y axes are computed independently across all datasets. This minima defines a reference point corresponding to
+        the highest difficulty. Each dataset's position is then evaluated relative to this reference, which makes the difficulty levels
+        inherently relative to the selected datasets. This is because the range and distribution of the PCA graph change depending on
+        the overall dataset composition, which influences how difficult a dataset appears in comparison to others.
         <br style="margin-bottom: 1rem;">
-        Furthermore, dataset similarity is calculated not only by their <strong>Euclidean distances</strong> in PCA space but also by the
-        uncertainty in their positions, which is visualized as ellipses around each point. These ellipses represent the variance of each
-        dataset along the X and Y axes. Given the uncertainty in dataset positions, a variance-normalized distance metric that is similar
-        to the <strong>Mahalanobis distance</strong> is used. This approach measures how close two datasets are relative to their combined
-        positional uncertainty.
+        <strong>Similarities:</strong> Dataset similarity is calculated not only by their <strong>Euclidean distances</strong> in PCA space
+        but also by the uncertainty in their positions, which is visualized by ellipses around each point. These ellipses represent
+        the variance of each dataset along the X and Y axes. Given the uncertainty in dataset positions, a variance-normalized distance metric,
+        which is similar to the <strong>Mahalanobis distance</strong>, is used to find the similarities. This approach measures how close
+        two datasets are relative to their combined positional uncertainty.
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <msup>
                 <mi>distance</mi>
