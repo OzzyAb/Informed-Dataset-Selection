@@ -26,7 +26,8 @@ export async function initialize() {
     difficultyElement = document.getElementById('dataset-difficulty');
 
     document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
-    document.getElementById('aps-export-png-btn').addEventListener('click', exportPng);
+    // ENHANCED: Added user feedback for export process
+    document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.updatePca').forEach(element => {
         element.addEventListener('change', updatePca);
     });
@@ -233,6 +234,43 @@ function resetGraph() {
 function exportPng() {
     chartHelper.exportChartAsPng('aps', canvasElement);
 }
+// Enhanced export function with user feedback to show the process is working
+async function exportPngWithFeedback() {
+    const exportBtn = document.getElementById('aps-export-png-btn');
+    const originalText = exportBtn.textContent;
+    
+    try {
+        // Update button to show process is starting
+        exportBtn.textContent = 'Exporting...';
+        exportBtn.disabled = true;
+        
+        // Small delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Call the export function
+        chartHelper.exportChartAsPng('aps', canvasElement);
+        
+        // Show success feedback
+        exportBtn.textContent = 'Exported!';
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Export failed:', error);
+        // Show error feedback
+        exportBtn.textContent = 'Export Failed';
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 3000);
+    }
+}
 
 function findSimilarDatasets(mappedResults) {
     const result = {};
@@ -408,7 +446,8 @@ function getConfidence(confidence) {
 
 export function dispose() {
     document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
-    document.getElementById('aps-export-png-btn').removeEventListener('click', exportPng);
+     // UPDATED: Updated to use the new enhanced export function
+    document.getElementById('aps-export-png-btn').removeEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.updatePca').forEach(element => {
         element.removeEventListener('change', updatePca);
     });

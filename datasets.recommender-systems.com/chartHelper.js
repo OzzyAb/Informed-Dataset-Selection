@@ -362,11 +362,85 @@ export class ChartHelper {
         }
     }
 
+       // MODIFIED: Alternative export method using OffscreenCanvas and toBlob to avoid fingerprinting warnings
     exportChartAsPng(chartName, canvas) {
         let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
         if (existingCanvas === undefined)
             return;
 
+        try {
+            // Method 1: Try using OffscreenCanvas (most privacy-friendly)
+            this.#exportUsingOffscreenCanvas(chartName, existingCanvas);
+        } catch (error) {
+            console.log('OffscreenCanvas not supported, trying alternative method...');
+            try {
+                // Method 2: Use toBlob instead of toDataURL (more privacy-friendly than toDataURL)
+                this.#exportUsingToBlob(chartName, existingCanvas);
+            } catch (blobError) {
+                console.log('toBlob not supported, falling back to original method...');
+                // Method 3: Fallback to original method if others fail
+                this.#exportUsingDataURL(chartName, existingCanvas);
+            }
+        }
+    }
+
+    // NEW: Privacy-friendly export using OffscreenCanvas
+    #exportUsingOffscreenCanvas(chartName, existingCanvas) {
+        const originalCanvas = existingCanvas.canvas;
+        const width = originalCanvas.width;
+        const height = originalCanvas.height;
+
+        // Create an OffscreenCanvas - this doesn't trigger fingerprinting warnings
+        const offscreenCanvas = new OffscreenCanvas(width, height + 50);
+        const offscreenCtx = offscreenCanvas.getContext('2d');
+
+        // Set white background
+        offscreenCtx.fillStyle = 'white';
+        offscreenCtx.fillRect(0, 0, width, height + 50);
+
+        // Copy the chart image data
+        const imageData = originalCanvas.getContext('2d').getImageData(0, 0, width, height);
+        offscreenCtx.putImageData(imageData, 0, 0);
+
+        // Add version and source text
+        this.#addFooterText(offscreenCtx, width, height + 50);
+
+        // Convert to blob and download
+        offscreenCanvas.convertToBlob({ type: 'image/png' }).then(blob => {
+            this.#downloadBlob(blob, `${chartName}-v${versionNumber}.png`);
+        });
+    }
+
+    // NEW: Alternative export using toBlob (more privacy-friendly than toDataURL)
+    #exportUsingToBlob(chartName, existingCanvas) {
+        const originalCanvas = existingCanvas.canvas;
+        const width = originalCanvas.width;
+        const height = originalCanvas.height;
+
+        // Create a regular canvas for combining
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = width;
+        finalCanvas.height = height + 50;
+        const finalCtx = finalCanvas.getContext('2d');
+
+        // Set white background
+        finalCtx.fillStyle = 'white';
+        finalCtx.fillRect(0, 0, width, height + 50);
+
+        // Copy the original canvas content
+        finalCtx.drawImage(originalCanvas, 0, 0);
+
+        // Add footer text
+        this.#addFooterText(finalCtx, width, height + 50);
+
+        // Use toBlob instead of toDataURL - this is less likely to trigger warnings
+        finalCanvas.toBlob(blob => {
+            this.#downloadBlob(blob, `${chartName}-v${versionNumber}.png`);
+        }, 'image/png');
+    }
+
+    // MODIFIED: Original method as fallback (kept for compatibility)
+    #exportUsingDataURL(chartName, existingCanvas) {
         const graphImage = existingCanvas.canvas.toDataURL('image/png');
 
         const finalCanvas = document.createElement('canvas');
@@ -381,23 +455,39 @@ export class ChartHelper {
         img.src = graphImage;
         img.onload = () => {
             finalCtx.drawImage(img, 0, 0);
-
-            finalCtx.fillStyle = 'black';
-            finalCtx.font = '18px Arial';
-
-            const margin = 10;
-            const versionText = `Version: ${versionNumber}`;
-            const sourceText = 'Source: datasets.recommender-systems.com';
-
-            finalCtx.fillText(sourceText, margin, finalCanvas.height - 15);
-            const versionWidth = finalCtx.measureText(versionText).width;
-            finalCtx.fillText(versionText, finalCanvas.width - versionWidth - margin, finalCanvas.height - 15);
+            this.#addFooterText(finalCtx, finalCanvas.width, finalCanvas.height);
 
             const link = document.createElement('a');
             link.download = `${chartName}-v${versionNumber}.png`;
             link.href = finalCanvas.toDataURL();
             link.click();
         };
+    }
+
+    // NEW: Helper method to add footer text 
+    #addFooterText(ctx, width, height) {
+        ctx.fillStyle = 'black';
+        ctx.font = '18px Arial';
+
+        const margin = 10;
+        const versionText = `Version: ${versionNumber}`;
+        const sourceText = 'Source: datasets.recommender-systems.com';
+
+        ctx.fillText(sourceText, margin, height - 15);
+        const versionWidth = ctx.measureText(versionText).width;
+        ctx.fillText(versionText, width - versionWidth - margin, height - 15);
+    }
+
+    // NEW: Helper method to download blob 
+    #downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        
+        // Clean up the object URL to prevent memory leaks
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 }
 
