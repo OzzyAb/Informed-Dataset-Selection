@@ -1,5 +1,53 @@
 ## Performance Results
 Anything related to performance results is under the endpoint starting with `/index.php?action=result`.
+> ### Get Performance Results
+```URL```
+```http
+GET &ids[]
+```
+```Query Parameters```
+- ```ids[]```: Array of datasets IDs related to the performance results
+
+```Response```
+```js
+{
+    statusCode: number,
+    isSuccess: boolean,
+    data: [
+        {
+            id: number,
+            algorithmConfigIndex: number,
+            algorithmConfiguration: string,
+            algorithmId: number,
+            datasetId: number,
+            createdDate: string,
+            hr: {
+                one: number | null,
+                three: number | null,
+                five: number | null,
+                ten: number | null,
+                twenty: number | null
+            },
+            ndcg: {
+                one: number | null,
+                three: number | null,
+                five: number | null,
+                ten: number | null,
+                twenty: number | null
+            },
+            recall: {
+                one: number | null,
+                three: number | null,
+                five: number | null,
+                ten: number | null,
+                twenty: number | null
+            }
+        },
+    ],
+    metadata: any | null
+}
+```
+---
 > ### Compare 2 Algorithms
 ```URL```
 ```http
