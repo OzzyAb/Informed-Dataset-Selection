@@ -75,15 +75,40 @@ export class ApiService {
     return data.data;
   }
 
-  static async getPerformanceResults(datasetIds) {
-    const ids = new URLSearchParams();
-    datasetIds.forEach(id => ids.append('ids[]', id));
+  static #performanceResults = null;
+  static async getPerformanceResults(datasetIds, algorithmIds) {
+    if (this.#performanceResults === null) {
+      this.#performanceResults = {};
+    }
 
-    const response = await fetch(`${this.#apiUrl}result&${ids.toString()}`);
-    if (!response.ok)
-      return null;
+    const cachedDatasets = [];
+    for (const dataset in this.#performanceResults) {
+      for (const algorithm in this.#performanceResults[dataset]) {
+        if (this.#performanceResults[dataset][algorithm] !== undefined) {
+          cachedDatasets.push(dataset);
+        }
+      }
+    }
+    
+    const missingIds = datasetIds.filter(id => !cachedDatasets.includes(String(id)));
+    if (missingIds.length !== 0) {
+      const ids = new URLSearchParams();
+      missingIds.forEach(id => ids.append('ids[]', id));
 
-    const data = await response.json();
-    return data.data;
+      const response = await fetch(`${this.#apiUrl}result&${ids.toString()}`);
+      if (!response.ok)
+        return null;
+
+      const data = await response.json();
+      data.data.forEach(result => {
+        if (this.#performanceResults[result.datasetId] === undefined) {
+          this.#performanceResults[result.datasetId] = {};
+        }
+
+        this.#performanceResults[result.datasetId][result.algorithmId] = result;
+      });
+    }
+    
+    return this.#performanceResults;
   }
 }

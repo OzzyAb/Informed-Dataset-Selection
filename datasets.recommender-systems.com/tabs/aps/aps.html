@@ -125,7 +125,7 @@
     <div class="row mb-3">
         <div class="col">
             <label for="formPerformanceMetricPca" class="form-label">Performance Metric</label>
-            <select id="formPerformanceMetricPca" class="form-select updatePca" aria-label="Select performance metric">
+            <select id="formPerformanceMetricPca" class="form-select aps-selection" aria-label="Select performance metric">
                 <option value="ndcg">nDCG</option>
                 <option value="hr">Hit Ratio (HR)</option>
                 <option value="recall">Recall</option>
@@ -133,7 +133,7 @@
         </div>
         <div class="col">
             <label for="formKValuePca" class="form-label">K-Value</label>
-            <select id="formKValuePca" class="form-select updatePca" aria-label="Select k-value">
+            <select id="formKValuePca" class="form-select aps-selection" aria-label="Select k-value">
                 <option value="one">@1</option>
                 <option value="three">@3</option>
                 <option value="five">@5</option>
@@ -143,18 +143,19 @@
         </div>
     </div>
 
-    <div class="accordion" id="accordionAPSAlgo" style="margin-bottom: 1rem;">
+    <div class="accordion" id="accordionAPS-algo" style="margin-bottom: 1rem;">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#apsAlgoNames" aria-expanded="false" aria-controls="apsAlgoNames">
-                    Algorithms
+            <h2 class="accordion-header" id="headingOne-algo">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#algorithmFilter" aria-expanded="false" aria-controls="algorithmFilter">
+                    <span>Algorithm Filter</span>
+                    <span id="aps-algorithm-filter-header" style="margin-left: auto;">(All selected)</span>
                 </button>
             </h2>
-            <div id="apsAlgoNames" class="accordion-collapse collapse" aria-labelledby="headingOne"
-                data-bs-parent="#accordionAPSAlgo">
-                <div id="aps-algo" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
-                    <!-- Algorithm names -->
+            <div id="algorithmFilter" class="accordion-collapse collapse" aria-labelledby="headingOne-algo"
+                data-bs-parent="#accordionAPS-algo">
+                <div id="aps-algorithm-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <!-- Algorithm filter checkboxes -->
                 </div>
             </div>
         </div>
@@ -164,18 +165,24 @@
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    data-bs-target="#datasetFilter" aria-expanded="false" aria-controls="datasetFilter">
                     <span>Dataset Filter</span>
-                    <span id="aps-filter-header" style="margin-left: auto;">(All selected)</span>
+                    <span id="aps-dataset-filter-header" style="margin-left: auto;">(All selected)</span>
                 </button>
             </h2>
-            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+            <div id="datasetFilter" class="accordion-collapse collapse" aria-labelledby="headingOne"
                 data-bs-parent="#accordionAPS">
-                <div id="aps-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <div id="aps-dataset-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
                     <!-- Dataset filter checkboxes -->
                 </div>
             </div>
         </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 1rem;">
+        <button id="aps-update-pca-btn" type="button" class="btn btn-primary">Update PCA</button>
+        <span id="aps-update-pca-txt-stale" style="display: none; font-weight: 400; font-style: italic;">The data on the graph is now stale!</span>
+        <span id="aps-update-pca-txt-calculating" class="fading-text" style="display: none; font-weight: 400; font-style: italic;">Calculating...</span>
     </div>
 
     <canvas id="aps-chart" class="my-3" style="touch-action: none; user-select: none;"></canvas>

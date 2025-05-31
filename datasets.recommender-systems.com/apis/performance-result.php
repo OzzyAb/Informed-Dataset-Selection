@@ -283,7 +283,7 @@ class PerformanceResult {
         echo json_encode([
             "isSuccess" => true,
             "statusCode" => 200,
-            "data" => $transformed
+            "data" => lowerFirstLetter($transformed)
         ]);
     }
 }
