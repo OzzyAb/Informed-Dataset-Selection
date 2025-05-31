@@ -66,8 +66,20 @@ export class ApiService {
     return response.ok;
   }
 
-  static async getPerformanceResults(algoId1, algoId2) {
+  static async compareAlgorithms(algoId1, algoId2) {
     const response = await fetch(`${this.#apiUrl}result&task=compareAlgorithms&x=${algoId1}&y=${algoId2}`);
+    if (!response.ok)
+      return null;
+
+    const data = await response.json();
+    return data.data;
+  }
+
+  static async getPerformanceResults(datasetIds) {
+    const ids = new URLSearchParams();
+    datasetIds.forEach(id => ids.append('ids[]', id));
+
+    const response = await fetch(`${this.#apiUrl}result&${ids.toString()}`);
     if (!response.ok)
       return null;
 

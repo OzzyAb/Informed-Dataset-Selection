@@ -234,5 +234,57 @@ class PerformanceResult {
             "data" => lowerFirstLetter($datasetPoints)
         ]);
     }
+
+    public static function getPerformanceResults($pdo, $datasetIds) {
+        header('Content-Type: application/json');
+
+        if (empty($datasetIds)) {
+            http_response_code(200);
+            echo json_encode([
+                "isSuccess" => true,
+                "statusCode" => 200,
+                "data" => []
+            ]);
+            exit();
+        }
+
+        $ids = implode(',', array_fill(0, count($datasetIds), '?'));
+        $sql = "SELECT * FROM PerformanceResults WHERE DatasetId IN ($ids)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($datasetIds);
+        $results = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        $transformed = [];
+
+        foreach ($results as $row) {
+            $rowArray = (array)$row;
+            $grouped = [];
+            $cleanRow = [];
+        
+            foreach ($rowArray as $key => $value) {
+                if (preg_match('/^(Hr|Ndcg|Recall)_(.+)$/', $key, $matches)) {
+                    $prefix = $matches[1];
+                    $suffix = $matches[2];
+                
+                    if (!isset($grouped[$prefix])) {
+                        $grouped[$prefix] = [];
+                    }
+                
+                    $grouped[$prefix][$suffix] = $value;
+                } else {
+                    $cleanRow[$key] = $value;
+                }
+            }
+        
+            $transformed[] = array_merge($cleanRow, $grouped);
+        }
+
+        http_response_code(200);
+        echo json_encode([
+            "isSuccess" => true,
+            "statusCode" => 200,
+            "data" => $transformed
+        ]);
+    }
 }
 ?>

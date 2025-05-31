@@ -124,7 +124,7 @@ async function compareAlgorithms() {
     const kValue = kValueElement.value;
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-    const results = await ApiService.getPerformanceResults(algoId1, algoId2);
+    const results = await ApiService.compareAlgorithms(algoId1, algoId2);
     const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
     const separatedResults = separateResults(filteredResults.map((result) => {
         return {
