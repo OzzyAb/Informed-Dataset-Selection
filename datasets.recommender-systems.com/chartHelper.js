@@ -17,10 +17,11 @@ export class ChartHelper {
      *     color: string,
      *     legendTitle: string
      *   },
-     *   verticalGradientBar: {
+     *    verticalGradientBar: {
      *     topColor: string,
      *     topText, string,
-     *     bottomText: string
+     *     bottomText: string,
+     *     verticalText: string
      *   }
      *   aspectRatio: number,
      *   title: string,
@@ -219,10 +220,11 @@ export class ChartHelper {
                         color: options.drawEllipseAroundDots.color,
                         legendTitle: options.drawEllipseAroundDots.legendTitle
                     },
-                    verticalGradientBar: options.verticalGradientBar && {
+                     verticalGradientBar: options.verticalGradientBar && {
                         topColor: options.verticalGradientBar.topColor,
                         topText: options.verticalGradientBar.topText,
-                        bottomText: options.verticalGradientBar.bottomText
+                        bottomText: options.verticalGradientBar.bottomText,
+                        verticalText: options.verticalGradientBar.verticalText
                     }
                 },
                 scales: {
@@ -263,7 +265,7 @@ export class ChartHelper {
                 },
                 layout: options.verticalGradientBar && {
                     padding: {
-                        right: 30
+                        right: 60
                     }
                 }
             },
@@ -471,6 +473,26 @@ const verticalGradientBar = {
             ctx.fillText(bottomText, x + barWidth / 2, bottom + 15);
         }
 
+ // Added vertical text
+        if (options.verticalText !== undefined) {
+            ctx.fillStyle = '#666';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.save();
+            
+            
+            const textX = x + barWidth + 20;
+            const textY = top + (bottom - top) / 2;
+            ctx.translate(textX, textY);
+            ctx.rotate(-Math.PI / 2);
+            
+            ctx.fillText(options.verticalText, 0, 0);
+            
+            ctx.restore();
+        }
+
         ctx.restore();
-    }
+    }    
+    
 };
