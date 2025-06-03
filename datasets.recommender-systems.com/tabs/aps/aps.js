@@ -13,6 +13,9 @@ var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
 
+// NEW: Variable to hold the select all/deselect all button
+var selectAllButton = null;
+
 var chartHelper = null;
 var selectedDatasets = [];
 
@@ -45,8 +48,15 @@ export async function initialize() {
         algorithmNamesElement.appendChild(span);
     });
 
+    // NEW: Create and add the Select All/Deselect All button
+    createSelectAllButton();
+
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
+    
+    // NEW: Add the select all button first, then the checkboxes
+    datasetFilterArea.appendChild(selectAllButton);
+
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -70,7 +80,80 @@ export async function initialize() {
         selectedDatasets.push(dataset.id);
     });
 
+    // NEW: Update the button text after all checkboxes are created
+    updateSelectAllButtonText();
+
     await updatePca();
+}
+
+// NEW: Function to create the Select All/Deselect All button
+function createSelectAllButton() {
+    // Create button wrapper div that spans full width
+    const buttonWrapper = document.createElement('div');
+    buttonWrapper.style.width = '100%';
+    buttonWrapper.style.marginBottom = '15px';
+
+    // Create the actual button
+    selectAllButton = document.createElement('button');
+    selectAllButton.type = 'button';
+    selectAllButton.className = 'filter-control-btn';
+    selectAllButton.textContent = 'Deselect All'; // Start with "Deselect All" since all are selected by default
+    selectAllButton.addEventListener('click', toggleAllDatasets);
+
+    buttonWrapper.appendChild(selectAllButton);
+    selectAllButton = buttonWrapper; // Replace reference to point to the wrapper
+}
+
+// NEW: Function to toggle all datasets on/off
+function toggleAllDatasets() {
+    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
+
+    // Update all checkboxes
+    datasetFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    // Update selected datasets array
+    selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
+
+    // Update the header and button text
+    updateFilterHeader();
+    updateSelectAllButtonText();
+
+    // Trigger the PCA update
+    updatePca();
+}
+
+// NEW: Function to update the Select All/Deselect All button text
+function updateSelectAllButtonText() {
+    const button = selectAllButton.querySelector('button');
+    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        button.textContent = 'Deselect All';
+    } else {
+        button.textContent = 'Select All';
+    }
+}
+
+// NEW: Function to update filter header text
+function updateFilterHeader() {
+    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        datasetFilterHeaderElement.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        datasetFilterHeaderElement.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        // Find the single selected dataset and show its name
+        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
+        const selectedDatasetId = Number(selectedCheckbox.id);
+        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
+        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
+    } else {
+        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
+    }
 }
 
 async function updatePca() {
@@ -108,25 +191,15 @@ async function onFilterDataset(e) {
     const datasetId = Number(e.target.id);
     if (e.target.checked) {
         selectedDatasets.push(datasetId);
-
-        if (selectedDatasets.length === datasets.length) {
-            datasetFilterHeaderElement.innerText = '(All selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
     else {
         const index = selectedDatasets.indexOf(datasetId);
         selectedDatasets.splice(index, 1);
-
-        if (selectedDatasets.length === 0) {
-            datasetFilterHeaderElement.innerText = '(None selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
+
+    // NEW: Update header and button text when individual checkboxes change
+    updateFilterHeader();
+    updateSelectAllButtonText();
 
     await updatePca();
 }
@@ -412,4 +485,12 @@ export function dispose() {
     document.querySelectorAll('.updatePca').forEach(element => {
         element.removeEventListener('change', updatePca);
     });
+    
+    // NEW: Clean up the select all button event listener
+    if (selectAllButton) {
+        const button = selectAllButton.querySelector('button');
+        if (button) {
+            button.removeEventListener('click', toggleAllDatasets);
+        }
+    }
 }
