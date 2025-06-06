@@ -34,6 +34,24 @@ body {
     margin-left: 1rem;
 }
 
+.fading-text {
+    animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    } 
+}
+
 /* NEW: CSS class for the Select All/Deselect All button */
 .filter-control-btn {
     background-color: #007bff;

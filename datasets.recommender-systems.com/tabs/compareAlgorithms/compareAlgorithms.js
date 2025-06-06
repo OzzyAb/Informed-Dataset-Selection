@@ -47,7 +47,7 @@ export async function initialize() {
     tableSolvedByYHeaderElements = document.getElementById('compare-algo-solved-by-y-header');
 
     document.getElementById('aps-redirect').addEventListener('click', apsRedirect);
-    document.getElementById('compare-algo-export-btn').addEventListener('click', exportPng);
+   document.getElementById('compare-algo-export-btn').addEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.addEventListener('change', compareAlgorithms);
     });
@@ -206,7 +206,7 @@ async function compareAlgorithms() {
     const kValue = kValueElement.value;
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-    const results = await ApiService.getPerformanceResults(algoId1, algoId2);
+    const results = await ApiService.compareAlgorithms(algoId1, algoId2);
     const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
     const separatedResults = separateResults(filteredResults.map((result) => {
         return {
@@ -418,6 +418,49 @@ function exportPng() {
 
     chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
 }
+//Enhanced export function with user feedback 
+async function exportPngWithFeedback() {
+    const exportBtn = document.getElementById('compare-algo-export-btn');
+    const originalText = exportBtn.textContent;
+    
+    try {
+        // Update button to show process is starting
+        exportBtn.textContent = 'Exporting...';
+        exportBtn.disabled = true;
+        
+        // Small delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get the filename dynamically like the original exportPng function
+        const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
+        const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
+        const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
+        const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+        
+        // Call the export function with the same naming convention
+        chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
+        
+        // Show success feedback
+        exportBtn.textContent = 'Exported!';
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Export failed:', error);
+        // Show error feedback
+        exportBtn.textContent = 'Export Failed';
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 3000);
+    }
+}
 
 function fillTables(separatedResults, algoName1, algoName2) {
     function fill(tableBodyElement, results) {
@@ -482,7 +525,7 @@ function fillTables(separatedResults, algoName1, algoName2) {
 
 export function dispose() {
     document.getElementById('aps-redirect').removeEventListener('click', apsRedirect);
-    document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPng);
+     document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.removeEventListener('change', compareAlgorithms);
     });
