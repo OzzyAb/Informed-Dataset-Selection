@@ -357,12 +357,10 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
         return `rgb(${r}, ${g}, ${b})`;
     }
 
-    chartHelper.createChart(canvasElement, {
+   chartHelper.createChart(canvasElement, {
         datasets: [
-            {
-                label: 'Dataset Difficulty',
-                pointBackgroundColor: difficultyBarTopColor
-            },
+        // Removed the dataset diffuclty legend 
+
             {
                 label: 'Datasets',
                 pointRadius: 5,
@@ -384,7 +382,8 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
         verticalGradientBar: {
             topColor: difficultyBarTopColor,
             topText: '1.0',
-            bottomText: '0.0'
+            bottomText: '0.0',
+            verticalText: 'Dataset Difficulty'
         },
         title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
         axisTitles: {
