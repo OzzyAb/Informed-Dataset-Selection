@@ -107,7 +107,28 @@ export async function initialize() {
         selectedDatasets.push(dataset.id);
     });
 
+    // Initialize all tables with custom no-data styling
+    initializeEmptyTables();
+
     await compareAlgorithms();
+}
+
+// Helper function to initialize empty tables with custom styling
+function initializeEmptyTables() {
+    const tableIds = [
+        'compare-algo-solved',
+        'compare-algo-solved-by-x', 
+        'compare-algo-solved-by-y',
+        'compare-algo-mediocres',
+        'compare-algo-true-challenges'
+    ];
+    
+    tableIds.forEach(id => {
+        const tbody = document.getElementById(id);
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="3" class="custom-no-data">(No datasets)</td></tr>';
+        }
+    });
 }
 
 function apsRedirect() {
@@ -391,13 +412,14 @@ async function exportPngWithFeedback() {
 }
 
 function fillTables(separatedResults, algoName1, algoName2) {
+    // Updated fill function to use custom-no-data class
     function fill(tableBodyElement, results) {
         if (results.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
 
             td.colSpan = 3;
-            td.style = 'text-align: center; vertical-align: middle;';
+            td.className = 'custom-no-data'; // Use custom class instead of inline styles
             td.textContent = "(No datasets)";
 
             tr.appendChild(td);
@@ -412,13 +434,9 @@ function fillTables(separatedResults, algoName1, algoName2) {
                 const tdX = document.createElement('td');
                 const tdY = document.createElement('td');
 
-                tdDataset.style = 'text-align: left; vertical-align: middle; white-space: nowrap;';
+                // Removed inline styles to let custom CSS handle styling
                 tdDataset.textContent = dataset.name;
-
-                tdX.style = 'text-align: center; vertical-align: middle;';
                 tdX.textContent = result.x.toFixed(5);
-
-                tdY.style = 'text-align: center; vertical-align: middle;';
                 tdY.textContent = result.y.toFixed(5);
 
                 tr.appendChild(tdDataset);
@@ -429,12 +447,14 @@ function fillTables(separatedResults, algoName1, algoName2) {
         }
     }
 
+    // Clear all table bodies
     solvedProblemsBodyElement.innerHTML = '';
     solvedByXBodyElement.innerHTML = '';
     solvedByYBodyElement.innerHTML = '';
     mediocresBodyElement.innerHTML = '';
     trueChallengesBodyElement.innerHTML = '';
 
+    // Update algorithm names in headers
     tableSolvedByXHeaderElements.textContent = 'Solved By ' + algoName1;
     tableAlgoXNameElements.forEach(element => {
         element.textContent = algoName1;
@@ -444,6 +464,7 @@ function fillTables(separatedResults, algoName1, algoName2) {
         element.textContent = algoName2;
     });
 
+    // Fill all tables with data or empty state
     fill(solvedProblemsBodyElement, separatedResults.solvedProblems);
     fill(solvedByXBodyElement, separatedResults.solvedByAlgo1);
     fill(solvedByYBodyElement, separatedResults.solvedByAlgo2);
