@@ -1,6 +1,6 @@
 <div class="tab-pane fade show active" id="dataset-info-tab-pane" role="tabpanel" aria-labelledby="dataset-info-tab" tabindex="0">
-    <h2>Dataset Comparison</h2>
-    <p>
+    <h2 class="compact-spacing">Dataset Comparison</h2>
+    <p class="compact-spacing">
         While working with recommender system algorithms, the characteristics of your datasets heavily affect how well your model can learn,
         generalize, and personalize. This dataset comparison table allows you to select any two datasets and compare them side-by-side
         using key metadata metrics. This comparison gives insight into data sparsity, bias risks and cold-start risks,
@@ -18,11 +18,13 @@
         </div>
     </div>
 
-    <hr style="margin-top: 2rem; margin-bottom: 2rem;">
+    <hr class="modern-section-divider">
 
-    <div class="container mt-5" style="margin-top: 0px !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
+    <!-- Dataset Comparison Table -->
+    <div class="modern-table-section">
+        <div class="modern-section-header">Dataset Metadata Comparison</div>
+        <table class="modern-table" id="dataset-table">
+            <thead>
                 <tr>
                     <th>Metadata</th>
                     <th>Dataset 1</th>
@@ -30,7 +32,7 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Comparison -->
+                <!-- Comparison content will be populated by JavaScript -->
             </tbody>
         </table>
     </div>
@@ -120,8 +122,6 @@
 </div>
 
 <div id="mean-ratings-per-user-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
-    <p id="mean-ratings-per-user-info-p" style="margin: 0.3rem;">
-    </p>
     <table style="
         border: 1px solid #ccc;
         padding: 0px;
