@@ -30,9 +30,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       compareAlgorithmsBtn.click();
     } else if (tabName === "compareDatasets") {
       compareDatasetsBtn.click();
-    } else {
+    } else if (tabName === "aps") {
       apsTabBtn.click();
     }
+  } else {
+    apsTabBtn.click();
   }
 
   const versionNumberElement = document.getElementById("version-number");
