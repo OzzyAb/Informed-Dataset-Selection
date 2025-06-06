@@ -21,7 +21,9 @@ var similarityElement = null;
 var difficultyElement = null;
 
 // NEW: Variable to hold the select all/deselect all button
-var selectAllButton = null;
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
 
 var chartHelper = null;
 var selectedAlgorithms = [];
@@ -85,13 +87,13 @@ export async function initialize() {
     });
 
     // NEW: Create and add the Select All/Deselect All button
-    createSelectAllButton();
+    createSelectAllDatasetButton();
 
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
     
     // NEW: Add the select all button first, then the checkboxes
-    datasetFilterArea.appendChild(selectAllButton);
+    datasetFilterArea.appendChild(selectAllDatasetArea);
 
     selectedDatasets = [];
     datasets.forEach(dataset => {
@@ -118,7 +120,7 @@ export async function initialize() {
     });
 
     // NEW: Update the button text after all checkboxes are created
-    updateSelectAllButtonText();
+    updateSelectAllDatasetButtonText();
 
     lastMetricSelection = 'ndcg';
     lastKValueSelection = 'one';
@@ -157,20 +159,28 @@ function checkStaleData() {
 }
 
 // NEW: Function to create the Select All/Deselect All button
-function createSelectAllButton() {
+function createSelectAllDatasetButton() {
     // Create button wrapper div that spans full width
-    const buttonWrapper = document.createElement('div');
-    buttonWrapper.style.width = '100%';
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
 
     // Create the actual button
-    selectAllButton = document.createElement('button');
-    selectAllButton.type = 'button';
-    selectAllButton.className = 'filter-control-btn';
-    selectAllButton.textContent = 'Deselect All'; // Start with "Deselect All" since all are selected by default
-    selectAllButton.addEventListener('click', toggleAllDatasets);
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
 
-    buttonWrapper.appendChild(selectAllButton);
-    selectAllButton = buttonWrapper; // Replace reference to point to the wrapper
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All'; // initial text
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
 }
 
 // NEW: Function to toggle all datasets on/off
@@ -186,25 +196,24 @@ function toggleAllDatasets() {
     // Update selected datasets array
     selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
 
-    updateFilterHeader();
-    updateSelectAllButtonText();
+    updateDatasetFilterHeader();
+    updateSelectAllDatasetButtonText();
     checkStaleData();
 }
 
 // NEW: Function to update the Select All/Deselect All button text
-function updateSelectAllButtonText() {
-    const button = selectAllButton.querySelector('button');
-    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+function updateSelectAllDatasetButtonText() {
+    const checkedCount = selectedDatasets.length;
     
     if (checkedCount === datasetFilterCheckboxes.length) {
-        button.textContent = 'Deselect All';
+        selectAllDatasetButtonText.textContent = 'Deselect All';
     } else {
-        button.textContent = 'Select All';
+        selectAllDatasetButtonText.textContent = 'Select All';
     }
 }
 
 // NEW: Function to update filter header text
-function updateFilterHeader() {
+function updateDatasetFilterHeader() {
     const checkedCount = selectedDatasets.length;
     
     if (checkedCount === datasetFilterCheckboxes.length) {
@@ -395,8 +404,8 @@ function onFilterDataset(e) {
         selectedDatasets.splice(index, 1);
     }
 
-    updateFilterHeader();
-    updateSelectAllButtonText();
+    updateDatasetFilterHeader();
+    updateSelectAllDatasetButtonText();
     checkStaleData();
 }
 
@@ -718,12 +727,5 @@ export function dispose() {
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
-    
-    // NEW: Clean up the select all button event listener
-    if (selectAllButton) {
-        const button = selectAllButton.querySelector('button');
-        if (button) {
-            button.removeEventListener('click', toggleAllDatasets);
-        }
-    }
+    selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
 }

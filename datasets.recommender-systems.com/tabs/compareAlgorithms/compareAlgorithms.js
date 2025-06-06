@@ -23,7 +23,9 @@ var tableSolvedByXHeaderElements = null;
 var tableSolvedByYHeaderElements = null;
 
 // NEW: Variable to hold the select all/deselect all button
-var selectAllButton = null;
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
 
 var chartHelper = null;
 var selectedDatasets = [];
@@ -85,14 +87,14 @@ export async function initialize() {
     }
 
     // NEW: Create and add the Select All/Deselect All button
-    createSelectAllButton();
+    createSelectAllDatasetButton();
 
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
     selectedDatasets = [];
     
     // NEW: Add the select all button first, then the checkboxes
-    datasetFilterArea.appendChild(selectAllButton);
+    datasetFilterArea.appendChild(selectAllDatasetArea);
 
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
@@ -118,26 +120,34 @@ export async function initialize() {
     });
 
     // NEW: Update the button text after all checkboxes are created
-    updateSelectAllButtonText();
+    updateSelectAllDatasetButtonText();
 
     await compareAlgorithms();
 }
 
 // NEW: Function to create the Select All/Deselect All button
-function createSelectAllButton() {
+function createSelectAllDatasetButton() {
     // Create button wrapper div that spans full width
-    const buttonWrapper = document.createElement('div');
-    buttonWrapper.style.width = '100%';
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
 
     // Create the actual button
-    selectAllButton = document.createElement('button');
-    selectAllButton.type = 'button';
-    selectAllButton.className = 'filter-control-btn';
-    selectAllButton.textContent = 'Deselect All'; // Start with "Deselect All" since all are selected by default
-    selectAllButton.addEventListener('click', toggleAllDatasets);
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
 
-    buttonWrapper.appendChild(selectAllButton);
-    selectAllButton = buttonWrapper; // Replace reference to point to the wrapper
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All'; // initial text
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
 }
 
 // NEW: Function to toggle all datasets on/off
@@ -155,21 +165,20 @@ function toggleAllDatasets() {
 
     // Update the header and button text
     updateFilterHeader();
-    updateSelectAllButtonText();
+    updateSelectAllDatasetButtonText();
 
     // Trigger the algorithm comparison update
     compareAlgorithms();
 }
 
 // NEW: Function to update the Select All/Deselect All button text
-function updateSelectAllButtonText() {
-    const button = selectAllButton.querySelector('button');
+function updateSelectAllDatasetButtonText() {
     const checkedCount = selectedDatasets.length;
     
     if (checkedCount === datasetFilterCheckboxes.length) {
-        button.textContent = 'Deselect All';
+        selectAllDatasetButtonText.textContent = 'Deselect All';
     } else {
-        button.textContent = 'Select All';
+        selectAllDatasetButtonText.textContent = 'Select All';
     }
 }
 
@@ -231,7 +240,7 @@ async function onFilterDataset(e) {
 
     // NEW: Update header and button text when individual checkboxes change
     updateFilterHeader();
-    updateSelectAllButtonText();
+    updateSelectAllDatasetButtonText();
 
     await compareAlgorithms();
 }
@@ -524,16 +533,9 @@ function fillTables(separatedResults, algoName1, algoName2) {
 
 export function dispose() {
     document.getElementById('aps-redirect').removeEventListener('click', apsRedirect);
-     document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPngWithFeedback);
+    document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.removeEventListener('change', compareAlgorithms);
     });
-    
-    // NEW: Clean up the select all button event listener
-    if (selectAllButton) {
-        const button = selectAllButton.querySelector('button');
-        if (button) {
-            button.removeEventListener('click', toggleAllDatasets);
-        }
-    }
+    selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
 }

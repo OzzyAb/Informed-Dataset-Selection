@@ -185,15 +185,21 @@
     </div>
 
     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 1rem;">
-        <button id="aps-update-pca-btn" type="button" class="btn btn-primary">Update PCA</button>
+        <button id="aps-update-pca-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-arrows-rotate" style="color: white !important; margin-right: 0.3rem;"></i>Update PCA
+        </button>
         <span id="aps-update-pca-txt-stale" style="display: none; font-weight: 400; font-style: italic;">The data on the graph is now stale!</span>
         <span id="aps-update-pca-txt-calculating" class="fading-text" style="display: none; font-weight: 400; font-style: italic;">Calculating...</span>
     </div>
 
     <canvas id="aps-chart" class="my-3" style="touch-action: none; user-select: none;"></canvas>
     <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 1rem;">
-        <button id="aps-reset-graph-btn" type="button" class="btn btn-primary">Reset Graph</button>
-        <button id="aps-export-png-btn" type="button" class="btn btn-primary">Export as PNG</button>
+        <button id="aps-reset-graph-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-rotate-right" style="color: white !important; margin-right: 0.3rem;"></i>Refresh View
+        </button>
+        <button id="aps-export-png-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG
+        </button>
     </div>
 
     <hr style="margin-bottom: 1.5rem;">
