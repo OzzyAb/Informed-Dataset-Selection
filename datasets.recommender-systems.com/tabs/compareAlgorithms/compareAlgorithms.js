@@ -128,7 +128,6 @@ function createSelectAllButton() {
     // Create button wrapper div that spans full width
     const buttonWrapper = document.createElement('div');
     buttonWrapper.style.width = '100%';
-    buttonWrapper.style.marginBottom = '15px';
 
     // Create the actual button
     selectAllButton = document.createElement('button');
@@ -165,7 +164,7 @@ function toggleAllDatasets() {
 // NEW: Function to update the Select All/Deselect All button text
 function updateSelectAllButtonText() {
     const button = selectAllButton.querySelector('button');
-    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    const checkedCount = selectedDatasets.length;
     
     if (checkedCount === datasetFilterCheckboxes.length) {
         button.textContent = 'Deselect All';
@@ -176,7 +175,7 @@ function updateSelectAllButtonText() {
 
 // NEW: Function to update filter header text
 function updateFilterHeader() {
-    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    const checkedCount = selectedDatasets.length;
     
     if (checkedCount === datasetFilterCheckboxes.length) {
         datasetFilterHeaderElement.innerText = '(All selected)';
