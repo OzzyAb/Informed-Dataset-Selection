@@ -153,32 +153,14 @@ async function updatePca() {
     const kValue = kValueElement.value;
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-    // Get PCA results from the DB to calculate difficulties
-    const pcaResults = await ApiService.getPcaResults();
-    const mappedPcaResults = pcaResults.map(result => {
-        return {
-            id: result.id,
-            datasetId: result.datasetId,
-            algorithmId: result.algorithmId,
-            x: result[performanceMetric][kValue].x,
-            y: result[performanceMetric][kValue].y,
-        }
-    });
-
-    const pcaMinX = Math.min(...mappedPcaResults.map(result => result.x));
-    const pcaMaxX = Math.max(...mappedPcaResults.map(result => result.x));
-    const pcaMinY = Math.min(...mappedPcaResults.map(result => result.y));
-    const pcaMaxY = Math.max(...mappedPcaResults.map(result => result.y));
-    showDatasetDifficulties(mappedPcaResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
-
     // Get performance results from the DB
-    let mappedResults;
+    let filteredResults;
     if (selectedAlgorithms.length === algorithms.length &&
         selectedDatasets.length === datasets.length
     ) {
         // No filter is applied. Get the PCA results directly from the backend
         const results = await ApiService.getPcaResults();
-        mappedResults = results.map(result => {
+        filteredResults = results.map(result => {
             return {
                 id: result.datasetId,
                 x: result[performanceMetric][kValue].x,
@@ -246,7 +228,7 @@ async function updatePca() {
             };
         });
 
-        mappedResults = results.map(result => {
+        filteredResults = results.map(result => {
             return {
                 id: result.datasetId,
                 x: result.x,
@@ -257,14 +239,32 @@ async function updatePca() {
         });
     }
 
-    // Draw the chart and calculate similarities
-    const minX = Math.min(...mappedResults.map(result => result.x));
-    const maxX = Math.max(...mappedResults.map(result => result.x));
-    const minY = Math.min(...mappedResults.map(result => result.y));
-    const maxY = Math.max(...mappedResults.map(result => result.y));
+    // Get PCA results from the DB to calculate difficulties and similarities
+    const pcaResults = await ApiService.getPcaResults();
+    const mappedPcaResults = pcaResults.map(result => {
+        return {
+            id: result.datasetId,
+            x: result[performanceMetric][kValue].x,
+            y: result[performanceMetric][kValue].y,
+        }
+    });
 
-    drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY);
-    showSimilarDatasets(mappedResults);
+    const pcaMinX = Math.min(...mappedPcaResults.map(result => result.x));
+    const pcaMaxX = Math.max(...mappedPcaResults.map(result => result.x));
+    const pcaMinY = Math.min(...mappedPcaResults.map(result => result.y));
+    const pcaMaxY = Math.max(...mappedPcaResults.map(result => result.y));
+
+    showDatasetDifficulties(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
+    showSimilarDatasets(filteredResults);
+
+    // Draw the chart
+    const minX = Math.min(...filteredResults.map(result => result.x));
+    const maxX = Math.max(...filteredResults.map(result => result.x));
+    const minY = Math.min(...filteredResults.map(result => result.y));
+    const maxY = Math.max(...filteredResults.map(result => result.y));
+
+    drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName,
+        minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
     
     // Save the last selections
     lastMetricSelection = performanceMetric;
@@ -331,7 +331,8 @@ function onFilterDataset(e) {
     checkStaleData();
 }
 
-function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY) {
+function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName, 
+    minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY) {
     const difficultyBarTopColor = 'rgb(253, 196, 125)';
 
     function getDatasetDifficultyColor(point, minX, maxX, minY, maxY) {
@@ -365,10 +366,10 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
             {
                 label: 'Datasets',
                 pointRadius: 5,
-                pointBackgroundColor: mappedResults.map(result => getDatasetDifficultyColor(result, minX, maxX, minY, maxY)),
+                pointBackgroundColor: filteredResults.map(result => getDatasetDifficultyColor(mappedPcaResults.find(x => x.id === result.id), pcaMinX, pcaMaxX, pcaMinY, pcaMaxY)),
                 pointBorderWidth: 0,
                 backgroundColor: 'red',
-                data: mappedResults
+                data: filteredResults
             },
             {
                 label: 'Variances',
@@ -401,7 +402,7 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
         labels: {
             showX: true,
             showY: true,
-            customLabels: mappedResults.reduce((data, result) => {
+            customLabels: filteredResults.reduce((data, result) => {
                 const dataset = datasets.find(dataset => dataset.id == result.id);
                 data[dataset.id] = dataset.name;
                 return data;
@@ -434,19 +435,19 @@ function exportPng() {
     chartHelper.exportChartAsPng('aps', canvasElement);
 }
 
-function showSimilarDatasets(mappedResults) {
+function showSimilarDatasets(filteredResults) {
     // Find similar datasets
     const result = {};
 
-    for (let i = 0; i < mappedResults.length; i++) {
-        const a = mappedResults[i];
+    for (let i = 0; i < filteredResults.length; i++) {
+        const a = filteredResults[i];
         const similar = [];
 
-        for (let j = 0; j < mappedResults.length; j++) {
+        for (let j = 0; j < filteredResults.length; j++) {
             if (i === j)
                 continue;
 
-            const b = mappedResults[j];
+            const b = filteredResults[j];
 
             const dx = a.x - b.x;
             const dy = a.y - b.y;
@@ -533,11 +534,14 @@ function showSimilarDatasets(mappedResults) {
     });
 }
 
-function showDatasetDifficulties(mappedPcaResults, minX, maxX, minY, maxY) {
+function showDatasetDifficulties(mappedPcaResults, filteredResults, minX, maxX, minY, maxY) {
     difficultyElement.innerHTML = '';
 
     mappedPcaResults.forEach(result => {
-        const dataset = datasets.find(d => d.id === result.datasetId);
+        if (filteredResults.find(r => r.id === result.id) == undefined)
+            return;
+
+        const dataset = datasets.find(d => d.id === result.id);
 
         const normX = (result.x - minX) / (maxX - minX);
         const normY = (result.y - minY) / (maxY - minY);
