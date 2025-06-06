@@ -110,8 +110,7 @@ export async function initialize() {
     dataset1SelectElement = document.getElementById('dataset-selection-1');
     dataset2SelectElement = document.getElementById('dataset-selection-2');
 
-    // Updated to find custom table instead of Bootstrap table
-    const table = document.querySelector(".custom-table");
+    const table = document.querySelector("#dataset-table");
     tableHeadElement = table.querySelector("thead");
     tableBodyElement = table.querySelector("tbody");
 
@@ -123,8 +122,7 @@ export async function initialize() {
 
     dataset1SelectElement.innerHTML = '';
     dataset2SelectElement.innerHTML = '';
-    // Initialize with custom no-data styling
-    tableBodyElement.innerHTML = '<tr><td colspan="3" class="custom-no-data">Select datasets to compare</td></tr>';
+    tableBodyElement.innerHTML = '';
 
     datasets.forEach((dataset) => {
         const option1 = document.createElement('option');
@@ -153,12 +151,11 @@ function compareDatasets() {
     const dataset1 = datasets.find((dataset) => dataset.id == Number(dataset1SelectElement.value));
     const dataset2 = datasets.find((dataset) => dataset.id == Number(dataset2SelectElement.value));
 
-    // Updated header styling to work with custom table
     tableHeadElement.innerHTML = `
       <tr>
-        <th>Metadata</th>
-        <th>${dataset1.name}</th>
-        <th>${dataset2.name}</th>
+        <th style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Metadata</th>
+        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset1.name}</th>
+        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset2.name}</th>
       </tr>
     `;
     tableBodyElement.innerHTML = '';
@@ -169,7 +166,7 @@ function compareDatasets() {
         const tdDataset1 = document.createElement('td');
         const tdDataset2 = document.createElement('td');
 
-        // Removed inline styles to let custom CSS handle styling
+        tdMetadata.style = 'text-align: left; vertical-align: middle; white-space: nowrap;';
         tdMetadata.textContent = metadata.name;
         if (metadata.description !== undefined) {
             tdMetadata.title = metadata.description;
@@ -216,6 +213,9 @@ function compareDatasets() {
 
             tdMetadata.appendChild(infoIcon);
         }
+
+        tdDataset1.style = 'text-align: center; vertical-align: middle;';
+        tdDataset2.style = 'text-align: center; vertical-align: middle;';
 
         const value1 = metadata.fixed === undefined ? dataset1[metadata.key] : dataset1[metadata.key].toFixed(2);
         const value2 = metadata.fixed === undefined ? dataset2[metadata.key] : dataset2[metadata.key].toFixed(2);
