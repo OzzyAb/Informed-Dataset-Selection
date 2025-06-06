@@ -20,22 +20,28 @@
             </li>
         </ul>
         The graph below visualizes this by reducing the performance results of datasets into two dimensions using
-        <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such as nDCG, Hit Ratio (HR) or Recall
-        and the selected K-value.
+        <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such as nDCG, Hit Ratio (HR)
+        or Recall and the selected K-value. The graph axes, <strong>Component 1</strong> and <strong>Component 2</strong>, represent
+        new composite variables that capture the most significant patterns in the original performance results. Specifically,
+        Component 1 explains the largest portion of the variance that reflects the dominant trend across datasets, whereas Component 2
+        accounts for the second-largest variance that highlights additional, independent patterns. These components are linear combinations
+        of the original results and allow us to visualize and compare complex multi-dimensional results in a simplified two-dimensional space.
+        As a result, the position of each dataset on the plot indicates its overall performance profile relative to others
+        based on the selected metrics and K-values.
         <br style="margin-bottom: 1rem;">
-        <strong>Difficulties:</strong> The difficulty levels of datasets are defined based on their positions on the graph, where each point
-        represents a dataset. The PCA's axes are not normalized but are scaled according to the variance captured in the selected datasets,
-        due to the variance-preserving nature of PCA. To determine the difficulty levels of the selected datasets, the minimum values
-        along the X and Y axes are computed independently across all datasets. This minima defines a reference point corresponding to
-        the highest difficulty. Each dataset's position is then evaluated relative to this reference, which makes the difficulty levels
-        inherently relative to the selected datasets. This is because the range and distribution of the PCA graph change depending on
-        the overall dataset composition, which influences how difficult a dataset appears in comparison to others.
+        <strong>Difficulties:</strong> The difficulty levels of datasets are inferred from their positions on the graph, where each point
+        corresponds to a dataset. Because PCA preserves variance, the axes reflect the amount of variability captured among all datasets.
+        To establish difficulty levels, the minimum values along the X and Y axes are identified independently across all datasets, which
+        defines a reference point that represents the highest difficulty. Each dataset's position is then assessed relative to this reference,
+        making the difficulty levels inherently relative to the overall performance of all algorithms on all datasets. This relativity arises
+        because the range and distribution of points on the PCA graph depend on the combined characteristics of all datasets, which affects
+        how difficult a dataset appears in comparison to others.
         <br style="margin-bottom: 1rem;">
-        <strong>Similarities:</strong> Dataset similarity is calculated not only by their <strong>Euclidean distances</strong> in PCA space
-        but also by the uncertainty in their positions, which is visualized by ellipses around each point. These ellipses represent
-        the variance of each dataset along the X and Y axes. Given the uncertainty in dataset positions, a variance-normalized distance metric,
-        which is similar to the <strong>Mahalanobis distance</strong>, is used to find the similarities. This approach measures how close
-        two datasets are relative to their combined positional uncertainty.
+        <strong>Similarities:</strong> Dataset similarity is assessed not only by their Euclidean distances on the PCA graph but also
+        by the uncertainty in their positions, which is shown as ellipses surrounding each point. These ellipses represent the variance of
+        each dataset along the X and Y axes. To account for this positional uncertainty, a variance-normalized distance metric, which is
+        similar to the <strong>Mahalanobis distance</strong> is employed. This method evaluates the closeness of two datasets relative to
+        their combined uncertainty. This provides a more robust measure of similarity than simple Euclidean distance alone.
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <msup>
                 <mi>distance</mi>
@@ -102,9 +108,9 @@
                 </mrow>
             </mfrac>
         </math>
-        A smaller distance indicates greater similarity between two datasets, while taking their relative uncertainty along each axis into
-        account. A confidence score is then calculated by applying an <strong>exponential transformation</strong> to this distance,
-        which maps smaller distances to higher confidence values:
+        A smaller distance indicates a higher similarity between two datasets, while accounting for their relative uncertainty
+        along each axis. To quantify this, a confidence score is computed by applying an <strong>exponential decay</strong>
+        to the distance, which converts smaller distances into higher confidence values:
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <mi>confidence</mi>
             <mo>=</mo>
@@ -116,7 +122,6 @@
                 </mrow>
             </msup>
         </math>
-        Higher confidence represents stronger similarity in algorithm performance between the datasets.
     </p>
 
     <hr>
@@ -125,7 +130,7 @@
     <div class="row mb-3">
         <div class="col">
             <label for="formPerformanceMetricPca" class="form-label">Performance Metric</label>
-            <select id="formPerformanceMetricPca" class="form-select updatePca" aria-label="Select performance metric">
+            <select id="formPerformanceMetricPca" class="form-select aps-selection" aria-label="Select performance metric">
                 <option value="ndcg">nDCG</option>
                 <option value="hr">Hit Ratio (HR)</option>
                 <option value="recall">Recall</option>
@@ -133,7 +138,7 @@
         </div>
         <div class="col">
             <label for="formKValuePca" class="form-label">K-Value</label>
-            <select id="formKValuePca" class="form-select updatePca" aria-label="Select k-value">
+            <select id="formKValuePca" class="form-select aps-selection" aria-label="Select k-value">
                 <option value="one">@1</option>
                 <option value="three">@3</option>
                 <option value="five">@5</option>
@@ -143,18 +148,19 @@
         </div>
     </div>
 
-    <div class="accordion" id="accordionAPSAlgo" style="margin-bottom: 1rem;">
+    <div class="accordion" id="accordionAPS-algo" style="margin-bottom: 1rem;">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#apsAlgoNames" aria-expanded="false" aria-controls="apsAlgoNames">
-                    Algorithms
+            <h2 class="accordion-header" id="headingOne-algo">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#algorithmFilter" aria-expanded="false" aria-controls="algorithmFilter">
+                    <span>Algorithm Filter</span>
+                    <span id="aps-algorithm-filter-header" style="margin-left: auto;">(All selected)</span>
                 </button>
             </h2>
-            <div id="apsAlgoNames" class="accordion-collapse collapse" aria-labelledby="headingOne"
-                data-bs-parent="#accordionAPSAlgo">
-                <div id="aps-algo" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
-                    <!-- Algorithm names -->
+            <div id="algorithmFilter" class="accordion-collapse collapse" aria-labelledby="headingOne-algo"
+                data-bs-parent="#accordionAPS-algo">
+                <div id="aps-algorithm-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <!-- Algorithm filter checkboxes -->
                 </div>
             </div>
         </div>
@@ -164,18 +170,24 @@
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    data-bs-target="#datasetFilter" aria-expanded="false" aria-controls="datasetFilter">
                     <span>Dataset Filter</span>
-                    <span id="aps-filter-header" style="margin-left: auto;">(All selected)</span>
+                    <span id="aps-dataset-filter-header" style="margin-left: auto;">(All selected)</span>
                 </button>
             </h2>
-            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+            <div id="datasetFilter" class="accordion-collapse collapse" aria-labelledby="headingOne"
                 data-bs-parent="#accordionAPS">
-                <div id="aps-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <div id="aps-dataset-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
                     <!-- Dataset filter checkboxes -->
                 </div>
             </div>
         </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 1rem;">
+        <button id="aps-update-pca-btn" type="button" class="btn btn-primary">Update PCA</button>
+        <span id="aps-update-pca-txt-stale" style="display: none; font-weight: 400; font-style: italic;">The data on the graph is now stale!</span>
+        <span id="aps-update-pca-txt-calculating" class="fading-text" style="display: none; font-weight: 400; font-style: italic;">Calculating...</span>
     </div>
 
     <canvas id="aps-chart" class="my-3" style="touch-action: none; user-select: none;"></canvas>
@@ -188,15 +200,15 @@
 
     <div class="accordion" id="aps-dataset-difficulties-container">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
+            <h2 class="accordion-header" id="headingOne-diff">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
                     data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
                     style="display: flex; justify-content: space-between; width: 100%;">
                     Difficulties
                 </button>
             </h2>
-            <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne"
-                data-bs-parent="#accordionAPS">
+            <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne-diff"
+                data-bs-parent="#accordionAPS-diff">
                 <div id="aps-dataset-difficulties-body" class="accordion-body"
                     style="display: flex; flex-direction: column;">
                     <div>
@@ -224,15 +236,15 @@
 
     <div class="accordion" id="aps-dataset-similarities-container" style="margin-top: 1rem;">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
+            <h2 class="accordion-header" id="headingOne-sim">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
                     data-bs-target="#aps-dataset-similarities" aria-expanded="false" aria-controls="collapseOne"
                     style="display: flex; justify-content: space-between; width: 100%;">
                     Similarities
                 </button>
             </h2>
-            <div id="aps-dataset-similarities" class="accordion-collapse collapse" aria-labelledby="headingOne"
-                data-bs-parent="#accordionAPS">
+            <div id="aps-dataset-similarities" class="accordion-collapse collapse" aria-labelledby="headingOne-sim"
+                data-bs-parent="#accordionAPS-sim">
                 <div id="aps-dataset-similarities-body" class="accordion-body" style="display: flex; flex-direction: column;">
                     <div>
                         <h5 style="font-weight: bold;">Similarity Confidence Levels:</h5>

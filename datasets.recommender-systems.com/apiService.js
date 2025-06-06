@@ -66,12 +66,49 @@ export class ApiService {
     return response.ok;
   }
 
-  static async getPerformanceResults(algoId1, algoId2) {
+  static async compareAlgorithms(algoId1, algoId2) {
     const response = await fetch(`${this.#apiUrl}result&task=compareAlgorithms&x=${algoId1}&y=${algoId2}`);
     if (!response.ok)
       return null;
 
     const data = await response.json();
     return data.data;
+  }
+
+  static #performanceResults = null;
+  static async getPerformanceResults(datasetIds, algorithmIds) {
+    if (this.#performanceResults === null) {
+      this.#performanceResults = {};
+    }
+
+    const cachedDatasets = [];
+    for (const dataset in this.#performanceResults) {
+      for (const algorithm in this.#performanceResults[dataset]) {
+        if (this.#performanceResults[dataset][algorithm] !== undefined) {
+          cachedDatasets.push(dataset);
+        }
+      }
+    }
+    
+    const missingIds = datasetIds.filter(id => !cachedDatasets.includes(String(id)));
+    if (missingIds.length !== 0) {
+      const ids = new URLSearchParams();
+      missingIds.forEach(id => ids.append('ids[]', id));
+
+      const response = await fetch(`${this.#apiUrl}result&${ids.toString()}`);
+      if (!response.ok)
+        return null;
+
+      const data = await response.json();
+      data.data.forEach(result => {
+        if (this.#performanceResults[result.datasetId] === undefined) {
+          this.#performanceResults[result.datasetId] = {};
+        }
+
+        this.#performanceResults[result.datasetId][result.algorithmId] = result;
+      });
+    }
+    
+    return this.#performanceResults;
   }
 }
