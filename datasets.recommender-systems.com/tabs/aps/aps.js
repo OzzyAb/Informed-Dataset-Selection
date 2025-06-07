@@ -21,6 +21,12 @@ var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
 
+// Modal info icon elements for Difficulties and Similarities
+var difficultiesInfoIcon = null;
+var difficultiesModal = null;
+var similaritiesInfoIcon = null;
+var similaritiesModal = null;
+
 var selectAllAlgorithmArea = null;
 var selectAllAlgorithmButton = null;
 var selectAllAlgorithmButtonText = null;
@@ -39,6 +45,7 @@ var lastAlgorithmFilter = [];
 var lastDatasetFilter = [];
 
 export async function initialize() {
+    // Get existing elements
     performanceMetricElement = document.getElementById("formPerformanceMetricPca");
     kValueElement = document.getElementById("formKValuePca");
     algorithmFilterHeaderElement = document.getElementById('aps-algorithm-filter-header');
@@ -53,6 +60,16 @@ export async function initialize() {
     similarityElement = document.getElementById('similar-datasets');
     difficultyElement = document.getElementById('dataset-difficulty');
 
+    // Get modal elements for info icons
+    difficultiesInfoIcon = document.getElementById('difficulties-info-icon');
+    difficultiesModal = document.getElementById('difficulties-modal');
+    similaritiesInfoIcon = document.getElementById('similarities-info-icon');
+    similaritiesModal = document.getElementById('similarities-modal');
+
+    // Initialize modal event listeners for info icons
+    initializeModalTooltips();
+
+    // Add existing event listeners
     updatePcaButton.addEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
@@ -62,11 +79,13 @@ export async function initialize() {
 
     chartHelper = new ChartHelper();
 
+    // Load data from API
     datasets = await ApiService.getDatasets();
     algorithms = await ApiService.getAlgorithms();
 
     createSelectAllButtons();
 
+    // Initialize algorithm filter
     algorithmFilterHeaderElement.innerText = '(All selected)';
     algorithmFilterArea.innerHTML = '';
     algorithmFilterArea.appendChild(selectAllAlgorithmArea);
@@ -95,6 +114,7 @@ export async function initialize() {
         selectedAlgorithms.push(algorithm.id);
     });
 
+    // Initialize dataset filter
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
     datasetFilterArea.appendChild(selectAllDatasetArea);
@@ -123,20 +143,120 @@ export async function initialize() {
         selectedDatasets.push(dataset.id);
     });
     
+    // Update filter headers and button texts
     updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
     updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
     updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
     updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
 
+    // Set initial selections
     lastMetricSelection = 'ndcg';
     lastKValueSelection = 'one';
     lastAlgorithmFilter = [...selectedAlgorithms];
     lastDatasetFilter = [...selectedDatasets];
 
+    // Initial data check and PCA update
     checkStaleData();
     await updatePca();
 }
 
+/**
+ * Initialize modal tooltips for Difficulties and Similarities sections
+ * This creates click-to-open modal functionality for info icons
+ */
+function initializeModalTooltips() {
+    // Difficulties info icon modal
+    if (difficultiesInfoIcon && difficultiesModal) {
+        // Open modal on click
+        difficultiesInfoIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openModal(difficultiesModal);
+        });
+
+        // Close modal when clicking close button
+        const closeBtn = difficultiesModal.querySelector('.info-modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeModal(difficultiesModal);
+            });
+        }
+
+        // Close modal when clicking overlay
+        difficultiesModal.addEventListener('click', (e) => {
+            if (e.target === difficultiesModal) {
+                closeModal(difficultiesModal);
+            }
+        });
+    }
+
+    // Similarities info icon modal
+    if (similaritiesInfoIcon && similaritiesModal) {
+        // Open modal on click
+        similaritiesInfoIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openModal(similaritiesModal);
+        });
+
+        // Close modal when clicking close button
+        const closeBtn = similaritiesModal.querySelector('.info-modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closeModal(similaritiesModal);
+            });
+        }
+
+        // Close modal when clicking overlay
+        similaritiesModal.addEventListener('click', (e) => {
+            if (e.target === similaritiesModal) {
+                closeModal(similaritiesModal);
+            }
+        });
+    }
+
+    // Close modals when pressing Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+}
+
+/**
+ * Open modal with smooth animation
+ */
+function openModal(modal) {
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+}
+
+/**
+ * Close modal with smooth animation
+ */
+function closeModal(modal) {
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+}
+
+/**
+ * Close all open modals
+ */
+function closeAllModals() {
+    const allModals = document.querySelectorAll('.info-modal-overlay');
+    allModals.forEach(modal => {
+        closeModal(modal);
+    });
+}
+
+/**
+ * Check if the current data is stale compared to last selections
+ * Shows appropriate UI messages based on selection state
+ */
 function checkStaleData() {
     function isSelectionEqual(lastSelection, currentSelection) {
         if (lastSelection.length !== currentSelection.length)
@@ -173,6 +293,9 @@ function checkStaleData() {
     }
 }
 
+/**
+ * Create select all/deselect all buttons for filters
+ */
 function createSelectAllButtons() {
     // Algorithm filter
     selectAllAlgorithmArea = document.createElement('div');
@@ -217,6 +340,9 @@ function createSelectAllButtons() {
     selectAllDatasetArea.appendChild(selectAllDatasetButton);
 }
 
+/**
+ * Toggle all algorithm selections
+ */
 function toggleAllAlgorithms() {
     const checkedCount = selectedAlgorithms.length;
     const shouldCheck = checkedCount !== algorithmFilterCheckboxes.length;
@@ -232,6 +358,9 @@ function toggleAllAlgorithms() {
     checkStaleData();
 }
 
+/**
+ * Toggle all dataset selections
+ */
 function toggleAllDatasets() {
     const checkedCount = selectedDatasets.length;
     const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
@@ -247,6 +376,9 @@ function toggleAllDatasets() {
     checkStaleData();
 }
 
+/**
+ * Update filter header text based on selections
+ */
 function updateFilterHeader(checkboxes, header, selection, list) {
     const checkedCount = selection.length;
 
@@ -264,6 +396,9 @@ function updateFilterHeader(checkboxes, header, selection, list) {
     }
 }
 
+/**
+ * Update select all button text based on current selections
+ */
 function updateSelectAllButtonText(checkboxes, text, selection) {
     const checkedCount = selection.length;
     if (checkedCount === checkboxes.length) {
@@ -273,13 +408,16 @@ function updateSelectAllButtonText(checkboxes, text, selection) {
     }
 }
 
+/**
+ * Main function to update PCA analysis and display results
+ */
 async function updatePca() {
-    // Show loading
+    // Show loading state
     updatePcaButton.disabled = true;
     updatePcaTextStale.style.display = 'none';
     updatePcaTextCalculating.style.display = 'block';
 
-    // Get selected values
+    // Get selected values from form
     const performanceMetric = performanceMetricElement.value;
     const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text;
     const kValue = kValueElement.value;
@@ -386,6 +524,7 @@ async function updatePca() {
     const pcaMinY = Math.min(...mappedPcaResults.map(result => result.y));
     const pcaMaxY = Math.max(...mappedPcaResults.map(result => result.y));
 
+    // Show difficulties and similarities sections
     showDatasetDifficulties(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
     showSimilarDatasets(filteredResults);
 
@@ -398,7 +537,7 @@ async function updatePca() {
     drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName,
         minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
     
-    // Save the last selections
+    // Save the last selections for stale data checking
     lastMetricSelection = performanceMetric;
     lastKValueSelection = kValue;
     lastAlgorithmFilter = [...selectedAlgorithms];
@@ -409,6 +548,9 @@ async function updatePca() {
     updatePcaTextCalculating.style.display = 'none';
 }
 
+/**
+ * Handle algorithm filter checkbox changes
+ */
 function onFilterAlgorithm(e) {
     const algorithmId = Number(e.target.id.split('-')[1]);
     if (e.target.checked) {
@@ -424,6 +566,9 @@ function onFilterAlgorithm(e) {
     checkStaleData();
 }
 
+/**
+ * Handle dataset filter checkbox changes
+ */
 function onFilterDataset(e) {
     const datasetId = Number(e.target.id.split('-')[1]);
     if (e.target.checked) {
@@ -439,6 +584,9 @@ function onFilterDataset(e) {
     checkStaleData();
 }
 
+/**
+ * Draw the main PCA chart
+ */
 function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName, 
     minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY) {
     const difficultyBarTopColor = 'rgb(253, 196, 125)';
@@ -532,14 +680,23 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
     });
 }
 
+/**
+ * Reset chart zoom/pan to default view
+ */
 function resetGraph() {
     chartHelper.resetChart(canvasElement);
 }
 
+/**
+ * Export chart as PNG file
+ */
 function exportPng() {
     chartHelper.exportChartAsPng('aps', canvasElement);
 }
-// Enhanced export function with user feedback to show the process is working
+
+/**
+ * Enhanced export function with user feedback to show the process is working
+ */
 async function exportPngWithFeedback() {
     const exportBtn = document.getElementById('aps-export-png-btn');
     const originalText = exportBtn.textContent;
@@ -576,6 +733,9 @@ async function exportPngWithFeedback() {
     }
 }
 
+/**
+ * Display similar datasets based on variance-normalized distance
+ */
 function showSimilarDatasets(filteredResults) {
     // Find similar datasets
     const result = {};
@@ -612,7 +772,7 @@ function showSimilarDatasets(filteredResults) {
         result[a.id] = similar;
     }
 
-    // Show similarities
+    // Show similarities in accordion format
     similarityElement.innerHTML = '';
     Object.entries(result).forEach(([id, similarList]) => {
         const collapseId = `collapse${id}`;
@@ -675,6 +835,9 @@ function showSimilarDatasets(filteredResults) {
     });
 }
 
+/**
+ * Display dataset difficulties with progress bars
+ */
 function showDatasetDifficulties(mappedPcaResults, filteredResults, minX, maxX, minY, maxY) {
     difficultyElement.innerHTML = '';
 
@@ -740,6 +903,9 @@ function showDatasetDifficulties(mappedPcaResults, filteredResults, minX, maxX, 
     });
 }
 
+/**
+ * Get confidence level and CSS class based on confidence score
+ */
 function getConfidence(confidence) {
     if (confidence >= 0.9) return { label: "Very High", className: "bg-success" };
     if (confidence >= 0.75) return { label: "High", className: "bg-primary" };
@@ -748,13 +914,37 @@ function getConfidence(confidence) {
     return { label: "Very Low", className: "bg-secondary" };
 }
 
+/**
+ * Clean up event listeners when disposing the module
+ */
 export function dispose() {
+    // Remove main event listeners
     updatePcaButton.removeEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').removeEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
-    selectAllAlgorithmButton.removeEventListener('click', toggleAllAlgorithms);
-    selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
+    
+    // Remove filter button listeners
+    if (selectAllAlgorithmButton) {
+        selectAllAlgorithmButton.removeEventListener('click', toggleAllAlgorithms);
+    }
+    if (selectAllDatasetButton) {
+        selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
+    }
+
+    // Close any open modals and remove listeners
+    closeAllModals();
+    
+    if (difficultiesInfoIcon) {
+        difficultiesInfoIcon.removeEventListener('click', () => {});
+    }
+    
+    if (similaritiesInfoIcon) {
+        similaritiesInfoIcon.removeEventListener('click', () => {});
+    }
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', () => {});
 }
