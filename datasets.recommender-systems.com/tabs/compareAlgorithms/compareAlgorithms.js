@@ -97,10 +97,10 @@ export async function initialize(queryOptions) {
     );
     if (firstAlgorithm) {
       firstAlgorithmElement.value = firstAlgorithm.id;
-    } else {
-      // If not found, default to the first algorithm
-      firstAlgorithmElement.value = algorithms[0].id;
     }
+  } else {
+    // If not found or empty, default to the first algorithm
+    firstAlgorithmElement.value = algorithms[0].id;
   }
   if (queryOptions.y) {
     // Check if the algorithm exists in the list
@@ -109,12 +109,13 @@ export async function initialize(queryOptions) {
     );
     if (secondAlgorithm) {
       secondAlgorithmElement.value = secondAlgorithm.id;
-    } else {
-      // If not found, default to the second algorithm, or the first if only one exists
-      secondAlgorithmElement.value =
-        algorithms.length > 1 ? algorithms[1].id : algorithms[0].id;
     }
+  } else {
+    // If not found or empty, default to the second algorithm, or the first if only one exists
+    secondAlgorithmElement.value =
+      algorithms.length > 1 ? algorithms[1].id : algorithms[0].id;
   }
+
   if (queryOptions.metric) {
     // Check if the metric exists in the options
     const metricOption = Array.from(performanceMetricElement.options).find(
@@ -157,16 +158,34 @@ export async function initialize(queryOptions) {
     }
   }
 
-  datasetFilterHeaderElement.innerText = "(All selected)";
-  datasetFilterArea.innerHTML = "";
+  let queriedDatasets;
+  if (!queryOptions.datasets) {
+    // If no datasets are specified, select all datasets by default
+    queriedDatasets = datasets.map((dataset) => dataset.id);
+  } else {
+    // If datasets are specified, parse them
+    queriedDatasets = queryOptions.datasets.split(" ").map(Number);
+  }
+
   selectedDatasets = [];
+
+  if (queriedDatasets.length === 0) {
+    datasetFilterHeaderElement.innerText = "(None selected)";
+  } else if (queriedDatasets.length === datasets.length) {
+    datasetFilterHeaderElement.innerText = "(All selected)";
+  } else {
+    datasetFilterHeaderElement.innerText = "(Some selected)";
+  }
+
+  datasetFilterArea.innerHTML = "";
+
   datasets.forEach((dataset) => {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = dataset.id;
     checkbox.name = "datasetCheckbox";
     checkbox.value = dataset.name;
-    checkbox.checked = true;
+    checkbox.checked = queriedDatasets.includes(dataset.id);
     checkbox.onchange = onFilterDataset;
 
     const label = document.createElement("label");
@@ -180,9 +199,13 @@ export async function initialize(queryOptions) {
 
     datasetFilterArea.appendChild(wrapper);
     datasetFilterCheckboxes.push(checkbox);
-    selectedDatasets.push(dataset.id);
+    // If the checkbox is checked, add the dataset to the selectedDatasets array
+    console.log("Checkbox checked:", checkbox.checked);
+    if (checkbox.checked) {
+      selectedDatasets.push(dataset.id);
+    }
   });
-
+  console.log("Selected datasets:", selectedDatasets);
   await compareAlgorithms();
 }
 
@@ -249,7 +272,7 @@ async function onFilterDataset(e) {
       datasetFilterHeaderElement.innerText = "(Some selected)";
     }
   }
-
+  console.log("Selected datasets:", selectedDatasets);
   await compareAlgorithms();
 }
 
@@ -433,6 +456,8 @@ function shareAlgorithmComparison() {
     secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text;
   const performanceMetricName = performanceMetricElement.value;
   const kValueName = kValueElement.value;
+  // Filter datasets based on the checkboxes
+  const datasetFilter = selectedDatasets;
 
   const options = {
     tab: "compareAlgorithms",
@@ -440,6 +465,7 @@ function shareAlgorithmComparison() {
     y: algoName2,
     metric: performanceMetricName,
     k: kValueName,
+    datasets: datasetFilter.join(" "),
   };
   const url = getQueryString(options);
 
