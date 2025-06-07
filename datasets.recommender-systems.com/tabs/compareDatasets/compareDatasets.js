@@ -4,13 +4,12 @@ import { capitalizeFirstLetter } from "../../util.js";
 var datasets = null;
 var selectedDatasets = [];
 
-var tableHeadElement = null;
 var tableBodyElement = null;
+var tableHeadElement = null;
 
 let currentSortKey = null;
 let currentSortDirection = 'asc'; // 'asc' oder 'desc'
 var infoElements = {};
-
 
 var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
@@ -185,6 +184,7 @@ export async function initialize() {
     currentSortDirection = 'asc';
     compareDatasets();
     initializeTooltips();
+    
 }
 
 async function onFilterDataset(e) {
@@ -400,7 +400,7 @@ function colorNumbersOnly(table) {
             const key = cell.getAttribute('data-key');
             const meta = metadataElements.find(m => m.key === key);
 
-            if (!meta || !meta.rangeDescription) return; // Nur Ranges einfärben
+            if (!meta || !meta.rangeDescription) return; 
 
             let colorClass = null;
             for (const range of meta.rangeDescription) {
@@ -418,6 +418,8 @@ function colorNumbersOnly(table) {
         });
     });
 }
+
+
 function checkStaleData() {
     compareDatasets();
 }

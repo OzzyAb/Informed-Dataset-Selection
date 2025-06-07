@@ -27,41 +27,45 @@
 
     <hr style="margin-top: 2rem; margin-bottom: 2rem;">
 
-    <div class="container mt-5" style="margin-top: 0px !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
-                <tr>
-                    <th data-key="name" class="sortable">Dataset <span class="sort-icon"></span></th>
-                    <th data-key="numberOfUsers" class="sortable">Number of Users <span class="sort-icon"></span></th>
-                    <th data-key="numberOfItems" class="sortable">Number of Items <span class="sort-icon"></span></th>
-                    <th data-key="numberOfInteractions" class="sortable">Number of Interactions <span class="sort-icon"></span></th>
-                    <th data-key="userItemRatio" class="sortable">
-                        User-Item Ratio
-                        <span class="tooltip-icon" data-tooltip-id="user-item-ratio-info" style="cursor: help;">ℹ️</span>
-                        <span class="sort-icon"></span>
-                    </th>
-                    <th data-key="density" class="sortable">Density <span class="sort-icon"></span></th>
-                    <th data-key="highestNumberOfRatingBySingleUser" class="sortable">Max Rating/User <span class="sort-icon"></span></th>
-                    <th data-key="lowestNumberOfRatingBySingleUser" class="sortable">Min Rating/User <span class="sort-icon"></span></th>
-                    <th data-key="highestNumberOfRatingOnSingleItem" class="sortable">Max Rating/Item <span class="sort-icon"></span></th>
-                    <th data-key="lowestNumberOfRatingOnSingleItem" class="sortable">Min Rating/Item <span class="sort-icon"></span></th>
-                    <th data-key="meanNumberOfRatingsByUser" class="sortable">
-                        Mean Ratings/User
-                        <span class="tooltip-icon" data-tooltip-id="mean-ratings-per-user-info" style="cursor: help;">ℹ️</span>
-                        <span class="sort-icon"></span>
-                    </th>
-                    <th data-key="meanNumberOfRatingsOnItem" class="sortable">
-                        Mean Ratings/Item
-                        <span class="tooltip-icon" data-tooltip-id="mean-ratings-per-item-info" style="cursor: help;">ℹ️</span>
-                        <span class="sort-icon"></span>
-                    </th>
-                </tr>
+   
 
-            </thead>
-            <tbody>
-                <!-- Comparison -->
-            </tbody>
-        </table>
+    <div class="container mt-5" style="margin-top: 0px !important; padding: 0px;">
+        <div class=" table-responsive"style="transform: rotateX(180deg);">
+            <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse; transform: rotateX(180deg);">
+                <thead class="table-light">
+                    <tr>
+                        <th data-key="name" class="sortable">Dataset <span class="sort-icon"></span></th>
+                        <th data-key="numberOfUsers" class="sortable">Number of Users <span class="sort-icon"></span></th>
+                        <th data-key="numberOfItems" class="sortable">Number of Items <span class="sort-icon"></span></th>
+                        <th data-key="numberOfInteractions" class="sortable">Number of Interactions <span class="sort-icon"></span></th>
+                        <th data-key="userItemRatio" class="sortable">
+                            User-Item Ratio
+                            <span class="tooltip-icon" data-tooltip-id="user-item-ratio-info" style="cursor: help;">ℹ️</span>
+                            <span class="sort-icon"></span>
+                        </th>
+                        <th data-key="density" class="sortable">Density <span class="sort-icon"></span></th>
+                        <th data-key="highestNumberOfRatingBySingleUser" class="sortable">Max Rating/User <span class="sort-icon"></span></th>
+                        <th data-key="lowestNumberOfRatingBySingleUser" class="sortable">Min Rating/User <span class="sort-icon"></span></th>
+                        <th data-key="highestNumberOfRatingOnSingleItem" class="sortable">Max Rating/Item <span class="sort-icon"></span></th>
+                        <th data-key="lowestNumberOfRatingOnSingleItem" class="sortable">Min Rating/Item <span class="sort-icon"></span></th>
+                        <th data-key="meanNumberOfRatingsByUser" class="sortable">
+                            Mean Ratings/User
+                            <span class="tooltip-icon" data-tooltip-id="mean-ratings-per-user-info" style="cursor: help;">ℹ️</span>
+                            <span class="sort-icon"></span>
+                        </th>
+                        <th data-key="meanNumberOfRatingsOnItem" class="sortable">
+                            Mean Ratings/Item
+                            <span class="tooltip-icon" data-tooltip-id="mean-ratings-per-item-info" style="cursor: help;">ℹ️</span>
+                            <span class="sort-icon"></span>
+                        </th>
+                    </tr>
+
+                </thead>
+                <tbody>
+                    <!-- Comparison -->
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -71,7 +75,9 @@
         background-color: white;
         padding: 0px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        font-size: 0.8rem;">
+        font-size: 0.8rem;
+        max-width: 600px; 
+        width: 100%;">
         <tr>
             <th colspan="6" style="font-weight: normal; border: 1px solid #ddd; padding: 4px 8px;">
                 The user-item ratio is an indicator for evaluating the balance of the interaction matrix. An extreme imbalance
@@ -154,7 +160,9 @@
     <table style="
         border: 1px solid #ccc;
         padding: 0px;
-        font-size: 0.8rem;">
+        font-size: 0.8rem;
+        max-width: 600px; 
+        width: 100%;">
         <tr>
             <th colspan="5" style="font-weight: normal; border: 1px solid #ddd; padding: 4px 8px;">
                 A sufficient volume of user interactions is essential for learning reliable preference patterns in collaborative
@@ -215,7 +223,9 @@
         background-color: white;
         padding: 0px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        font-size: 0.8rem;">
+        font-size: 0.8rem;
+        max-width: 600px; 
+        width: 100%;">
         <tr>
             <th colspan="5" style="font-weight: normal; border: 1px solid #ddd; padding: 4px 8px;">
                 Balanced item exposure is crucial for learning robust item representations in recommender systems. Items with sparse
