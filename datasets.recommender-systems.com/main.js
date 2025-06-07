@@ -31,9 +31,12 @@ async function loadTab(fileName) {
   Loading.showLoading();
 
   if (activeTabScript !== null) {
-    activeTabScript.dispose();
+    if (typeof activeTabScript.dispose === 'function') {
+      activeTabScript.dispose();
+    }
     activeTabScript = null;
   }
+
   
   await DynamicContent.loadContentToElement(fileName, tabContentElement);
 
