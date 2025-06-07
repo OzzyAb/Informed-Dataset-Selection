@@ -16,10 +16,9 @@ var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
 var datasetFilterCheckboxes = [];
 
-let currentSort = {
-    key: 'name',
-    direction: 'asc' // 'asc' | 'desc'
-};
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
 
 var metadataElements = [
     { name: 'Name', key: 'name', better: 'higher'},
@@ -129,13 +128,16 @@ export async function initialize() {
     });
 
     datasets = await ApiService.getDatasets();
-    console.log("Geladene Datasets:", datasets);
+    createSelectAllButtons();
+    
 
     datasetFilterHeaderElement = document.getElementById('dataset-comparison-header');
     datasetFilterArea = document.getElementById('dataset-comparison-filter');
 
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
+    datasetFilterArea.appendChild(selectAllDatasetArea);
+
     datasetFilterCheckboxes = [];
     selectedDatasets = [];
     datasets.forEach(dataset => {
@@ -182,6 +184,7 @@ export async function initialize() {
     currentSortKey = 'name';
     currentSortDirection = 'asc';
     compareDatasets();
+    initializeTooltips();
 }
 
 async function onFilterDataset(e) {
@@ -237,6 +240,69 @@ function compareDatasets() {
     const table = document.querySelector("#dataset-table");
     colorNumbersOnly(table);
 } 
+
+function createSelectAllButtons() {
+
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
+
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
+
+    let icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All';
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
+}
+
+function toggleAllDatasets() {
+    const checkedCount = selectedDatasets.length;
+    const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
+
+    datasetFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
+
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
+    checkStaleData();
+}
+function updateFilterHeader(checkboxes, header, selection, list) {
+    const checkedCount = selection.length;
+
+    if (checkedCount === checkboxes.length) {
+        header.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        header.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        const selectedCheckbox = checkboxes.find(checkbox => checkbox.checked);
+        const selectedId = Number(selectedCheckbox.id.split('-')[1]);
+        const selected = list.find(x => x.id === selectedId);
+        header.innerText = `(${selected.name})`;
+    } else {
+        header.innerText = `(${checkedCount} selected)`;
+    }
+}
+
+function updateSelectAllButtonText(checkboxes, text, selection) {
+    const checkedCount = selection.length;
+    if (checkedCount === checkboxes.length) {
+        text.textContent = 'Deselect All';
+    } else {
+        text.textContent = 'Select All';
+    }
+}
  
 
 
@@ -351,5 +417,8 @@ function colorNumbersOnly(table) {
             }
         });
     });
+}
+function checkStaleData() {
+    compareDatasets();
 }
 
