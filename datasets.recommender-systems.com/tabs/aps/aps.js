@@ -14,13 +14,17 @@ var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
 var datasetFilterCheckboxes = [];
 var updatePcaButton = null;
+var updatePcaTextNoneSelected = null;
 var updatePcaTextStale = null;
 var updatePcaTextCalculating = null;
 var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
 
-// NEW: Variable to hold the select all/deselect all button
+var selectAllAlgorithmArea = null;
+var selectAllAlgorithmButton = null;
+var selectAllAlgorithmButtonText = null;
+
 var selectAllDatasetArea = null;
 var selectAllDatasetButton = null;
 var selectAllDatasetButtonText = null;
@@ -42,6 +46,7 @@ export async function initialize() {
     datasetFilterHeaderElement = document.getElementById('aps-dataset-filter-header');
     datasetFilterArea = document.getElementById('aps-dataset-filter');
     updatePcaButton = document.getElementById('aps-update-pca-btn');
+    updatePcaTextNoneSelected = document.getElementById('aps-update-pca-txt-none-selected');
     updatePcaTextStale = document.getElementById('aps-update-pca-txt-stale');
     updatePcaTextCalculating = document.getElementById('aps-update-pca-txt-calculating');
     canvasElement = document.getElementById('aps-chart');
@@ -60,8 +65,12 @@ export async function initialize() {
     datasets = await ApiService.getDatasets();
     algorithms = await ApiService.getAlgorithms();
 
+    createSelectAllButtons();
+
     algorithmFilterHeaderElement.innerText = '(All selected)';
     algorithmFilterArea.innerHTML = '';
+    algorithmFilterArea.appendChild(selectAllAlgorithmArea);
+
     selectedAlgorithms = [];
     algorithms.forEach(algorithm => {
         const checkbox = document.createElement('input');
@@ -86,13 +95,8 @@ export async function initialize() {
         selectedAlgorithms.push(algorithm.id);
     });
 
-    // NEW: Create and add the Select All/Deselect All button
-    createSelectAllDatasetButton();
-
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
-    
-    // NEW: Add the select all button first, then the checkboxes
     datasetFilterArea.appendChild(selectAllDatasetArea);
 
     selectedDatasets = [];
@@ -118,9 +122,11 @@ export async function initialize() {
         datasetFilterCheckboxes.push(checkbox);
         selectedDatasets.push(dataset.id);
     });
-
-    // NEW: Update the button text after all checkboxes are created
-    updateSelectAllDatasetButtonText();
+    
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
 
     lastMetricSelection = 'ndcg';
     lastKValueSelection = 'one';
@@ -149,85 +155,121 @@ function checkStaleData() {
         !isSelectionEqual(lastAlgorithmFilter, selectedAlgorithms) ||
         !isSelectionEqual(lastDatasetFilter, selectedDatasets)
     ) {
-        updatePcaButton.disabled = false;
-        updatePcaTextStale.style.display = 'block';
+        if (selectedAlgorithms.length > 1 && selectedDatasets.length > 1) {
+            updatePcaButton.disabled = false;
+            updatePcaTextStale.style.display = 'block';
+            updatePcaTextNoneSelected.style.display = 'none';
+        }
+        else {
+            updatePcaButton.disabled = true;
+            updatePcaTextStale.style.display = 'none';
+            updatePcaTextNoneSelected.style.display = 'block';
+        }
     }
     else {
         updatePcaButton.disabled = true;
         updatePcaTextStale.style.display = 'none';
+        updatePcaTextNoneSelected.style.display = 'none';
     }
 }
 
-// NEW: Function to create the Select All/Deselect All button
-function createSelectAllDatasetButton() {
-    // Create button wrapper div that spans full width
+function createSelectAllButtons() {
+    // Algorithm filter
+    selectAllAlgorithmArea = document.createElement('div');
+    selectAllAlgorithmArea.style.width = '100%';
+
+    selectAllAlgorithmButton = document.createElement('button');
+    selectAllAlgorithmButton.type = 'button';
+    selectAllAlgorithmButton.className = 'filter-control-btn';
+    selectAllAlgorithmButton.addEventListener('click', toggleAllAlgorithms);
+
+    let icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllAlgorithmButtonText = document.createElement('span');
+    selectAllAlgorithmButtonText.textContent = 'Deselect All';
+
+    selectAllAlgorithmButton.appendChild(icon);
+    selectAllAlgorithmButton.appendChild(selectAllAlgorithmButtonText);
+    selectAllAlgorithmArea.appendChild(selectAllAlgorithmButton);
+
+    // Dataset filter
     selectAllDatasetArea = document.createElement('div');
     selectAllDatasetArea.style.width = '100%';
 
-    // Create the actual button
     selectAllDatasetButton = document.createElement('button');
     selectAllDatasetButton.type = 'button';
     selectAllDatasetButton.className = 'filter-control-btn';
     selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
 
-    const icon = document.createElement('i');
+    icon = document.createElement('i');
     icon.className = 'fa-solid fa-filter';
     icon.style.setProperty('color', 'white', 'important');
     icon.style.marginRight = '0.3rem';
 
     selectAllDatasetButtonText = document.createElement('span');
-    selectAllDatasetButtonText.textContent = 'Deselect All'; // initial text
+    selectAllDatasetButtonText.textContent = 'Deselect All';
 
     selectAllDatasetButton.appendChild(icon);
     selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
     selectAllDatasetArea.appendChild(selectAllDatasetButton);
 }
 
-// NEW: Function to toggle all datasets on/off
+function toggleAllAlgorithms() {
+    const checkedCount = selectedAlgorithms.length;
+    const shouldCheck = checkedCount !== algorithmFilterCheckboxes.length;
+
+    algorithmFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    selectedAlgorithms = shouldCheck ? algorithms.map(algorithm => algorithm.id) : [];
+
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
+    checkStaleData();
+}
+
 function toggleAllDatasets() {
-    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    const checkedCount = selectedDatasets.length;
     const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
 
-    // Update all checkboxes
     datasetFilterCheckboxes.forEach(checkbox => {
         checkbox.checked = shouldCheck;
     });
 
-    // Update selected datasets array
     selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
 
-    updateDatasetFilterHeader();
-    updateSelectAllDatasetButtonText();
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
     checkStaleData();
 }
 
-// NEW: Function to update the Select All/Deselect All button text
-function updateSelectAllDatasetButtonText() {
-    const checkedCount = selectedDatasets.length;
-    
-    if (checkedCount === datasetFilterCheckboxes.length) {
-        selectAllDatasetButtonText.textContent = 'Deselect All';
+function updateFilterHeader(checkboxes, header, selection, list) {
+    const checkedCount = selection.length;
+
+    if (checkedCount === checkboxes.length) {
+        header.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        header.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        const selectedCheckbox = checkboxes.find(checkbox => checkbox.checked);
+        const selectedId = Number(selectedCheckbox.id.split('-')[1]);
+        const selected = list.find(x => x.id === selectedId);
+        header.innerText = `(${selected.name})`;
     } else {
-        selectAllDatasetButtonText.textContent = 'Select All';
+        header.innerText = `(${checkedCount} selected)`;
     }
 }
 
-// NEW: Function to update filter header text
-function updateDatasetFilterHeader() {
-    const checkedCount = selectedDatasets.length;
-    
-    if (checkedCount === datasetFilterCheckboxes.length) {
-        datasetFilterHeaderElement.innerText = '(All selected)';
-    } else if (checkedCount === 0) {
-        datasetFilterHeaderElement.innerText = '(None selected)';
-    } else if (checkedCount === 1) {
-        // Find the single selected dataset and show its name
-        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
-        const selectedDatasetId = Number(selectedCheckbox.id.split('-')[1]);
-        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
-        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
+function updateSelectAllButtonText(checkboxes, text, selection) {
+    const checkedCount = selection.length;
+    if (checkedCount === checkboxes.length) {
+        text.textContent = 'Deselect All';
     } else {
-        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
+        text.textContent = 'Select All';
     }
 }
 
@@ -371,26 +413,14 @@ function onFilterAlgorithm(e) {
     const algorithmId = Number(e.target.id.split('-')[1]);
     if (e.target.checked) {
         selectedAlgorithms.push(algorithmId);
-
-        if (selectedAlgorithms.length === algorithms.length) {
-            algorithmFilterHeaderElement.innerText = '(All selected)';
-        }
-        else {
-            algorithmFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
     else {
         const index = selectedAlgorithms.indexOf(algorithmId);
         selectedAlgorithms.splice(index, 1);
-
-        if (selectedAlgorithms.length === 0) {
-            algorithmFilterHeaderElement.innerText = '(None selected)';
-        }
-        else {
-            algorithmFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
 
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
     checkStaleData();
 }
 
@@ -404,8 +434,8 @@ function onFilterDataset(e) {
         selectedDatasets.splice(index, 1);
     }
 
-    updateDatasetFilterHeader();
-    updateSelectAllDatasetButtonText();
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
     checkStaleData();
 }
 
@@ -437,8 +467,6 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
 
    chartHelper.createChart(canvasElement, {
         datasets: [
-        // Removed the dataset diffuclty legend 
-
             {
                 label: 'Datasets',
                 pointRadius: 5,
@@ -727,5 +755,6 @@ export function dispose() {
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
+    selectAllAlgorithmButton.removeEventListener('click', toggleAllAlgorithms);
     selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
 }
