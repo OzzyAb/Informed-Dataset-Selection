@@ -477,7 +477,7 @@ function fillTables(separatedResults, algoName1, algoName2) {
             const td = document.createElement('td');
 
             td.colSpan = 3;
-            td.style = 'text-align: center; vertical-align: middle;';
+            td.className = 'modern-no-data';
             td.textContent = "(No datasets)";
 
             tr.appendChild(td);
@@ -492,13 +492,12 @@ function fillTables(separatedResults, algoName1, algoName2) {
                 const tdX = document.createElement('td');
                 const tdY = document.createElement('td');
 
-                tdDataset.style = 'text-align: left; vertical-align: middle; white-space: nowrap;';
                 tdDataset.textContent = dataset.name;
 
-                tdX.style = 'text-align: center; vertical-align: middle;';
+                tdX.className = 'value-cell';
                 tdX.textContent = result.x.toFixed(5);
 
-                tdY.style = 'text-align: center; vertical-align: middle;';
+                tdY.className = 'value-cell';
                 tdY.textContent = result.y.toFixed(5);
 
                 tr.appendChild(tdDataset);

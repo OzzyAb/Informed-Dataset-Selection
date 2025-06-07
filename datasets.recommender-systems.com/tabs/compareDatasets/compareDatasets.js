@@ -153,9 +153,9 @@ function compareDatasets() {
 
     tableHeadElement.innerHTML = `
       <tr>
-        <th style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Metadata</th>
-        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset1.name}</th>
-        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset2.name}</th>
+        <th>Metadata</th>
+        <th>${dataset1.name}</th>
+        <th>${dataset2.name}</th>
       </tr>
     `;
     tableBodyElement.innerHTML = '';
@@ -166,7 +166,6 @@ function compareDatasets() {
         const tdDataset1 = document.createElement('td');
         const tdDataset2 = document.createElement('td');
 
-        tdMetadata.style = 'text-align: left; vertical-align: middle; white-space: nowrap;';
         tdMetadata.textContent = metadata.name;
         if (metadata.description !== undefined) {
             tdMetadata.title = metadata.description;
@@ -176,7 +175,12 @@ function compareDatasets() {
             infoIcon.innerHTML = ' &#8505;';
             infoIcon.style.color = '#0d6efd';
             infoIcon.style.cursor = 'pointer';
-            infoIcon.style.marginLeft = '5px';
+            infoIcon.style.marginLeft = '8px';
+            infoIcon.style.fontSize = '16px';
+            infoIcon.style.fontWeight = 'bold';
+            infoIcon.style.display = 'inline-block';
+            infoIcon.style.minWidth = '16px';
+            infoIcon.style.minHeight = '16px';
 
             infoIcon.addEventListener('mouseenter', (e) => {
                 infoElements[metadata.info].style.display = 'block';
@@ -195,6 +199,7 @@ function compareDatasets() {
                 let left = e.pageX + 10;
                 let top = e.pageY + 10;
 
+                // Adjust tooltip position to prevent overflow
                 if (left + tooltipRect.width > pageWidth) {
                     left = e.pageX - tooltipRect.width - 10;
                 }
@@ -202,6 +207,10 @@ function compareDatasets() {
                 if (top + tooltipRect.height > pageHeight) {
                     top = e.pageY - tooltipRect.height - 10;
                 }
+
+                // Ensure tooltip stays within viewport
+                if (left < 10) left = 10;
+                if (top < 10) top = 10;
 
                 tooltip.style.left = left + 'px';
                 tooltip.style.top = top + 'px';
@@ -213,9 +222,6 @@ function compareDatasets() {
 
             tdMetadata.appendChild(infoIcon);
         }
-
-        tdDataset1.style = 'text-align: center; vertical-align: middle;';
-        tdDataset2.style = 'text-align: center; vertical-align: middle;';
 
         const value1 = metadata.fixed === undefined ? dataset1[metadata.key] : dataset1[metadata.key].toFixed(2);
         const value2 = metadata.fixed === undefined ? dataset2[metadata.key] : dataset2[metadata.key].toFixed(2);
