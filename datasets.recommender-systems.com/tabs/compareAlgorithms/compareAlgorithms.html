@@ -1,7 +1,7 @@
 <div class="tab-pane fade show active" id="compare-tab-pane" role="tabpanel" aria-labelledby="compare-tab" tabindex="0">
     <!-- "Compare two algorithms" tab content begins here" -->
-    <h2>Algorithm Comparison</h2>
-    <p>
+    <h2 class="compact-spacing">Algorithm Comparison</h2>
+    <p class="compact-spacing">
         This graph presents a direct comparison between two recommender system algorithms across multiple datasets based on the select
         performance metric such nDCG, Hit Ratio (HR) or Recall and the selected K-value. The performance results are further grouped
         into five different regions to provide deeper analytical insights.
@@ -25,11 +25,11 @@
         </ul>
         Since the comparison involves only two selected algorithms, any conclusion about overall dataset difficulties or
         similarities should be interpreted with caution, as they may not generalize beyond the chosen algorithms. For that,
-        <span id="aps-redirect" style="color:blue; text-decoration:underline; cursor:pointer;">Algorithm Search Space (APS)</span>
+        <span id="aps-redirect" style="color:blue; text-decoration:underline; cursor:pointer;">Algorithm Performance Space (APS)</span>
         is recommended.
     </p>
 
-    <hr>
+    <hr class="compact-spacing-large">
 
     <!-- Form controls to select two algorithms -->
     <div class="row mb-3">
@@ -65,7 +65,7 @@
     </div>
 
     <!-- Textual information in a collapsible -->
-    <div class="accordion" id="accordionAPS">
+    <div class="accordion compact-spacing" id="accordionAPS">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
@@ -77,115 +77,112 @@
             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
                 data-bs-parent="#accordionAPS">
                 <div id="compare-algo-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
-                    <!-- Dataset filter checkboxes -->
+                    <!-- NEW: Select All/Deselect All Button - will be dynamically added at the top -->
+                    <!-- Dataset filter checkboxes - dynamically added here -->
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Chart for algorithm comparison -->
     <canvas id="compare-algo-chart" class="my-3"></canvas>
+
+
+
     <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 1rem;">
-        <button id="compare-algo-export-btn" type="button" class="btn btn-primary">Export as PNG</button>
+        <!-- Button to export the chart as PNG -->
+        <button id="compare-algo-export-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG
+        </button>
+        <!-- Button to share the comparison -->
+        <button id="compare-algo-share-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-link"></i> Share
+        </button>
     </div>
 
-    <hr>
+    <hr class="modern-section-divider">
 
-    <div class="container mt-5" style="margin-top: 2rem !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
+    <!-- Solved Problems Section -->
+    <div class="modern-table-section">
+        <div class="modern-section-header">Solved Problems</div>
+        <table class="modern-table">
+            <thead>
                 <tr>
-                    <th colspan="3" style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">
-                        Solved Problems
-                    </th>
-                </tr>
-                <tr>
-                    <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">Dataset</th>
-                    <th class="compare-algo-x-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">X</th>
-                    <th class="compare-algo-y-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Y</th>
+                    <th>Dataset</th>
+                    <th class="compare-algo-x-name">X</th>
+                    <th class="compare-algo-y-name">Y</th>
                 </tr>
             </thead>
             <tbody id="compare-algo-solved">
-                
+
             </tbody>
         </table>
     </div>
 
-    <div class="container mt-5" style="margin-top: 1rem !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
+    <!-- Solved By Algorithm 1 Section -->
+    <div class="modern-table-section">
+        <div class="modern-section-header" id="compare-algo-solved-by-x-header">Solved By X</div>
+        <table class="modern-table">
+            <thead>
                 <tr>
-                    <th colspan="3" style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">
-                        <span id="compare-algo-solved-by-x-header">Solved By X</span>
-                    </th>
-                </tr>
-                <tr>
-                    <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">Dataset</th>
-                    <th class="compare-algo-x-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">X</th>
-                    <th class="compare-algo-y-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Y</th>
+                    <th>Dataset</th>
+                    <th class="compare-algo-x-name">X</th>
+                    <th class="compare-algo-y-name">Y</th>
                 </tr>
             </thead>
             <tbody id="compare-algo-solved-by-x">
-                
+
             </tbody>
         </table>
     </div>
 
-    <div class="container mt-5" style="margin-top: 1rem !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
+    <!-- Solved By Algorithm 2 Section -->
+    <div class="modern-table-section">
+        <div class="modern-section-header" id="compare-algo-solved-by-y-header">Solved By Y</div>
+        <table class="modern-table">
+            <thead>
                 <tr>
-                    <th colspan="3" style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">
-                        <span id="compare-algo-solved-by-y-header">Solved By Y</span>
-                    </th>
-                </tr>
-                <tr>
-                    <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">Dataset</th>
-                    <th class="compare-algo-x-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">X</th>
-                    <th class="compare-algo-y-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Y</th>
+                    <th>Dataset</th>
+                    <th class="compare-algo-x-name">X</th>
+                    <th class="compare-algo-y-name">Y</th>
                 </tr>
             </thead>
             <tbody id="compare-algo-solved-by-y">
-                
+
             </tbody>
         </table>
     </div>
 
-    <div class="container mt-5" style="margin-top: 1rem !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
+    <!-- Mediocres Section -->
+    <div class="modern-table-section">
+        <div class="modern-section-header">Mediocres</div>
+        <table class="modern-table">
+            <thead>
                 <tr>
-                    <th colspan="3" style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">
-                        <span id="compare-algo-solved-by-y-header">Mediocres</span>
-                    </th>
-                </tr>
-                <tr>
-                    <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">Dataset</th>
-                    <th class="compare-algo-x-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">X</th>
-                    <th class="compare-algo-y-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Y</th>
+                    <th>Dataset</th>
+                    <th class="compare-algo-x-name">X</th>
+                    <th class="compare-algo-y-name">Y</th>
                 </tr>
             </thead>
             <tbody id="compare-algo-mediocres">
-                
+
             </tbody>
         </table>
     </div>
 
-    <div class="container mt-5" style="margin-top: 1rem !important; padding: 0px;">
-        <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse;">
-            <thead class="table-light">
+    <!-- True Challenges Section -->
+    <div class="modern-table-section">
+        <div class="modern-section-header">True Challenges</div>
+        <table class="modern-table">
+            <thead>
                 <tr>
-                    <th colspan="3" style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">
-                        True Challenges
-                    </th>
-                </tr>
-                <tr>
-                    <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">Dataset</th>
-                    <th class="compare-algo-x-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">X</th>
-                    <th class="compare-algo-y-name" style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Y</th>
+                    <th>Dataset</th>
+                    <th class="compare-algo-x-name">X</th>
+                    <th class="compare-algo-y-name">Y</th>
                 </tr>
             </thead>
             <tbody id="compare-algo-true-challenges">
-                
+
             </tbody>
         </table>
     </div>
