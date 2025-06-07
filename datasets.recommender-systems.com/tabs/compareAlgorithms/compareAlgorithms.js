@@ -169,13 +169,13 @@ export async function initialize(queryOptions) {
     queriedDatasets = queryOptions.datasets.split(" ").map(Number);
   }
 
-  selectedDatasets = [];
-
   createSelectAllDatasetButton();
 
   datasetFilterArea.innerHTML = "";
   datasetFilterArea.appendChild(selectAllDatasetArea);
 
+  datasetFilterCheckboxes = [];
+  selectedDatasets = [];
   datasets.forEach((dataset) => {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";

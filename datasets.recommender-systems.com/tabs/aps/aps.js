@@ -71,6 +71,7 @@ export async function initialize() {
     algorithmFilterArea.innerHTML = '';
     algorithmFilterArea.appendChild(selectAllAlgorithmArea);
 
+    algorithmFilterCheckboxes = [];
     selectedAlgorithms = [];
     algorithms.forEach(algorithm => {
         const checkbox = document.createElement('input');
@@ -99,6 +100,7 @@ export async function initialize() {
     datasetFilterArea.innerHTML = '';
     datasetFilterArea.appendChild(selectAllDatasetArea);
 
+    datasetFilterCheckboxes = [];
     selectedDatasets = [];
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
