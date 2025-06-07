@@ -214,7 +214,7 @@ body {
     margin-top: 3rem;
 }
 
-/* Tooltip containers for info icons*/
+/*
 #user-item-ratio-info,
 #mean-ratings-per-user-info,
 #mean-ratings-per-item-info {
@@ -228,7 +228,6 @@ body {
     z-index: 10000;
 }
 
-/* Tooltip tables */
 #user-item-ratio-info table,
 #mean-ratings-per-user-info table,
 #mean-ratings-per-item-info table {
@@ -284,7 +283,6 @@ body {
     background-color: #f1f5f9;
 }
 
-/* Responsive tooltip tables */
 @media (max-width: 768px) {
 
     #user-item-ratio-info,
@@ -310,6 +308,7 @@ body {
         font-size: 9px;
     }
 }
+*/
 
 @media (max-width: 768px) {
     .modern-table {
