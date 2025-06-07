@@ -1,6 +1,6 @@
 import { ChartHelper } from "../../chartHelper.js";
 import { ApiService } from "../../apiService.js";
-import { getQueryString } from "../../main.js";
+import { getQueryString, clearQueryString } from "../../main.js";
 
 var algorithms = null;
 var datasets = null;
@@ -23,8 +23,15 @@ var tableAlgoYNameElements = null;
 var tableSolvedByXHeaderElements = null;
 var tableSolvedByYHeaderElements = null;
 
+// NEW: Variable to hold the select all/deselect all button
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
+
 var chartHelper = null;
 var selectedDatasets = [];
+
+var shareButton = null;
 
 export async function initialize(queryOptions) {
   firstAlgorithmElement = document.getElementById("formControlAlgorithm1");
@@ -53,18 +60,13 @@ export async function initialize(queryOptions) {
     "compare-algo-solved-by-y-header"
   );
 
-  document
-    .getElementById("aps-redirect")
-    .addEventListener("click", apsRedirect);
-  document
-    .getElementById("compare-algo-export-btn")
-    .addEventListener("click", exportPng);
-  document
-    .getElementById("compare-algo-share-btn")
-    .addEventListener("click", shareAlgorithmComparison);
-  document.querySelectorAll(".compareAlgorithms").forEach((element) => {
-    element.addEventListener("change", compareAlgorithms);
+  document.getElementById('aps-redirect').addEventListener('click', apsRedirect);
+  document.getElementById('compare-algo-export-btn').addEventListener('click', exportPngWithFeedback);
+  document.querySelectorAll('.compareAlgorithms').forEach(element => {
+    element.addEventListener('change', compareAlgorithms);
   });
+  shareButton = document.getElementById("compare-algo-share-btn");
+  shareButton.addEventListener("click", shareAlgorithmComparison);
 
   chartHelper = new ChartHelper();
 
@@ -169,15 +171,10 @@ export async function initialize(queryOptions) {
 
   selectedDatasets = [];
 
-  if (queriedDatasets.length === 0) {
-    datasetFilterHeaderElement.innerText = "(None selected)";
-  } else if (queriedDatasets.length === datasets.length) {
-    datasetFilterHeaderElement.innerText = "(All selected)";
-  } else {
-    datasetFilterHeaderElement.innerText = "(Some selected)";
-  }
+  createSelectAllDatasetButton();
 
   datasetFilterArea.innerHTML = "";
+  datasetFilterArea.appendChild(selectAllDatasetArea);
 
   datasets.forEach((dataset) => {
     const checkbox = document.createElement("input");
@@ -199,16 +196,94 @@ export async function initialize(queryOptions) {
 
     datasetFilterArea.appendChild(wrapper);
     datasetFilterCheckboxes.push(checkbox);
-    // If the checkbox is checked, add the dataset to the selectedDatasets array
-    console.log("Checkbox checked:", checkbox.checked);
     if (checkbox.checked) {
       selectedDatasets.push(dataset.id);
     }
   });
-  console.log("Selected datasets:", selectedDatasets);
+
+  updateFilterHeader();
+  updateSelectAllDatasetButtonText();
+
+  clearQueryString();
+
   await compareAlgorithms();
 }
 
+// NEW: Function to create the Select All/Deselect All button
+function createSelectAllDatasetButton() {
+    // Create button wrapper div that spans full width
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
+
+    // Create the actual button
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
+
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All'; // initial text
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
+}
+
+// NEW: Function to toggle all datasets on/off
+function toggleAllDatasets() {
+    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
+
+    // Update all checkboxes
+    datasetFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    // Update selected datasets array
+    selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
+
+    // Update the header and button text
+    updateFilterHeader();
+    updateSelectAllDatasetButtonText();
+
+    // Trigger the algorithm comparison update
+    compareAlgorithms();
+}
+
+// NEW: Function to update the Select All/Deselect All button text
+function updateSelectAllDatasetButtonText() {
+  const checkedCount = selectedDatasets.length;
+  
+  if (checkedCount === datasetFilterCheckboxes.length) {
+      selectAllDatasetButtonText.textContent = 'Deselect All';
+  } else {
+      selectAllDatasetButtonText.textContent = 'Select All';
+  }
+}
+
+// NEW: Function to update filter header text
+function updateFilterHeader() {
+    const checkedCount = selectedDatasets.length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        datasetFilterHeaderElement.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        datasetFilterHeaderElement.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        // Find the single selected dataset and show its name
+        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
+        const selectedDatasetId = Number(selectedCheckbox.id);
+        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
+        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
+    } else {
+        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
+    }
+}
 function apsRedirect() {
   document.getElementById("aps-tab-btn").click();
 }
@@ -227,19 +302,15 @@ async function compareAlgorithms() {
   const kValue = kValueElement.value;
   const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-  const results = await ApiService.getPerformanceResults(algoId1, algoId2);
-  const filteredResults = results.filter((result) =>
-    selectedDatasets.includes(result.datasetId)
-  );
-  const separatedResults = separateResults(
-    filteredResults.map((result) => {
-      return {
-        id: result.datasetId,
-        x: result.x[performanceMetric][kValue],
-        y: result.y[performanceMetric][kValue],
-      };
-    })
-  );
+    const results = await ApiService.compareAlgorithms(algoId1, algoId2);
+    const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
+    const separatedResults = separateResults(filteredResults.map((result) => {
+        return {
+            id: result.datasetId,
+            x: result.x[performanceMetric][kValue],
+            y: result.y[performanceMetric][kValue]
+        }
+    }));
 
   drawChart(
     filteredResults,
@@ -255,24 +326,16 @@ async function compareAlgorithms() {
 async function onFilterDataset(e) {
   const datasetId = Number(e.target.id);
   if (e.target.checked) {
-    selectedDatasets.push(datasetId);
-
-    if (selectedDatasets.length === datasets.length) {
-      datasetFilterHeaderElement.innerText = "(All selected)";
-    } else {
-      datasetFilterHeaderElement.innerText = "(Some selected)";
-    }
-  } else {
-    const index = selectedDatasets.indexOf(datasetId);
-    selectedDatasets.splice(index, 1);
-
-    if (selectedDatasets.length === 0) {
-      datasetFilterHeaderElement.innerText = "(None selected)";
-    } else {
-      datasetFilterHeaderElement.innerText = "(Some selected)";
-    }
+      selectedDatasets.push(datasetId);
   }
-  console.log("Selected datasets:", selectedDatasets);
+  else {
+      const index = selectedDatasets.indexOf(datasetId);
+      selectedDatasets.splice(index, 1);
+  }
+
+  updateFilterHeader();
+  updateSelectAllDatasetButtonText();
+
   await compareAlgorithms();
 }
 
@@ -428,20 +491,10 @@ function drawChart(
 }
 
 function exportPng() {
-  const algoName1 =
-    firstAlgorithmElement.options[
-      firstAlgorithmElement.selectedIndex
-    ].text.toLowerCase();
-  const algoName2 =
-    secondAlgorithmElement.options[
-      secondAlgorithmElement.selectedIndex
-    ].text.toLowerCase();
-  const performanceMetricName =
-    performanceMetricElement.options[
-      performanceMetricElement.selectedIndex
-    ].text.toLowerCase();
-  const kValueName =
-    kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+    const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
+    const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
+    const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
+    const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
 
   chartHelper.exportChartAsPng(
     `comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`,
@@ -486,6 +539,49 @@ function shareAlgorithmComparison() {
     });
 }
 
+//Enhanced export function with user feedback 
+async function exportPngWithFeedback() {
+  const exportBtn = document.getElementById('compare-algo-export-btn');
+  const originalText = exportBtn.textContent;
+  
+  try {
+      // Update button to show process is starting
+      exportBtn.textContent = 'Exporting...';
+      exportBtn.disabled = true;
+      
+      // Small delay to ensure UI updates
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get the filename dynamically like the original exportPng function
+      const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
+      const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
+      const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
+      const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+      
+      // Call the export function with the same naming convention
+      chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
+      
+      // Show success feedback
+      exportBtn.textContent = 'Exported!';
+      
+      // Reset button after 2 seconds
+      setTimeout(() => {
+          exportBtn.textContent = originalText;
+          exportBtn.disabled = false;
+      }, 2000);
+      
+  } catch (error) {
+      // Show error feedback
+      exportBtn.textContent = 'Export Failed';
+      
+      // Reset button after 3 seconds
+      setTimeout(() => {
+          exportBtn.textContent = originalText;
+          exportBtn.disabled = false;
+      }, 3000);
+  }
+}
+
 function fillTables(separatedResults, algoName1, algoName2) {
   function fill(tableBodyElement, results) {
     if (results.length === 0) {
@@ -493,7 +589,7 @@ function fillTables(separatedResults, algoName1, algoName2) {
       const td = document.createElement("td");
 
       td.colSpan = 3;
-      td.style = "text-align: center; vertical-align: middle;";
+      td.className = 'modern-no-data';
       td.textContent = "(No datasets)";
 
       tr.appendChild(td);
@@ -507,14 +603,12 @@ function fillTables(separatedResults, algoName1, algoName2) {
         const tdX = document.createElement("td");
         const tdY = document.createElement("td");
 
-        tdDataset.style =
-          "text-align: left; vertical-align: middle; white-space: nowrap;";
         tdDataset.textContent = dataset.name;
 
-        tdX.style = "text-align: center; vertical-align: middle;";
+        tdX.className = 'value-cell';
         tdX.textContent = result.x.toFixed(5);
 
-        tdY.style = "text-align: center; vertical-align: middle;";
+        tdY.className = 'value-cell';
         tdY.textContent = result.y.toFixed(5);
 
         tr.appendChild(tdDataset);
@@ -548,13 +642,11 @@ function fillTables(separatedResults, algoName1, algoName2) {
 }
 
 export function dispose() {
-  document
-    .getElementById("aps-redirect")
-    .removeEventListener("click", apsRedirect);
-  document
-    .getElementById("compare-algo-export-btn")
-    .removeEventListener("click", exportPng);
-  document.querySelectorAll(".compareAlgorithms").forEach((element) => {
-    element.removeEventListener("change", compareAlgorithms);
+  document.getElementById('aps-redirect').removeEventListener('click', apsRedirect);
+  document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPngWithFeedback);
+  document.querySelectorAll('.compareAlgorithms').forEach(element => {
+      element.removeEventListener('change', compareAlgorithms);
   });
+  selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
+  shareButton.removeEventListener("click", shareAlgorithmComparison);
 }

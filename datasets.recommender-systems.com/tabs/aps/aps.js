@@ -1,34 +1,63 @@
 import { ChartHelper } from "../../chartHelper.js";
 import { ApiService } from "../../apiService.js";
+import { PCA } from 'https://cdn.skypack.dev/ml-pca';
 
 var datasets = null;
 var algorithms = null;
 
 var performanceMetricElement = null;
 var kValueElement = null;
+var algorithmFilterHeaderElement = null;
+var algorithmFilterArea = null;
+var algorithmFilterCheckboxes = [];
 var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
 var datasetFilterCheckboxes = [];
+var updatePcaButton = null;
+var updatePcaTextNoneSelected = null;
+var updatePcaTextStale = null;
+var updatePcaTextCalculating = null;
 var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
 
+var selectAllAlgorithmArea = null;
+var selectAllAlgorithmButton = null;
+var selectAllAlgorithmButtonText = null;
+
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
+
 var chartHelper = null;
+var selectedAlgorithms = [];
 var selectedDatasets = [];
+
+var lastMetricSelection = null;
+var lastKValueSelection = null;
+var lastAlgorithmFilter = [];
+var lastDatasetFilter = [];
 
 export async function initialize() {
     performanceMetricElement = document.getElementById("formPerformanceMetricPca");
     kValueElement = document.getElementById("formKValuePca");
-    datasetFilterHeaderElement = document.getElementById('aps-filter-header');
-    datasetFilterArea = document.getElementById('aps-filter');
+    algorithmFilterHeaderElement = document.getElementById('aps-algorithm-filter-header');
+    algorithmFilterArea = document.getElementById('aps-algorithm-filter');
+    datasetFilterHeaderElement = document.getElementById('aps-dataset-filter-header');
+    datasetFilterArea = document.getElementById('aps-dataset-filter');
+    updatePcaButton = document.getElementById('aps-update-pca-btn');
+    updatePcaTextNoneSelected = document.getElementById('aps-update-pca-txt-none-selected');
+    updatePcaTextStale = document.getElementById('aps-update-pca-txt-stale');
+    updatePcaTextCalculating = document.getElementById('aps-update-pca-txt-calculating');
     canvasElement = document.getElementById('aps-chart');
     similarityElement = document.getElementById('similar-datasets');
     difficultyElement = document.getElementById('dataset-difficulty');
 
+    updatePcaButton.addEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
-    document.getElementById('aps-export-png-btn').addEventListener('click', exportPng);
-    document.querySelectorAll('.updatePca').forEach(element => {
-        element.addEventListener('change', updatePca);
+    document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
+    document.querySelectorAll('.aps-selection').forEach(element => {
+        element.addEventListener('change', checkStaleData);
     });
 
     chartHelper = new ChartHelper();
@@ -36,28 +65,52 @@ export async function initialize() {
     datasets = await ApiService.getDatasets();
     algorithms = await ApiService.getAlgorithms();
 
-    const algorithmNamesElement = document.getElementById('aps-algo');
-    algorithmNamesElement.innerHTML = '';
+    createSelectAllButtons();
+
+    algorithmFilterHeaderElement.innerText = '(All selected)';
+    algorithmFilterArea.innerHTML = '';
+    algorithmFilterArea.appendChild(selectAllAlgorithmArea);
+
+    selectedAlgorithms = [];
     algorithms.forEach(algorithm => {
-        const span = document.createElement('span');
-        span.style = 'padding: 6px 12px; background-color: #f0f0f0; border-radius: 4px; font-size: 14px;'
-        span.textContent = algorithm.name;
-        algorithmNamesElement.appendChild(span);
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `algorithm-${algorithm.id}`;
+        checkbox.name = 'algorithmCheckbox';
+        checkbox.value = algorithm.name;
+        checkbox.checked = true;
+        checkbox.onchange = onFilterAlgorithm;
+
+        const label = document.createElement('label');
+        label.htmlFor = `algorithm-${algorithm.id}`;
+        label.textContent = algorithm.name;
+        label.style.marginLeft = '0.25rem';
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        algorithmFilterArea.appendChild(wrapper);
+        algorithmFilterCheckboxes.push(checkbox);
+        selectedAlgorithms.push(algorithm.id);
     });
 
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
+    datasetFilterArea.appendChild(selectAllDatasetArea);
+
+    selectedDatasets = [];
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.id = dataset.id;
+        checkbox.id = `dataset-${dataset.id}`;
         checkbox.name = 'datasetCheckbox';
         checkbox.value = dataset.name;
         checkbox.checked = true;
         checkbox.onchange = onFilterDataset;
 
         const label = document.createElement('label');
-        label.htmlFor = dataset.id;
+        label.htmlFor = `dataset-${dataset.id}`;
         label.textContent = dataset.name;
         label.style.marginLeft = '0.25rem';
 
@@ -69,69 +122,325 @@ export async function initialize() {
         datasetFilterCheckboxes.push(checkbox);
         selectedDatasets.push(dataset.id);
     });
+    
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
 
+    lastMetricSelection = 'ndcg';
+    lastKValueSelection = 'one';
+    lastAlgorithmFilter = [...selectedAlgorithms];
+    lastDatasetFilter = [...selectedDatasets];
+
+    checkStaleData();
     await updatePca();
 }
 
+function checkStaleData() {
+    function isSelectionEqual(lastSelection, currentSelection) {
+        if (lastSelection.length !== currentSelection.length)
+            return false;
+
+        const sortedLastSelection = [...lastSelection].sort((a, b) => a - b);
+        const sortedCurrentSelection = [...currentSelection].sort((a, b) => a - b);
+
+        return sortedLastSelection.every((val, index) => val === sortedCurrentSelection[index]);
+    }
+
+    if (lastMetricSelection !== performanceMetricElement.value ||
+        lastKValueSelection !== kValueElement.value ||
+        lastAlgorithmFilter.length !== selectedAlgorithms.length ||
+        lastDatasetFilter.length !== selectedDatasets.length ||
+        !isSelectionEqual(lastAlgorithmFilter, selectedAlgorithms) ||
+        !isSelectionEqual(lastDatasetFilter, selectedDatasets)
+    ) {
+        if (selectedAlgorithms.length > 1 && selectedDatasets.length > 1) {
+            updatePcaButton.disabled = false;
+            updatePcaTextStale.style.display = 'block';
+            updatePcaTextNoneSelected.style.display = 'none';
+        }
+        else {
+            updatePcaButton.disabled = true;
+            updatePcaTextStale.style.display = 'none';
+            updatePcaTextNoneSelected.style.display = 'block';
+        }
+    }
+    else {
+        updatePcaButton.disabled = true;
+        updatePcaTextStale.style.display = 'none';
+        updatePcaTextNoneSelected.style.display = 'none';
+    }
+}
+
+function createSelectAllButtons() {
+    // Algorithm filter
+    selectAllAlgorithmArea = document.createElement('div');
+    selectAllAlgorithmArea.style.width = '100%';
+
+    selectAllAlgorithmButton = document.createElement('button');
+    selectAllAlgorithmButton.type = 'button';
+    selectAllAlgorithmButton.className = 'filter-control-btn';
+    selectAllAlgorithmButton.addEventListener('click', toggleAllAlgorithms);
+
+    let icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllAlgorithmButtonText = document.createElement('span');
+    selectAllAlgorithmButtonText.textContent = 'Deselect All';
+
+    selectAllAlgorithmButton.appendChild(icon);
+    selectAllAlgorithmButton.appendChild(selectAllAlgorithmButtonText);
+    selectAllAlgorithmArea.appendChild(selectAllAlgorithmButton);
+
+    // Dataset filter
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
+
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
+
+    icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All';
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
+}
+
+function toggleAllAlgorithms() {
+    const checkedCount = selectedAlgorithms.length;
+    const shouldCheck = checkedCount !== algorithmFilterCheckboxes.length;
+
+    algorithmFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    selectedAlgorithms = shouldCheck ? algorithms.map(algorithm => algorithm.id) : [];
+
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
+    checkStaleData();
+}
+
+function toggleAllDatasets() {
+    const checkedCount = selectedDatasets.length;
+    const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
+
+    datasetFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
+
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
+    checkStaleData();
+}
+
+function updateFilterHeader(checkboxes, header, selection, list) {
+    const checkedCount = selection.length;
+
+    if (checkedCount === checkboxes.length) {
+        header.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        header.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        const selectedCheckbox = checkboxes.find(checkbox => checkbox.checked);
+        const selectedId = Number(selectedCheckbox.id.split('-')[1]);
+        const selected = list.find(x => x.id === selectedId);
+        header.innerText = `(${selected.name})`;
+    } else {
+        header.innerText = `(${checkedCount} selected)`;
+    }
+}
+
+function updateSelectAllButtonText(checkboxes, text, selection) {
+    const checkedCount = selection.length;
+    if (checkedCount === checkboxes.length) {
+        text.textContent = 'Deselect All';
+    } else {
+        text.textContent = 'Select All';
+    }
+}
+
 async function updatePca() {
+    // Show loading
+    updatePcaButton.disabled = true;
+    updatePcaTextStale.style.display = 'none';
+    updatePcaTextCalculating.style.display = 'block';
+
+    // Get selected values
     const performanceMetric = performanceMetricElement.value;
     const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text;
     const kValue = kValueElement.value;
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-    const results = await ApiService.getPcaResults();
-    const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
-    const mappedResults = filteredResults.map(result => {
+    // Get performance results from the DB
+    let filteredResults;
+    if (selectedAlgorithms.length === algorithms.length &&
+        selectedDatasets.length === datasets.length
+    ) {
+        // No filter is applied. Get the PCA results directly from the backend
+        const results = await ApiService.getPcaResults();
+        filteredResults = results.map(result => {
+            return {
+                id: result.datasetId,
+                x: result[performanceMetric][kValue].x,
+                y: result[performanceMetric][kValue].y,
+                ellipseX: result[performanceMetric][kValue].varianceX,
+                ellipseY: result[performanceMetric][kValue].varianceY,
+            };
+        });
+    }
+    else {
+        // Get the performance results from the backend calculate the PCA locally
+        const performanceResults = await ApiService.getPerformanceResults(selectedDatasets, selectedAlgorithms);
+        
+        const X = selectedDatasets.map(datasetId => {
+            return selectedAlgorithms.map(algorithmId => {
+                const value = performanceResults[datasetId]?.[algorithmId]?.[performanceMetric]?.[kValue];
+                return value != null ? value : NaN;
+            });
+        });
+
+        const nRows = X.length;
+        const nCols = X[0].length;
+        const colMeans = [];
+        for (let c = 0; c < nCols; c++) {
+            let sum = 0, count = 0;
+            for (let r = 0; r < nRows; r++) {
+                if (!Number.isNaN(X[r][c])) {
+                    sum += X[r][c];
+                    count++;
+                }
+            }
+            colMeans[c] = count > 0 ? sum / count : 0;
+        }
+
+        const X_imputed = X.map(row => row.map((v, c) => Number.isNaN(v) ? colMeans[c] : v));
+        const pca = new PCA(X_imputed, { center: true, scale: false });
+        const X_pca = pca.predict(X_imputed).data.map(arr => Array.from(arr));
+
+        const results = selectedDatasets.map((datasetId, i) => {
+            const points = selectedAlgorithms.map((algorithmId, algIdx) => {
+                const rowVector = new Array(nCols).fill(NaN);
+                const val = performanceResults[datasetId]?.[algorithmId]?.[performanceMetric]?.[kValue];
+                rowVector[algIdx] = val != null ? val : NaN;
+                const imputedRow = rowVector.map((v, idx) => Number.isNaN(v) ? pca.means[idx] : v);
+                const prediction = pca.predict([imputedRow]);
+                return prediction.data[0];
+            });
+
+            let varianceX = 0, varianceY = 0;
+            if (points.length > 1) {
+                const xs = points.map(p => p[0]);
+                const ys = points.map(p => p[1]);
+                const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
+                const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+                varianceX = Math.sqrt(xs.reduce((acc, v) => acc + (v - meanX) ** 2, 0) / xs.length);
+                varianceY = Math.sqrt(ys.reduce((acc, v) => acc + (v - meanY) ** 2, 0) / ys.length);
+            }
+
+            return {
+                datasetId: datasetId,
+                x: X_pca[i][0],
+                y: -X_pca[i][1], // This PCA code's output is mirrored horizontally compared to the Python script! That's why it's minus
+                varianceX,
+                varianceY
+            };
+        });
+
+        filteredResults = results.map(result => {
+            return {
+                id: result.datasetId,
+                x: result.x,
+                y: result.y,
+                ellipseX: result.varianceX,
+                ellipseY: result.varianceY,
+            };
+        });
+    }
+
+    // Get PCA results from the DB to calculate difficulties and similarities
+    const pcaResults = await ApiService.getPcaResults();
+    const mappedPcaResults = pcaResults.map(result => {
         return {
             id: result.datasetId,
             x: result[performanceMetric][kValue].x,
             y: result[performanceMetric][kValue].y,
-            ellipseX: result[performanceMetric][kValue].varianceX,
-            ellipseY: result[performanceMetric][kValue].varianceY,
-        };
+        }
     });
 
-    const minX = Math.min(...mappedResults.map(result => result.x));
-    const maxX = Math.max(...mappedResults.map(result => result.x));
-    const minY = Math.min(...mappedResults.map(result => result.y));
-    const maxY = Math.max(...mappedResults.map(result => result.y));
+    const pcaMinX = Math.min(...mappedPcaResults.map(result => result.x));
+    const pcaMaxX = Math.max(...mappedPcaResults.map(result => result.x));
+    const pcaMinY = Math.min(...mappedPcaResults.map(result => result.y));
+    const pcaMaxY = Math.max(...mappedPcaResults.map(result => result.y));
 
-    drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY);
+    showDatasetDifficulties(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
+    showSimilarDatasets(filteredResults);
 
-    const similarDatasets = findSimilarDatasets(mappedResults);
-    showSimilarDatasets(similarDatasets);
+    // Draw the chart
+    const minX = Math.min(...filteredResults.map(result => result.x));
+    const maxX = Math.max(...filteredResults.map(result => result.x));
+    const minY = Math.min(...filteredResults.map(result => result.y));
+    const maxY = Math.max(...filteredResults.map(result => result.y));
 
-    showDatasetDifficulties(mappedResults, minX, maxX, minY, maxY);
+    drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName,
+        minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
+    
+    // Save the last selections
+    lastMetricSelection = performanceMetric;
+    lastKValueSelection = kValue;
+    lastAlgorithmFilter = [...selectedAlgorithms];
+    lastDatasetFilter = [...selectedDatasets];
+    checkStaleData();
+
+    // Hide loading text
+    updatePcaTextCalculating.style.display = 'none';
 }
 
-async function onFilterDataset(e) {
-    const datasetId = Number(e.target.id);
+function onFilterAlgorithm(e) {
+    const algorithmId = Number(e.target.id.split('-')[1]);
+    if (e.target.checked) {
+        selectedAlgorithms.push(algorithmId);
+    }
+    else {
+        const index = selectedAlgorithms.indexOf(algorithmId);
+        selectedAlgorithms.splice(index, 1);
+    }
+
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
+    checkStaleData();
+}
+
+function onFilterDataset(e) {
+    const datasetId = Number(e.target.id.split('-')[1]);
     if (e.target.checked) {
         selectedDatasets.push(datasetId);
-
-        if (selectedDatasets.length === datasets.length) {
-            datasetFilterHeaderElement.innerText = '(All selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
     else {
         const index = selectedDatasets.indexOf(datasetId);
         selectedDatasets.splice(index, 1);
-
-        if (selectedDatasets.length === 0) {
-            datasetFilterHeaderElement.innerText = '(None selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
 
-    await updatePca();
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
+    checkStaleData();
 }
 
-function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX, minY, maxY) {
+function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName, 
+    minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY) {
     const difficultyBarTopColor = 'rgb(253, 196, 125)';
 
     function getDatasetDifficultyColor(point, minX, maxX, minY, maxY) {
@@ -156,19 +465,15 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
         return `rgb(${r}, ${g}, ${b})`;
     }
 
-    chartHelper.createChart(canvasElement, {
+   chartHelper.createChart(canvasElement, {
         datasets: [
-            {
-                label: 'Dataset Difficulty',
-                pointBackgroundColor: difficultyBarTopColor
-            },
             {
                 label: 'Datasets',
                 pointRadius: 5,
-                pointBackgroundColor: mappedResults.map(result => getDatasetDifficultyColor(result, minX, maxX, minY, maxY)),
+                pointBackgroundColor: filteredResults.map(result => getDatasetDifficultyColor(mappedPcaResults.find(x => x.id === result.id), pcaMinX, pcaMaxX, pcaMinY, pcaMaxY)),
                 pointBorderWidth: 0,
                 backgroundColor: 'red',
-                data: mappedResults
+                data: filteredResults
             },
             {
                 label: 'Variances',
@@ -183,7 +488,8 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
         verticalGradientBar: {
             topColor: difficultyBarTopColor,
             topText: '1.0',
-            bottomText: '0.0'
+            bottomText: '0.0',
+            verticalText: 'Dataset Difficulty'
         },
         title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
         axisTitles: {
@@ -201,7 +507,7 @@ function drawChart(mappedResults, performanceMetricName, kValueName, minX, maxX,
         labels: {
             showX: true,
             showY: true,
-            customLabels: mappedResults.reduce((data, result) => {
+            customLabels: filteredResults.reduce((data, result) => {
                 const dataset = datasets.find(dataset => dataset.id == result.id);
                 data[dataset.id] = dataset.name;
                 return data;
@@ -233,19 +539,56 @@ function resetGraph() {
 function exportPng() {
     chartHelper.exportChartAsPng('aps', canvasElement);
 }
+// Enhanced export function with user feedback to show the process is working
+async function exportPngWithFeedback() {
+    const exportBtn = document.getElementById('aps-export-png-btn');
+    const originalText = exportBtn.textContent;
+    
+    try {
+        // Update button to show process is starting
+        exportBtn.textContent = 'Exporting...';
+        exportBtn.disabled = true;
+        
+        // Small delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Call the export function
+        chartHelper.exportChartAsPng('aps', canvasElement);
+        
+        // Show success feedback
+        exportBtn.textContent = 'Exported!';
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        // Show error feedback
+        exportBtn.textContent = 'Export Failed';
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 3000);
+    }
+}
 
-function findSimilarDatasets(mappedResults) {
+function showSimilarDatasets(filteredResults) {
+    // Find similar datasets
     const result = {};
 
-    for (let i = 0; i < mappedResults.length; i++) {
-        const a = mappedResults[i];
+    for (let i = 0; i < filteredResults.length; i++) {
+        const a = filteredResults[i];
         const similar = [];
 
-        for (let j = 0; j < mappedResults.length; j++) {
+        for (let j = 0; j < filteredResults.length; j++) {
             if (i === j)
                 continue;
 
-            const b = mappedResults[j];
+            const b = filteredResults[j];
 
             const dx = a.x - b.x;
             const dy = a.y - b.y;
@@ -269,13 +612,9 @@ function findSimilarDatasets(mappedResults) {
         result[a.id] = similar;
     }
 
-    return result;
-}
-
-function showSimilarDatasets(similarDatasets) {
+    // Show similarities
     similarityElement.innerHTML = '';
-
-    Object.entries(similarDatasets).forEach(([id, similarList]) => {
+    Object.entries(result).forEach(([id, similarList]) => {
         const collapseId = `collapse${id}`;
         const headingId = `heading${id}`;
 
@@ -336,10 +675,13 @@ function showSimilarDatasets(similarDatasets) {
     });
 }
 
-function showDatasetDifficulties(mappedResults, minX, maxX, minY, maxY) {
+function showDatasetDifficulties(mappedPcaResults, filteredResults, minX, maxX, minY, maxY) {
     difficultyElement.innerHTML = '';
 
-    mappedResults.forEach(result => {
+    mappedPcaResults.forEach(result => {
+        if (filteredResults.find(r => r.id === result.id) == undefined)
+            return;
+
         const dataset = datasets.find(d => d.id === result.id);
 
         const normX = (result.x - minX) / (maxX - minX);
@@ -407,9 +749,12 @@ function getConfidence(confidence) {
 }
 
 export function dispose() {
+    updatePcaButton.removeEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
-    document.getElementById('aps-export-png-btn').removeEventListener('click', exportPng);
-    document.querySelectorAll('.updatePca').forEach(element => {
-        element.removeEventListener('change', updatePca);
+    document.getElementById('aps-export-png-btn').removeEventListener('click', exportPngWithFeedback);
+    document.querySelectorAll('.aps-selector').forEach(element => {
+        element.removeEventListener('change', checkStaleData);
     });
+    selectAllAlgorithmButton.removeEventListener('click', toggleAllAlgorithms);
+    selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
 }

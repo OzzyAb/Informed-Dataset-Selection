@@ -72,3 +72,7 @@ function readQueryString(queryString) {
   const options = Object.fromEntries(params.entries());
   return options;
 }
+export function clearQueryString() {
+  const urlWithoutQuery = window.location.origin + window.location.pathname;
+  window.history.replaceState({}, document.title, urlWithoutQuery);
+}
