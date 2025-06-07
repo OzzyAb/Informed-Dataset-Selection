@@ -22,6 +22,11 @@ var tableAlgoYNameElements = null;
 var tableSolvedByXHeaderElements = null;
 var tableSolvedByYHeaderElements = null;
 
+// NEW: Variable to hold the select all/deselect all button
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
+
 var chartHelper = null;
 var selectedDatasets = [];
 
@@ -44,7 +49,7 @@ export async function initialize() {
     tableSolvedByYHeaderElements = document.getElementById('compare-algo-solved-by-y-header');
 
     document.getElementById('aps-redirect').addEventListener('click', apsRedirect);
-    document.getElementById('compare-algo-export-btn').addEventListener('click', exportPng);
+   document.getElementById('compare-algo-export-btn').addEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.addEventListener('change', compareAlgorithms);
     });
@@ -81,9 +86,16 @@ export async function initialize() {
         secondAlgorithmElement.value = algorithms[0].id;
     }
 
+    // NEW: Create and add the Select All/Deselect All button
+    createSelectAllDatasetButton();
+
     datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
     selectedDatasets = [];
+    
+    // NEW: Add the select all button first, then the checkboxes
+    datasetFilterArea.appendChild(selectAllDatasetArea);
+
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -107,9 +119,87 @@ export async function initialize() {
         selectedDatasets.push(dataset.id);
     });
 
+    // NEW: Update the button text after all checkboxes are created
+    updateSelectAllDatasetButtonText();
+
     await compareAlgorithms();
 }
 
+// NEW: Function to create the Select All/Deselect All button
+function createSelectAllDatasetButton() {
+    // Create button wrapper div that spans full width
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
+
+    // Create the actual button
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
+
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All'; // initial text
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
+}
+
+// NEW: Function to toggle all datasets on/off
+function toggleAllDatasets() {
+    const checkedCount = datasetFilterCheckboxes.filter(checkbox => checkbox.checked).length;
+    const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
+
+    // Update all checkboxes
+    datasetFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    // Update selected datasets array
+    selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
+
+    // Update the header and button text
+    updateFilterHeader();
+    updateSelectAllDatasetButtonText();
+
+    // Trigger the algorithm comparison update
+    compareAlgorithms();
+}
+
+// NEW: Function to update the Select All/Deselect All button text
+function updateSelectAllDatasetButtonText() {
+    const checkedCount = selectedDatasets.length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        selectAllDatasetButtonText.textContent = 'Deselect All';
+    } else {
+        selectAllDatasetButtonText.textContent = 'Select All';
+    }
+}
+
+// NEW: Function to update filter header text
+function updateFilterHeader() {
+    const checkedCount = selectedDatasets.length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        datasetFilterHeaderElement.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        datasetFilterHeaderElement.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        // Find the single selected dataset and show its name
+        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
+        const selectedDatasetId = Number(selectedCheckbox.id);
+        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
+        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
+    } else {
+        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
+    }
+}
 function apsRedirect() {
     document.getElementById('aps-tab-btn').click();
 }
@@ -124,7 +214,7 @@ async function compareAlgorithms() {
     const kValue = kValueElement.value;
     const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-    const results = await ApiService.getPerformanceResults(algoId1, algoId2);
+    const results = await ApiService.compareAlgorithms(algoId1, algoId2);
     const filteredResults = results.filter(result => selectedDatasets.includes(result.datasetId));
     const separatedResults = separateResults(filteredResults.map((result) => {
         return {
@@ -142,25 +232,15 @@ async function onFilterDataset(e) {
     const datasetId = Number(e.target.id);
     if (e.target.checked) {
         selectedDatasets.push(datasetId);
-
-        if (selectedDatasets.length === datasets.length) {
-            datasetFilterHeaderElement.innerText = '(All selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
     else {
         const index = selectedDatasets.indexOf(datasetId);
         selectedDatasets.splice(index, 1);
-
-        if (selectedDatasets.length === 0) {
-            datasetFilterHeaderElement.innerText = '(None selected)';
-        }
-        else {
-            datasetFilterHeaderElement.innerText = '(Some selected)';
-        }
     }
+
+    // NEW: Update header and button text when individual checkboxes change
+    updateFilterHeader();
+    updateSelectAllDatasetButtonText();
 
     await compareAlgorithms();
 }
@@ -346,6 +426,49 @@ function exportPng() {
 
     chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
 }
+//Enhanced export function with user feedback 
+async function exportPngWithFeedback() {
+    const exportBtn = document.getElementById('compare-algo-export-btn');
+    const originalText = exportBtn.textContent;
+    
+    try {
+        // Update button to show process is starting
+        exportBtn.textContent = 'Exporting...';
+        exportBtn.disabled = true;
+        
+        // Small delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get the filename dynamically like the original exportPng function
+        const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
+        const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
+        const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
+        const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+        
+        // Call the export function with the same naming convention
+        chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
+        
+        // Show success feedback
+        exportBtn.textContent = 'Exported!';
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Export failed:', error);
+        // Show error feedback
+        exportBtn.textContent = 'Export Failed';
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 3000);
+    }
+}
 
 function fillTables(separatedResults, algoName1, algoName2) {
     function fill(tableBodyElement, results) {
@@ -409,8 +532,9 @@ function fillTables(separatedResults, algoName1, algoName2) {
 
 export function dispose() {
     document.getElementById('aps-redirect').removeEventListener('click', apsRedirect);
-    document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPng);
+    document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPngWithFeedback);
     document.querySelectorAll('.compareAlgorithms').forEach(element => {
         element.removeEventListener('change', compareAlgorithms);
     });
+    selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
 }

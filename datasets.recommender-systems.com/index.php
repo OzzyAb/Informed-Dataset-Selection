@@ -105,13 +105,35 @@ else if ($action === 'result') {
         PerformanceResult::getPcaResults($pdo);
     }
     else {
-        header('Content-Type: application/json');
-        http_response_code(400);
-        echo json_encode([
-            "isSuccess" => false,
-            "statusCode" => 400,
-            "message" => "Wrong task"
-        ]);
+        $ids = isset($_GET['ids']) ? $_GET['ids'] : null;
+        if (is_array($ids)) {
+            $allIntegers = true;
+            foreach ($ids as $id) {
+                if (!is_numeric($id) || intval($id) != $id) {
+                    header('Content-Type: application/json');
+                    http_response_code(400);
+                    echo json_encode([
+                        "isSuccess" => false,
+                        "statusCode" => 400,
+                        "message" => "IDs are not integers"
+                    ]);
+                    exit();
+                    break;
+                }
+            }
+        } 
+        else {
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode([
+                "isSuccess" => false,
+                "statusCode" => 400,
+                "message" => "IDs are not in an array"
+            ]);
+            exit();
+        }
+
+        PerformanceResult::getPerformanceResults($pdo, $ids);
     }
 }
 else if ($action === 'admin') {

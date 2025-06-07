@@ -34,6 +34,45 @@ body {
     margin-left: 1rem;
 }
 
+.fading-text {
+    animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    } 
+}
+
+/* NEW: CSS class for the Select All/Deselect All button */
+.filter-control-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.filter-control-btn:hover {
+    background-color: #0056b3;
+}
+
+.filter-control-btn:active {
+    background-color: #004085;
+}
+
 .modern-table {
     width: 100%;
     border-collapse: collapse;
@@ -135,7 +174,7 @@ body {
 }
 
 /* Remove gaps between header and table */
-.modern-section-header + .modern-table {
+.modern-section-header+.modern-table {
     margin-top: 0;
     border-top: none;
     border-radius: 0 0 12px 12px;
@@ -171,7 +210,7 @@ body {
     border-radius: 1px;
 }
 
-.modern-section-divider + .modern-table-section {
+.modern-section-divider+.modern-table-section {
     margin-top: 3rem;
 }
 
@@ -247,19 +286,20 @@ body {
 
 /* Responsive tooltip tables */
 @media (max-width: 768px) {
+
     #user-item-ratio-info,
     #mean-ratings-per-user-info,
     #mean-ratings-per-item-info {
         max-width: 95vw;
         font-size: 10px;
     }
-    
+
     #user-item-ratio-info table,
     #mean-ratings-per-user-info table,
     #mean-ratings-per-item-info table {
         font-size: 10px;
     }
-    
+
     #user-item-ratio-info th,
     #user-item-ratio-info td,
     #mean-ratings-per-user-info th,
@@ -275,38 +315,39 @@ body {
     .modern-table {
         font-size: 12px;
     }
-    
+
     .modern-table thead th,
     .modern-table tbody td {
         padding: 10px 16px;
     }
-    
+
     .modern-section-header {
         padding: 12px 16px;
         font-size: 16px;
     }
-    
+
     .modern-no-data {
         padding: 20px;
     }
-    
+
     .modern-table-section {
         margin-bottom: 3rem;
     }
 }
 
 @media (max-width: 480px) {
+
     .modern-table thead th,
     .modern-table tbody td {
         padding: 8px 12px;
         font-size: 11px;
     }
-    
+
     .modern-section-header {
         font-size: 14px;
         padding: 10px 12px;
     }
-    
+
     .modern-table-section {
         margin-bottom: 2.5rem;
     }
