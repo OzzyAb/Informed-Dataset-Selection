@@ -214,76 +214,6 @@ body {
     margin-top: 3rem;
 }
 
-/* Tooltip containers for info icons*/
-#user-item-ratio-info,
-#mean-ratings-per-user-info,
-#mean-ratings-per-item-info {
-    max-width: 90vw;
-    max-height: 80vh;
-    overflow: auto;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
-}
-
-/* Tooltip tables */
-#user-item-ratio-info table,
-#mean-ratings-per-user-info table,
-#mean-ratings-per-item-info table {
-    width: 100%;
-    max-width: 800px;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin: 0;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-#user-item-ratio-info th,
-#user-item-ratio-info td,
-#mean-ratings-per-user-info th,
-#mean-ratings-per-user-info td,
-#mean-ratings-per-item-info th,
-#mean-ratings-per-item-info td {
-    padding: 6px 8px;
-    border: 1px solid #ddd;
-    text-align: left;
-    word-wrap: break-word;
-}
-
-#user-item-ratio-info th,
-#mean-ratings-per-user-info th,
-#mean-ratings-per-item-info th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: 600;
-    font-size: 11px;
-}
-
-#user-item-ratio-info th[colspan],
-#mean-ratings-per-user-info th[colspan],
-#mean-ratings-per-item-info th[colspan] {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: normal;
-    text-align: center;
-    border: 1px solid #667eea;
-}
-
-#user-item-ratio-info tbody tr:nth-child(even),
-#mean-ratings-per-user-info tbody tr:nth-child(even),
-#mean-ratings-per-item-info tbody tr:nth-child(even) {
-    background-color: #f8fafc;
-}
-
-#user-item-ratio-info tbody tr:hover,
-#mean-ratings-per-user-info tbody tr:hover,
-#mean-ratings-per-item-info tbody tr:hover {
-    background-color: #f1f5f9;
-}
-
 /* Modal overlay */
 .info-modal-overlay {
     position: fixed;
@@ -552,33 +482,6 @@ body {
     .info-modal-level {
         padding: 12px;
         margin-bottom: 15px;
-    }
-}
-
-/* Responsive tooltip tables */
-@media (max-width: 768px) {
-
-    #user-item-ratio-info,
-    #mean-ratings-per-user-info,
-    #mean-ratings-per-item-info {
-        max-width: 95vw;
-        font-size: 10px;
-    }
-
-    #user-item-ratio-info table,
-    #mean-ratings-per-user-info table,
-    #mean-ratings-per-item-info table {
-        font-size: 10px;
-    }
-
-    #user-item-ratio-info th,
-    #user-item-ratio-info td,
-    #mean-ratings-per-user-info th,
-    #mean-ratings-per-user-info td,
-    #mean-ratings-per-item-info th,
-    #mean-ratings-per-item-info td {
-        padding: 4px 6px;
-        font-size: 9px;
     }
 }
 

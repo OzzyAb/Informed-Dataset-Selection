@@ -212,7 +212,7 @@
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
                     data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
                     style="display: flex; justify-content: space-between; width: 100%;">
-                    <span>Difficulties <span id="difficulties-info-icon" class="info-icon-modal">ℹ</span></span>
+                    <span>Difficulties</span>
                 </button>
             </h2>
             <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne-diff"
@@ -220,16 +220,11 @@
                 <div id="aps-dataset-difficulties-body" class="accordion-body"
                     style="display: flex; flex-direction: column;">
                     <div>
-                        <h5 style="font-weight: bold;">Difficulty Levels:</h5>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
-                            <span class="badge bg-dark">Very Hard (&lt;= 0.2)</span>
-                            <span class="badge bg-danger">Hard (0.2 - 0.3)</span>
-                            <span class="badge bg-warning text-dark">Medium (0.3 - 0.4)</span>
-                            <span class="badge bg-primary">Easy (0.4 - 0.7)</span>
-                            <span class="badge bg-success">Very Easy (&gt;= 0.7)</span>
-                        </div>
+                        <h5 style="font-weight: bold; display: flex; flex-direction: row; align-content: center;">Difficulty Levels
+                            <span id="difficulties-info-icon" class="info-icon-modal" style="padding-top: 0.17rem;">&#8505;</span>
+                        </h5>
                     </div>
-                    <div id="dataset-difficulty" style="margin-top: 2rem;">
+                    <div id="dataset-difficulty" style="margin-top: 1rem;">
                         <!-- Dataset Difficulties -->
                         <div><strong>Dataset D</strong></div>
                         <div class="progress" style="height: 20px;">
@@ -249,23 +244,18 @@
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
                     data-bs-target="#aps-dataset-similarities" aria-expanded="false" aria-controls="collapseOne"
                     style="display: flex; justify-content: space-between; width: 100%;">
-                    <span>Similarities <span id="similarities-info-icon" class="info-icon-modal">ℹ</span></span>
+                    <span>Similarities</span>
                 </button>
             </h2>
             <div id="aps-dataset-similarities" class="accordion-collapse collapse" aria-labelledby="headingOne-sim"
                 data-bs-parent="#accordionAPS-sim">
                 <div id="aps-dataset-similarities-body" class="accordion-body" style="display: flex; flex-direction: column;">
                     <div>
-                        <h5 style="font-weight: bold;">Similarity Confidence Levels:</h5>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
-                            <span class="badge bg-secondary">Very Low (&lt;= 0.25)</span>
-                            <span class="badge bg-danger">Low (0.25 - 0.5)</span>
-                            <span class="badge bg-warning text-dark">Moderate (0.5 - 0.75)</span>
-                            <span class="badge bg-primary">High (0.75 - 0.9)</span>
-                            <span class="badge bg-success">Very High (&gt;= 0.9)</span>
-                        </div>
+                        <h5 style="font-weight: bold; display: flex; flex-direction: row; align-content: center;">Similarity Confidence Levels
+                            <span id="similarities-info-icon" class="info-icon-modal" style="padding-top: 0.17rem;">&#8505;</span>
+                        </h5>
                     </div>
-                    <div id="similar-datasets" style="margin-top: 2rem;">
+                    <div id="similar-datasets" style="margin-top: 1rem;">
                         <!-- Similar Datasets -->
                     </div>
                 </div>
@@ -277,7 +267,7 @@
     <div id="difficulties-modal" class="info-modal-overlay">
         <div class="info-modal-content">
             <div class="info-modal-header">
-                <h2 class="info-modal-title">Difficulty Levels Explained</h2>
+                <h2 class="info-modal-title">Difficulty Levels</h2>
                 <button class="info-modal-close" type="button">&times;</button>
             </div>
             <div class="info-modal-body">
@@ -285,7 +275,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-hard">Very Hard</div>
                         <div class="info-modal-info">
-                            <h4>0.00 – 0.20</h4>
+                            <h4>0.00 - 0.20</h4>
                             <p>In PCA-based APS, lower scores mean worse algorithm performance. The research paper identifies datasets near the origin as “unsolved problems.” 0–0.2 captures this extreme difficulty.</p>
                         </div>
                     </div>
@@ -293,7 +283,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge hard">Hard</div>
                         <div class="info-modal-info">
-                            <h4>0.20 – 0.30</h4>
+                            <h4>0.20 - 0.30</h4>
                             <p>This range captures a <strong>transition zone</strong> — separating total failure (&lt;0.2) from early-stage success. These values still represent low overall performance.</p>
                         </div>
                     </div>
@@ -301,7 +291,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge medium">Medium</div>
                         <div class="info-modal-info">
-                            <h4>0.30 – 0.40</h4>
+                            <h4>0.30 - 0.40</h4>
                             <p>Around this range, datasets begin to <strong>diversify</strong>. It's a middle band between failure and success, as also reflected in PCA clusters in the APS visualization.</p>
                         </div>
                     </div>
@@ -309,7 +299,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge easy">Easy</div>
                         <div class="info-modal-info">
-                            <h4>0.40 – 0.70</h4>
+                            <h4>0.40 - 0.70</h4>
                             <p>Scores above 0.4 indicate datasets where <strong>multiple algorithms</strong> succeed. The upper limit (0.7) stops before the "solved" zone mentioned in the research paper.</p>
                         </div>
                     </div>
@@ -317,7 +307,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-easy">Very Easy</div>
                         <div class="info-modal-info">
-                            <h4>0.70 – 1.00</h4>
+                            <h4>0.70 - 1.00</h4>
                             <p>The research paper describes top-right datasets as “solved” — where nearly all algorithms do well. These are at or near <strong>maximum PCA scores</strong>, normalized to 1.0.</p>
                         </div>
                     </div>
@@ -330,7 +320,7 @@
     <div id="similarities-modal" class="info-modal-overlay">
         <div class="info-modal-content">
             <div class="info-modal-header">
-                <h2 class="info-modal-title">Similarity Confidence Levels Explained</h2>
+                <h2 class="info-modal-title">Similarity Confidence Levels</h2>
                 <button class="info-modal-close" type="button">&times;</button>
             </div>
             <div class="info-modal-body">
@@ -338,7 +328,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-low">Very Low</div>
                         <div class="info-modal-info">
-                            <h4>0.00 – 0.25</h4>
+                            <h4>0.00 - 0.25</h4>
                             <p>Datasets are highly different; algorithm behavior is inconsistent, and uncertainty is high. This corresponds to <strong>distance > 1.4</strong>. After applying <code>confidence = e^(-distance)</code>, values fall below 0.25.</p>
                         </div>
                     </div>
@@ -346,7 +336,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge low">Low</div>
                         <div class="info-modal-info">
-                            <h4>0.25 – 0.50</h4>
+                            <h4>0.25 - 0.50</h4>
                             <p>Datasets have weak similarity. Some patterns may match, but results are not reliable. From <code>e^(-1.0) ≈ 0.37</code>, we know this captures <strong>distance ~0.7-1.4</strong> — medium-long range.</p>
                         </div>
                     </div>
@@ -354,7 +344,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge moderate">Moderate</div>
                         <div class="info-modal-info">
-                            <h4>0.50 – 0.75</h4>
+                            <h4>0.50 - 0.75</h4>
                             <p>Some similarity in algorithm performance; useful but not close enough to assume equivalence. <code>e^(-0.7) ≈ 0.5</code>, <code>e^(-0.3) ≈ 0.74</code> — this captures <strong>distance ~0.3-0.7</strong> and shows noticeable, but not strong, similarity.</p>
                         </div>
                     </div>
@@ -362,7 +352,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge high">High</div>
                         <div class="info-modal-info">
-                            <h4>0.75 – 0.90</h4>
+                            <h4>0.75 - 0.90</h4>
                             <p>Strong overlap in performance; datasets behave similarly in most cases. Very small distances: <code>e^(-0.25 to -0.1)</code> gives high confidence (around 0.78-0.9).</p>
                         </div>
                     </div>
@@ -370,7 +360,7 @@
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-high">Very High</div>
                         <div class="info-modal-info">
-                            <h4>0.90 – 1.00</h4>
+                            <h4>0.90 - 1.00</h4>
                             <p>Datasets are nearly identical in how algorithms perform on them. <code>distance ≈ 0</code>, so <code>confidence = e^0 = 1</code>. Any distance < ~0.1 gives <code>confidence > 0.9</code>, indicating redundancy.</p>
                         </div>
                     </div>
