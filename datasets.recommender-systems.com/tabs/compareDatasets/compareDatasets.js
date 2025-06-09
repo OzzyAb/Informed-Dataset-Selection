@@ -1,5 +1,6 @@
 import { ApiService } from "../../apiService.js";
 import { capitalizeFirstLetter } from "../../util.js";
+import { readQueryString, getQueryString, clearQueryString } from "../../main.js";
 
 var datasets = null;
 var selectedDatasets = [];
@@ -18,6 +19,8 @@ var datasetFilterCheckboxes = [];
 var selectAllDatasetArea = null;
 var selectAllDatasetButton = null;
 var selectAllDatasetButtonText = null;
+
+var shareButton = null;
 
 var metadataElements = [
     { name: 'Name', key: 'name', better: 'higher'},
@@ -105,7 +108,7 @@ var metadataElements = [
     }
 ];
 
-export async function initialize() {
+export async function initialize(queryOptions) {
 
     infoElements['user-item-ratio-info'] = document.getElementById('user-item-ratio-info');
     infoElements['user-item-ratio-info-p'] = document.getElementById('user-item-ratio-info-p');
@@ -128,7 +131,6 @@ export async function initialize() {
 
     datasets = await ApiService.getDatasets();
     createSelectAllButtons();
-    
 
     datasetFilterHeaderElement = document.getElementById('dataset-comparison-header');
     datasetFilterArea = document.getElementById('dataset-comparison-filter');
@@ -139,13 +141,23 @@ export async function initialize() {
 
     datasetFilterCheckboxes = [];
     selectedDatasets = [];
+
+    // Hier: falls queryOptions.datasets vorhanden ist, die IDs parsen, sonst alle auswählen
+    let initialSelectedDatasetIds;
+    if (queryOptions && queryOptions.datasets) {
+        initialSelectedDatasetIds = queryOptions.datasets.split(' ').map(id => Number(id));
+    } else {
+        initialSelectedDatasetIds = datasets.map(ds => ds.id);
+    }
+
     datasets.forEach(dataset => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = dataset.id;
         checkbox.name = 'datasetCheckbox';
         checkbox.value = dataset.name;
-        checkbox.checked = true;
+        
+        checkbox.checked = initialSelectedDatasetIds.includes(dataset.id);
         checkbox.onchange = onFilterDataset;
 
         const label = document.createElement('label');
@@ -159,9 +171,14 @@ export async function initialize() {
 
         datasetFilterArea.appendChild(wrapper);
         datasetFilterCheckboxes.push(checkbox);
-        selectedDatasets.push(dataset.id);
+
+        
+        if (checkbox.checked) {
+            selectedDatasets.push(dataset.id);
+        }
     });
 
+    
     tableBodyElement.innerHTML = '';
     document.querySelectorAll('th.sortable').forEach(th => {
         th.addEventListener('click', () => {
@@ -179,12 +196,12 @@ export async function initialize() {
         });
     });
 
-    
+    shareButton = document.getElementById("compare-database-share-btn");
+    shareButton.addEventListener("click", shareDatabaseComparison);
     currentSortKey = 'name';
     currentSortDirection = 'asc';
     compareDatasets();
     initializeTooltips();
-    
 }
 
 async function onFilterDataset(e) {
@@ -416,6 +433,34 @@ function colorNumbersOnly(table) {
                 cell.innerHTML = content.replace(match[0], coloredNumber);
             }
         });
+    });
+}
+
+function shareDatabaseComparison() {
+  const datasetIds = selectedDatasets.map(ds => typeof ds === 'object' ? ds.id : ds);
+
+  const options = {
+    tab: "compareDatasets",
+    datasets: datasetIds.join(" "), 
+  };
+
+  const url = getQueryString(options);
+
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      const shareBtn = document.getElementById("compare-database-share-btn");
+      shareBtn.textContent = "Copied!";
+      setTimeout(() => {
+        shareBtn.innerHTML = '<i class="fa-solid fa-link"></i> Share';
+      }, 2000);
+    })
+    .catch(() => {
+      const shareBtn = document.getElementById("compare-database-share-btn");
+      shareBtn.textContent = "Failed to copy";
+      setTimeout(() => {
+        shareBtn.innerHTML = '<i class="fa-solid fa-link"></i> Share';
+      }, 2000);
     });
 }
 

@@ -69,7 +69,7 @@ export function getQueryString(options) {
   const params = new URLSearchParams(options).toString();
   return window.location.href.split("?")[0] + "?" + params;
 }
-function readQueryString(queryString) {
+export function readQueryString(queryString) {
   const params = new URLSearchParams(queryString);
   const options = Object.fromEntries(params.entries());
   return options;
