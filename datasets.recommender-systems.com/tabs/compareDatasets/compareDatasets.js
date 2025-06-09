@@ -135,14 +135,12 @@ export async function initialize(queryOptions) {
     datasetFilterHeaderElement = document.getElementById('dataset-comparison-header');
     datasetFilterArea = document.getElementById('dataset-comparison-filter');
 
-    datasetFilterHeaderElement.innerText = '(All selected)';
     datasetFilterArea.innerHTML = '';
     datasetFilterArea.appendChild(selectAllDatasetArea);
 
     datasetFilterCheckboxes = [];
     selectedDatasets = [];
 
-    // Hier: falls queryOptions.datasets vorhanden ist, die IDs parsen, sonst alle auswählen
     let initialSelectedDatasetIds;
     if (queryOptions && queryOptions.datasets) {
         initialSelectedDatasetIds = queryOptions.datasets.split(' ').map(id => Number(id));
@@ -202,30 +200,25 @@ export async function initialize(queryOptions) {
     currentSortDirection = 'asc';
     compareDatasets();
     initializeTooltips();
+    updateFilterHeader();
 }
 
 async function onFilterDataset(e) {
     const datasetId = Number(e.target.id);
-
     if (e.target.checked) {
         selectedDatasets.push(datasetId);
-    } else {
+    }
+    else {
         const index = selectedDatasets.indexOf(datasetId);
-        if (index > -1) {
-            selectedDatasets.splice(index, 1);
-        }
+        selectedDatasets.splice(index, 1);
     }
 
-    if (selectedDatasets.length === 0) {
-        datasetFilterHeaderElement.innerText = '(None selected)';
-    } else if (selectedDatasets.length === datasets.length) {
-        datasetFilterHeaderElement.innerText = '(All selected)';
-    } else {
-        datasetFilterHeaderElement.innerText = '(Some selected)';
-    }
+    updateFilterHeader();
+    updateSelectAllDatasetButtonText();
 
     await compareDatasets();
 }
+
 
 function compareDatasets() {
     const selectedDatasetIds = Array.from(document.querySelectorAll('#dataset-comparison-filter input[type="checkbox"]:checked'))
@@ -292,33 +285,35 @@ function toggleAllDatasets() {
     selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
 
     updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
-    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
+    updateSelectAllDatasetButtonText();
     checkStaleData();
 }
-function updateFilterHeader(checkboxes, header, selection, list) {
-    const checkedCount = selection.length;
-
-    if (checkedCount === checkboxes.length) {
-        header.innerText = '(All selected)';
+function updateFilterHeader() {
+    const checkedCount = selectedDatasets.length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        datasetFilterHeaderElement.innerText = '(All selected)';
     } else if (checkedCount === 0) {
-        header.innerText = '(None selected)';
+        datasetFilterHeaderElement.innerText = '(None selected)';
     } else if (checkedCount === 1) {
-        const selectedCheckbox = checkboxes.find(checkbox => checkbox.checked);
-        const selectedId = Number(selectedCheckbox.id.split('-')[1]);
-        const selected = list.find(x => x.id === selectedId);
-        header.innerText = `(${selected.name})`;
+        
+        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
+        const selectedDatasetId = Number(selectedCheckbox.id);
+        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
+        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
     } else {
-        header.innerText = `(${checkedCount} selected)`;
+        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
     }
 }
 
-function updateSelectAllButtonText(checkboxes, text, selection) {
-    const checkedCount = selection.length;
-    if (checkedCount === checkboxes.length) {
-        text.textContent = 'Deselect All';
-    } else {
-        text.textContent = 'Select All';
-    }
+function updateSelectAllDatasetButtonText() {
+  const checkedCount = selectedDatasets.length;
+  
+  if (checkedCount === datasetFilterCheckboxes.length) {
+      selectAllDatasetButtonText.textContent = 'Deselect All';
+  } else {
+      selectAllDatasetButtonText.textContent = 'Select All';
+  }
 }
  
 
