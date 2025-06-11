@@ -194,12 +194,18 @@
     </div>
 
     <canvas id="aps-chart" class="my-3" style="touch-action: none; user-select: none;"></canvas>
+    
+    <!-- Updated button section with CSV export button -->
     <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 1rem;">
         <button id="aps-reset-graph-btn" type="button" class="btn btn-primary">
             <i class="fa-solid fa-rotate-right" style="color: white !important; margin-right: 0.3rem;"></i>Refresh View
         </button>
         <button id="aps-export-png-btn" type="button" class="btn btn-primary">
             <i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG
+        </button>
+        <!-- CSV Export Button -->
+        <button id="aps-export-csv-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV
         </button>
     </div>
 
@@ -290,7 +296,7 @@
                         <div class="info-modal-badge very-hard">Very Hard</div>
                         <div class="info-modal-info">
                             <h4>0.00 - 0.20</h4>
-                            <p>In PCA-based APS, lower scores mean worse algorithm performance. The research paper identifies datasets near the origin as “unsolved problems.” 0–0.2 captures this extreme difficulty.</p>
+                            <p>In PCA-based APS, lower scores mean worse algorithm performance. The research paper identifies datasets near the origin as "unsolved problems." 0–0.2 captures this extreme difficulty.</p>
                         </div>
                     </div>
                     
@@ -322,7 +328,7 @@
                         <div class="info-modal-badge very-easy">Very Easy</div>
                         <div class="info-modal-info">
                             <h4>0.70 - 1.00</h4>
-                            <p>The research paper describes top-right datasets as “solved” — where nearly all algorithms do well. These are at or near <strong>maximum PCA scores</strong>, normalized to 1.0.</p>
+                            <p>The research paper describes top-right datasets as "solved" — where nearly all algorithms do well. These are at or near <strong>maximum PCA scores</strong>, normalized to 1.0.</p>
                         </div>
                     </div>
                 </div>
