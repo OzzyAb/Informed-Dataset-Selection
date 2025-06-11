@@ -48,10 +48,12 @@ async function loadTab(fileName) {
   Loading.showLoading();
 
   if (activeTabScript !== null) {
-    activeTabScript.dispose();
+    if (typeof activeTabScript.dispose === 'function') {
+      activeTabScript.dispose();
+    }
     activeTabScript = null;
   }
-
+  
   await DynamicContent.loadContentToElement(fileName, tabContentElement);
 
   const jsFileName = fileName.split(".html")[0] + ".js";
@@ -67,7 +69,7 @@ export function getQueryString(options) {
   const params = new URLSearchParams(options).toString();
   return window.location.href.split("?")[0] + "?" + params;
 }
-function readQueryString(queryString) {
+export function readQueryString(queryString) {
   const params = new URLSearchParams(queryString);
   const options = Object.fromEntries(params.entries());
   return options;

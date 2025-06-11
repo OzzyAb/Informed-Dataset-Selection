@@ -1,16 +1,29 @@
 import { ApiService } from "../../apiService.js";
 import { capitalizeFirstLetter } from "../../util.js";
+import { readQueryString, getQueryString, clearQueryString } from "../../main.js";
 
 var datasets = null;
+var selectedDatasets = [];
 
-var dataset1SelectElement = null;
-var dataset2SelectElement = null;
-var tableHeadElement = null;
 var tableBodyElement = null;
+var tableHeadElement = null;
 
+let currentSortKey = null;
+let currentSortDirection = 'asc'; // 'asc' oder 'desc'
 var infoElements = {};
 
+var datasetFilterHeaderElement = null;
+var datasetFilterArea = null;
+var datasetFilterCheckboxes = [];
+
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
+
+var shareButton = null;
+
 var metadataElements = [
+    { name: 'Name', key: 'name', better: 'higher'},
     { name: 'Number of Users', key: 'numberOfUsers', better: 'higher' },
     { name: 'Number of Items', key: 'numberOfItems', better: 'higher' },
     { name: 'Number of Interactions', key: 'numberOfInteractions', better: 'higher' },
@@ -45,7 +58,6 @@ var metadataElements = [
         }]
     },
     { name: 'Density', key: 'density', fixed: 2, better: 'higher' },
-    { name: 'Feedback Type', key: 'feedbackType' },
     { name: 'Max Rating/User', description: 'Highest Number of Rating By Single User', key: 'highestNumberOfRatingBySingleUser' },
     { name: 'Min Rating/User', description: 'Lowest Number of Rating By Single User', key: 'lowestNumberOfRatingBySingleUser' },
     { name: 'Max Rating/Item', description: 'Highest Number of Rating On Single Item', key: 'highestNumberOfRatingOnSingleItem' },
@@ -96,19 +108,18 @@ var metadataElements = [
     }
 ];
 
-export async function initialize() {
+export async function initialize(queryOptions) {
+
     infoElements['user-item-ratio-info'] = document.getElementById('user-item-ratio-info');
     infoElements['user-item-ratio-info-p'] = document.getElementById('user-item-ratio-info-p');
     infoElements['mean-ratings-per-user-info'] = document.getElementById('mean-ratings-per-user-info');
     infoElements['mean-ratings-per-user-info-p'] = document.getElementById('mean-ratings-per-user-info-p');
     infoElements['mean-ratings-per-item-info'] = document.getElementById('mean-ratings-per-item-info');
     infoElements['mean-ratings-per-item-info-p'] = document.getElementById('mean-ratings-per-item-info-p');
+
     document.body.appendChild(infoElements['user-item-ratio-info']);
     document.body.appendChild(infoElements['mean-ratings-per-user-info']);
     document.body.appendChild(infoElements['mean-ratings-per-item-info']);
-
-    dataset1SelectElement = document.getElementById('dataset-selection-1');
-    dataset2SelectElement = document.getElementById('dataset-selection-2');
 
     const table = document.querySelector("#dataset-table");
     tableHeadElement = table.querySelector("thead");
@@ -117,164 +128,339 @@ export async function initialize() {
     document.querySelectorAll('.compareDatasets').forEach(element => {
         element.addEventListener('change', compareDatasets);
     });
-    
+
     datasets = await ApiService.getDatasets();
+    createSelectAllButtons();
 
-    dataset1SelectElement.innerHTML = '';
-    dataset2SelectElement.innerHTML = '';
-    tableBodyElement.innerHTML = '';
+    datasetFilterHeaderElement = document.getElementById('dataset-comparison-header');
+    datasetFilterArea = document.getElementById('dataset-comparison-filter');
 
-    datasets.forEach((dataset) => {
-        const option1 = document.createElement('option');
-        option1.value = dataset.id;
-        option1.textContent = dataset.name;
-        dataset1SelectElement.appendChild(option1);
+    datasetFilterArea.innerHTML = '';
+    datasetFilterArea.appendChild(selectAllDatasetArea);
 
-        const option2 = document.createElement('option');
-        option2.value = dataset.id;
-        option2.textContent = dataset.name;
-        dataset2SelectElement.appendChild(option2);
+    datasetFilterCheckboxes = [];
+    selectedDatasets = [];
+
+    let initialSelectedDatasetIds;
+    if (queryOptions && queryOptions.datasets) {
+        initialSelectedDatasetIds = queryOptions.datasets.split(' ').map(id => Number(id));
+    } else {
+        initialSelectedDatasetIds = datasets.map(ds => ds.id);
+    }
+
+    datasets.forEach(dataset => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = dataset.id;
+        checkbox.name = 'datasetCheckbox';
+        checkbox.value = dataset.name;
+        
+        checkbox.checked = initialSelectedDatasetIds.includes(dataset.id);
+        checkbox.onchange = onFilterDataset;
+
+        const label = document.createElement('label');
+        label.htmlFor = dataset.id;
+        label.textContent = dataset.name;
+        label.style.marginLeft = '0.25rem';
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        datasetFilterArea.appendChild(wrapper);
+        datasetFilterCheckboxes.push(checkbox);
+
+        
+        if (checkbox.checked) {
+            selectedDatasets.push(dataset.id);
+        }
     });
 
-    dataset1SelectElement.value = datasets[0].id;
-    if (datasets.length > 1) {
-        dataset2SelectElement.value = datasets[1].id;
+    
+    tableBodyElement.innerHTML = '';
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const key = th.getAttribute('data-key');
+
+            if (currentSortKey === key) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortKey = key;
+                currentSortDirection = 'asc';
+            }
+
+            compareDatasets();
+            initializeTooltips();
+        });
+    });
+
+    shareButton = document.getElementById("compare-database-share-btn");
+    shareButton.addEventListener("click", shareDatabaseComparison);
+    currentSortKey = 'name';
+    currentSortDirection = 'asc';
+    compareDatasets();
+    initializeTooltips();
+    updateFilterHeader();
+}
+
+async function onFilterDataset(e) {
+    const datasetId = Number(e.target.id);
+    if (e.target.checked) {
+        selectedDatasets.push(datasetId);
     }
     else {
-        dataset2SelectElement.value = datasets[0].id;
+        const index = selectedDatasets.indexOf(datasetId);
+        selectedDatasets.splice(index, 1);
     }
 
+    updateFilterHeader();
+    updateSelectAllDatasetButtonText();
+
+    await compareDatasets();
+}
+
+
+function compareDatasets() {
+    const selectedDatasetIds = Array.from(document.querySelectorAll('#dataset-comparison-filter input[type="checkbox"]:checked'))
+        .map(cb => Number(cb.id));
+
+    selectedDatasets = datasets.filter(d => selectedDatasetIds.includes(d.id));
+
+    if (currentSortKey) {
+        selectedDatasets = sortDatasets(selectedDatasets, currentSortKey);
+    }
+
+    const tableBodyElement = document.querySelector('#dataset-table tbody');
+    tableBodyElement.innerHTML = '';
+
+    selectedDatasets.forEach(dataset => {
+        const tr = document.createElement('tr');
+
+        const cells = metadataElements.map(meta => {
+            const value = dataset[meta.key];
+            const decimals = meta.fixed ?? 0;
+            return `<td data-key="${meta.key}">${formatValue(value, decimals)}</td>`;
+        });
+
+        tr.innerHTML = cells.join('');
+        tableBodyElement.appendChild(tr);
+    });
+
+    updateSortIcons();
+    const table = document.querySelector("#dataset-table");
+    colorNumbersOnly(table);
+} 
+
+function createSelectAllButtons() {
+
+    selectAllDatasetArea = document.createElement('div');
+    selectAllDatasetArea.style.width = '100%';
+
+    selectAllDatasetButton = document.createElement('button');
+    selectAllDatasetButton.type = 'button';
+    selectAllDatasetButton.className = 'filter-control-btn';
+    selectAllDatasetButton.addEventListener('click', toggleAllDatasets);
+
+    let icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllDatasetButtonText = document.createElement('span');
+    selectAllDatasetButtonText.textContent = 'Deselect All';
+
+    selectAllDatasetButton.appendChild(icon);
+    selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
+    selectAllDatasetArea.appendChild(selectAllDatasetButton);
+}
+
+function toggleAllDatasets() {
+    const checkedCount = selectedDatasets.length;
+    const shouldCheck = checkedCount !== datasetFilterCheckboxes.length;
+
+    datasetFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
+
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllDatasetButtonText();
+    checkStaleData();
+}
+function updateFilterHeader() {
+    const checkedCount = selectedDatasets.length;
+    
+    if (checkedCount === datasetFilterCheckboxes.length) {
+        datasetFilterHeaderElement.innerText = '(All selected)';
+    } else if (checkedCount === 0) {
+        datasetFilterHeaderElement.innerText = '(None selected)';
+    } else if (checkedCount === 1) {
+        
+        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
+        const selectedDatasetId = Number(selectedCheckbox.id);
+        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
+        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
+    } else {
+        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
+    }
+}
+
+function updateSelectAllDatasetButtonText() {
+  const checkedCount = selectedDatasets.length;
+  
+  if (checkedCount === datasetFilterCheckboxes.length) {
+      selectAllDatasetButtonText.textContent = 'Deselect All';
+  } else {
+      selectAllDatasetButtonText.textContent = 'Select All';
+  }
+}
+ 
+
+
+function sortDatasets(datasets, key) {
+    return datasets.sort((a, b) => {
+        const valA = a[key];
+        const valB = b[key];
+
+        if (valA === undefined || valB === undefined) return 0;
+
+        if (typeof valA === 'string') {
+            return currentSortDirection === 'asc'
+                ? valA.localeCompare(valB)
+                : valB.localeCompare(valA);
+        } else {
+            return currentSortDirection === 'asc'
+                ? valA - valB
+                : valB - valA;
+        }
+    });
+}
+
+
+function updateSortIcons() {
+    document.querySelectorAll('th.sortable').forEach(th => {
+        const key = th.getAttribute('data-key');
+        const icon = th.querySelector('.sort-icon');
+        if (key === currentSortKey) {
+            icon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+        } else {
+            icon.textContent = '';
+        }
+    });
+}
+
+function formatValue(value, decimals = 0) {
+    if (value === null || value === undefined) return '-';
+    return typeof value === 'number' ? value.toFixed(decimals) : value;
+}
+
+function initializeTooltips() {
+    document.querySelectorAll('.tooltip-icon').forEach(icon => {
+        const tooltipId = icon.dataset.tooltipId;
+        const tooltip = document.getElementById(tooltipId);
+
+        if (!tooltip) return;
+
+        icon.addEventListener('mouseenter', (e) => {
+            tooltip.style.display = 'block';
+            positionTooltip(e, tooltip);
+        });
+
+        icon.addEventListener('mousemove', (e) => {
+            positionTooltip(e, tooltip);
+        });
+
+        icon.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+    });
+}
+
+function positionTooltip(e, tooltip) {
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const pageWidth = window.innerWidth;
+    const pageHeight = window.innerHeight;
+
+    let left = e.pageX + 10;
+    let top = e.pageY + 10;
+
+    if (left + tooltipRect.width > pageWidth) {
+        left = e.pageX - tooltipRect.width - 10;
+    }
+
+    if (top + tooltipRect.height > pageHeight) {
+        top = e.pageY - tooltipRect.height - 10;
+    }
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+}
+
+function colorNumbersOnly(table) {
+    const rows = table.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+
+        cells.forEach((cell, index) => {
+            const content = cell.textContent.trim();
+            const match = content.match(/[-+]?[0-9]*\.?[0-9]+/);
+            if (!match) return;
+
+            const value = parseFloat(match[0]);
+            const key = cell.getAttribute('data-key');
+            const meta = metadataElements.find(m => m.key === key);
+
+            if (!meta || !meta.rangeDescription) return; 
+
+            let colorClass = null;
+            for (const range of meta.rangeDescription) {
+                const [min, max] = range.value;
+                if (value >= min && value < max) {
+                    colorClass = range.color;
+                    break;
+                }
+            }
+
+            if (colorClass) {
+                const coloredNumber = `<span class="${colorClass}" style="font-weight: bold;">${match[0]}</span>`;
+                cell.innerHTML = content.replace(match[0], coloredNumber);
+            }
+        });
+    });
+}
+
+function shareDatabaseComparison() {
+  const datasetIds = selectedDatasets.map(ds => typeof ds === 'object' ? ds.id : ds);
+
+  const options = {
+    tab: "compareDatasets",
+    datasets: datasetIds.join(" "), 
+  };
+
+  const url = getQueryString(options);
+
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      const shareBtn = document.getElementById("compare-database-share-btn");
+      shareBtn.textContent = "Copied!";
+      setTimeout(() => {
+        shareBtn.innerHTML = '<i class="fa-solid fa-link"></i> Share';
+      }, 2000);
+    })
+    .catch(() => {
+      const shareBtn = document.getElementById("compare-database-share-btn");
+      shareBtn.textContent = "Failed to copy";
+      setTimeout(() => {
+        shareBtn.innerHTML = '<i class="fa-solid fa-link"></i> Share';
+      }, 2000);
+    });
+}
+
+
+function checkStaleData() {
     compareDatasets();
 }
 
-function compareDatasets() {
-    const dataset1 = datasets.find((dataset) => dataset.id == Number(dataset1SelectElement.value));
-    const dataset2 = datasets.find((dataset) => dataset.id == Number(dataset2SelectElement.value));
-
-    tableHeadElement.innerHTML = `
-      <tr>
-        <th style="text-align: center; vertical-align: middle; width: 100px; background-color: #CFE2FF;">Metadata</th>
-        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset1.name}</th>
-        <th style="text-align: center; vertical-align: middle; width: 200px; background-color: #CFE2FF;">${dataset2.name}</th>
-      </tr>
-    `;
-    tableBodyElement.innerHTML = '';
-    
-    metadataElements.forEach(metadata => {
-        const tr = document.createElement('tr');
-        const tdMetadata = document.createElement('td');
-        const tdDataset1 = document.createElement('td');
-        const tdDataset2 = document.createElement('td');
-
-        tdMetadata.style = 'text-align: left; vertical-align: middle; white-space: nowrap;';
-        tdMetadata.textContent = metadata.name;
-        if (metadata.description !== undefined) {
-            tdMetadata.title = metadata.description;
-        }
-        if (metadata.info !== undefined) {
-            const infoIcon = document.createElement('span');
-            infoIcon.innerHTML = ' &#8505;';
-            infoIcon.style.color = '#0d6efd';
-            infoIcon.style.cursor = 'pointer';
-            infoIcon.style.marginLeft = '5px';
-
-            infoIcon.addEventListener('mouseenter', (e) => {
-                infoElements[metadata.info].style.display = 'block';
-                infoElements[metadata.info].style.left = e.pageX + 10 + 'px';
-                infoElements[metadata.info].style.top = e.pageY + 10 + 'px';
-            });
-
-            infoIcon.addEventListener('mousemove', (e) => {
-                const tooltip = infoElements[metadata.info];
-                tooltip.style.display = 'block';
-
-                const tooltipRect = tooltip.getBoundingClientRect();
-                const pageWidth = window.innerWidth;
-                const pageHeight = window.innerHeight;
-
-                let left = e.pageX + 10;
-                let top = e.pageY + 10;
-
-                if (left + tooltipRect.width > pageWidth) {
-                    left = e.pageX - tooltipRect.width - 10;
-                }
-
-                if (top + tooltipRect.height > pageHeight) {
-                    top = e.pageY - tooltipRect.height - 10;
-                }
-
-                tooltip.style.left = left + 'px';
-                tooltip.style.top = top + 'px';
-            });
-
-            infoIcon.addEventListener('mouseleave', () => {
-                infoElements[metadata.info].style.display = 'none';
-            });
-
-            tdMetadata.appendChild(infoIcon);
-        }
-
-        tdDataset1.style = 'text-align: center; vertical-align: middle;';
-        tdDataset2.style = 'text-align: center; vertical-align: middle;';
-
-        const value1 = metadata.fixed === undefined ? dataset1[metadata.key] : dataset1[metadata.key].toFixed(2);
-        const value2 = metadata.fixed === undefined ? dataset2[metadata.key] : dataset2[metadata.key].toFixed(2);
-        let color1 = null;
-        let color2 = null;
-        if (metadata.better !== undefined) {
-            if (metadata.better === 'higher') {
-                if (value1 > value2) {
-                    color1 = 'text-success';
-                }
-                else if (value2 > value1) {
-                    color2 = 'text-success';
-                }
-            }
-            else if (metadata.better === 'lower') {
-                if (value1 < value2) {
-                    color1 = 'text-success';
-                }
-                else if (value2 < value1) {
-                    color2 = 'text-success';
-                }
-            }
-            else if (metadata.better === 'range') {
-                for (const description of metadata.rangeDescription) {
-                    if (value1 >= description.value[0] && value1 <= description.value[1]) {
-                        color1 = description.color;
-                    }
-                    if (value2 >= description.value[0] && value2 <= description.value[1]) {
-                        color2 = description.color;
-                    }
-                }
-            }
-        }
-
-        if (metadata.key === 'feedbackType') {
-            tdDataset1.textContent = capitalizeFirstLetter(value1);
-            tdDataset2.textContent = capitalizeFirstLetter(value2);
-        }
-        else {
-            tdDataset1.textContent = value1;
-            tdDataset2.textContent = value2;
-        }
-        
-        if (color1 != null) {
-            tdDataset1.classList.add(color1);
-        }
-        if (color2 != null) {
-            tdDataset2.classList.add(color2);
-        }
-
-        tr.appendChild(tdMetadata);
-        tr.appendChild(tdDataset1);
-        tr.appendChild(tdDataset2);
-        tableBodyElement.appendChild(tr);
-    });
-}
-
-export function dispose() {
-    document.querySelectorAll('.compareDatasets').forEach(element => {
-        element.removeEventListener('change', compareDatasets);
-    });
-}
