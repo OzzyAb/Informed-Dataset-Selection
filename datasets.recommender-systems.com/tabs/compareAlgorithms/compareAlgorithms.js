@@ -32,6 +32,7 @@ var chartHelper = null;
 var selectedDatasets = [];
 
 var shareButton = null;
+var metadataButton = null;
 
 export async function initialize(queryOptions) {
   firstAlgorithmElement = document.getElementById("formControlAlgorithm1");
@@ -67,6 +68,8 @@ export async function initialize(queryOptions) {
   });
   shareButton = document.getElementById("compare-algo-share-btn");
   shareButton.addEventListener("click", shareAlgorithmComparison);
+  metadataButton = document.getElementById('compare-algo-metadata-btn');
+  metadataButton.addEventListener("click", seeMetadata);
 
   chartHelper = new ChartHelper();
 
@@ -490,18 +493,6 @@ function drawChart(
   });
 }
 
-function exportPng() {
-    const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
-    const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
-    const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
-    const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
-
-  chartHelper.exportChartAsPng(
-    `comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`,
-    canvasElement
-  );
-}
-
 function shareAlgorithmComparison() {
   const algoName1 =
     firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text;
@@ -537,6 +528,16 @@ function shareAlgorithmComparison() {
         shareBtn.innerHTML = '<i class="fa-solid fa-link"></i> Share';
       }, 2000);
     });
+}
+
+function seeMetadata() {
+    const options = {
+      tab: "compareDatasets",
+      datasets: selectedDatasets.join(" "),
+    };
+
+    const url = getQueryString(options);
+    window.open(url, '_blank');
 }
 
 //Enhanced export function with user feedback 
@@ -649,4 +650,5 @@ export function dispose() {
   });
   selectAllDatasetButton.removeEventListener('click', toggleAllDatasets);
   shareButton.removeEventListener("click", shareAlgorithmComparison);
+  metadataButton.removeEventListener('click', seeMetadata);
 }
