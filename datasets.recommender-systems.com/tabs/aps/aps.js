@@ -1,3 +1,172 @@
+import { ChartHelper } from "../../chartHelper.js";
+import { ApiService } from "../../apiService.js";
+import { PCA } from 'https://cdn.skypack.dev/ml-pca';
+import { getQueryString } from "../../main.js";
+
+var datasets = null;
+var algorithms = null;
+
+var performanceMetricElement = null;
+var kValueElement = null;
+var algorithmFilterHeaderElement = null;
+var algorithmFilterArea = null;
+var algorithmFilterCheckboxes = [];
+var datasetFilterHeaderElement = null;
+var datasetFilterArea = null;
+var datasetFilterCheckboxes = [];
+var updatePcaButton = null;
+var updatePcaTextNoneSelected = null;
+var updatePcaTextStale = null;
+var updatePcaTextCalculating = null;
+var canvasElement = null;
+var similarityElement = null;
+var difficultyElement = null;
+var metadataButton = null;
+
+// Modal info icon elements for Difficulties and Similarities
+var difficultiesInfoIcon = null;
+var difficultiesModal = null;
+var similaritiesInfoIcon = null;
+var similaritiesModal = null;
+
+var selectAllAlgorithmArea = null;
+var selectAllAlgorithmButton = null;
+var selectAllAlgorithmButtonText = null;
+
+var selectAllDatasetArea = null;
+var selectAllDatasetButton = null;
+var selectAllDatasetButtonText = null;
+
+var chartHelper = null;
+var selectedAlgorithms = [];
+var selectedDatasets = [];
+
+var lastMetricSelection = null;
+var lastKValueSelection = null;
+var lastAlgorithmFilter = [];
+var lastDatasetFilter = [];
+
+export async function initialize() {
+    // Get existing elements
+    performanceMetricElement = document.getElementById("formPerformanceMetricPca");
+    kValueElement = document.getElementById("formKValuePca");
+    algorithmFilterHeaderElement = document.getElementById('aps-algorithm-filter-header');
+    algorithmFilterArea = document.getElementById('aps-algorithm-filter');
+    datasetFilterHeaderElement = document.getElementById('aps-dataset-filter-header');
+    datasetFilterArea = document.getElementById('aps-dataset-filter');
+    updatePcaButton = document.getElementById('aps-update-pca-btn');
+    updatePcaTextNoneSelected = document.getElementById('aps-update-pca-txt-none-selected');
+    updatePcaTextStale = document.getElementById('aps-update-pca-txt-stale');
+    updatePcaTextCalculating = document.getElementById('aps-update-pca-txt-calculating');
+    canvasElement = document.getElementById('aps-chart');
+    similarityElement = document.getElementById('similar-datasets');
+    difficultyElement = document.getElementById('dataset-difficulty');
+    metadataButton = document.getElementById('aps-metadata-btn');
+
+    // Get modal elements for info icons
+    difficultiesInfoIcon = document.getElementById('difficulties-info-icon');
+    difficultiesModal = document.getElementById('difficulties-modal');
+    similaritiesInfoIcon = document.getElementById('similarities-info-icon');
+    similaritiesModal = document.getElementById('similarities-modal');
+
+    // Initialize modal event listeners for info icons
+    initializeModalTooltips();
+
+    // Add existing event listeners
+    updatePcaButton.addEventListener('click', updatePca);
+    document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
+    document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
+    document.getElementById('aps-export-csv-btn').addEventListener('click', exportCsvWithFeedback);
+    document.querySelectorAll('.aps-selection').forEach(element => {
+        element.addEventListener('change', checkStaleData);
+    });
+    metadataButton.addEventListener('click', seeMetadata);
+
+    chartHelper = new ChartHelper();
+
+    // Load data from API
+    datasets = await ApiService.getDatasets();
+    algorithms = await ApiService.getAlgorithms();
+
+    createSelectAllButtons();
+
+    // Initialize algorithm filter
+    algorithmFilterHeaderElement.innerText = '(All selected)';
+    algorithmFilterArea.innerHTML = '';
+    algorithmFilterArea.appendChild(selectAllAlgorithmArea);
+
+    algorithmFilterCheckboxes = [];
+    selectedAlgorithms = [];
+    algorithms.forEach(algorithm => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `algorithm-${algorithm.id}`;
+        checkbox.name = 'algorithmCheckbox';
+        checkbox.value = algorithm.name;
+        checkbox.checked = true;
+        checkbox.onchange = onFilterAlgorithm;
+
+        const label = document.createElement('label');
+        label.htmlFor = `algorithm-${algorithm.id}`;
+        label.textContent = algorithm.name;
+        label.style.marginLeft = '0.25rem';
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        algorithmFilterArea.appendChild(wrapper);
+        algorithmFilterCheckboxes.push(checkbox);
+        selectedAlgorithms.push(algorithm.id);
+    });
+
+    // Initialize dataset filter
+    datasetFilterHeaderElement.innerText = '(All selected)';
+    datasetFilterArea.innerHTML = '';
+    datasetFilterArea.appendChild(selectAllDatasetArea);
+
+    datasetFilterCheckboxes = [];
+    selectedDatasets = [];
+    datasets.forEach(dataset => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `dataset-${dataset.id}`;
+        checkbox.name = 'datasetCheckbox';
+        checkbox.value = dataset.name;
+        checkbox.checked = true;
+        checkbox.onchange = onFilterDataset;
+
+        const label = document.createElement('label');
+        label.htmlFor = `dataset-${dataset.id}`;
+        label.textContent = dataset.name;
+        label.style.marginLeft = '0.25rem';
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        datasetFilterArea.appendChild(wrapper);
+        datasetFilterCheckboxes.push(checkbox);
+        selectedDatasets.push(dataset.id);
+    });
+    
+    // Update filter headers and button texts
+    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
+    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
+    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
+    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
+
+    // Set initial selections
+    lastMetricSelection = 'ndcg';
+    lastKValueSelection = 'one';
+    lastAlgorithmFilter = [...selectedAlgorithms];
+    lastDatasetFilter = [...selectedDatasets];
+
+    // Initial data check and PCA update
+    checkStaleData();
+    await updatePca();
+}
+
 /**
  * Initialize modal tooltips for Difficulties and Similarities sections
  * This creates click-to-open modal functionality for info icons
@@ -536,13 +705,6 @@ function resetGraph() {
 }
 
 /**
- * Export chart as PNG file
- */
-function exportPng() {
-    chartHelper.exportChartAsPng('aps', canvasElement);
-}
-
-/**
  * Enhanced export function with user feedback to show the process is working
  */
 async function exportPngWithFeedback() {
@@ -617,6 +779,16 @@ async function exportCsvWithFeedback() {
             exportBtn.disabled = false;
         }, 3000);
     }
+}
+
+function seeMetadata() {
+    const options = {
+      tab: "compareDatasets",
+      datasets: lastDatasetFilter.join(" "),
+    };
+
+    const url = getQueryString(options);
+    window.open(url, '_blank');
 }
 
 /**
@@ -808,11 +980,11 @@ export function dispose() {
     updatePcaButton.removeEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').removeEventListener('click', exportPngWithFeedback);
-    // NEW: Remove CSV export button listener
     document.getElementById('aps-export-csv-btn').removeEventListener('click', exportCsvWithFeedback);
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
+    metadataButton.removeEventListener('click', seeMetadata);
     
     // Remove filter button listeners
     if (selectAllAlgorithmButton) {
@@ -835,168 +1007,4 @@ export function dispose() {
     
     // Remove escape key listener
     document.removeEventListener('keydown', () => {});
-}import { ChartHelper } from "../../chartHelper.js";
-import { ApiService } from "../../apiService.js";
-import { PCA } from 'https://cdn.skypack.dev/ml-pca';
-
-var datasets = null;
-var algorithms = null;
-
-var performanceMetricElement = null;
-var kValueElement = null;
-var algorithmFilterHeaderElement = null;
-var algorithmFilterArea = null;
-var algorithmFilterCheckboxes = [];
-var datasetFilterHeaderElement = null;
-var datasetFilterArea = null;
-var datasetFilterCheckboxes = [];
-var updatePcaButton = null;
-var updatePcaTextNoneSelected = null;
-var updatePcaTextStale = null;
-var updatePcaTextCalculating = null;
-var canvasElement = null;
-var similarityElement = null;
-var difficultyElement = null;
-
-// Modal info icon elements for Difficulties and Similarities
-var difficultiesInfoIcon = null;
-var difficultiesModal = null;
-var similaritiesInfoIcon = null;
-var similaritiesModal = null;
-
-var selectAllAlgorithmArea = null;
-var selectAllAlgorithmButton = null;
-var selectAllAlgorithmButtonText = null;
-
-var selectAllDatasetArea = null;
-var selectAllDatasetButton = null;
-var selectAllDatasetButtonText = null;
-
-var chartHelper = null;
-var selectedAlgorithms = [];
-var selectedDatasets = [];
-
-var lastMetricSelection = null;
-var lastKValueSelection = null;
-var lastAlgorithmFilter = [];
-var lastDatasetFilter = [];
-
-export async function initialize() {
-    // Get existing elements
-    performanceMetricElement = document.getElementById("formPerformanceMetricPca");
-    kValueElement = document.getElementById("formKValuePca");
-    algorithmFilterHeaderElement = document.getElementById('aps-algorithm-filter-header');
-    algorithmFilterArea = document.getElementById('aps-algorithm-filter');
-    datasetFilterHeaderElement = document.getElementById('aps-dataset-filter-header');
-    datasetFilterArea = document.getElementById('aps-dataset-filter');
-    updatePcaButton = document.getElementById('aps-update-pca-btn');
-    updatePcaTextNoneSelected = document.getElementById('aps-update-pca-txt-none-selected');
-    updatePcaTextStale = document.getElementById('aps-update-pca-txt-stale');
-    updatePcaTextCalculating = document.getElementById('aps-update-pca-txt-calculating');
-    canvasElement = document.getElementById('aps-chart');
-    similarityElement = document.getElementById('similar-datasets');
-    difficultyElement = document.getElementById('dataset-difficulty');
-
-    // Get modal elements for info icons
-    difficultiesInfoIcon = document.getElementById('difficulties-info-icon');
-    difficultiesModal = document.getElementById('difficulties-modal');
-    similaritiesInfoIcon = document.getElementById('similarities-info-icon');
-    similaritiesModal = document.getElementById('similarities-modal');
-
-    // Initialize modal event listeners for info icons
-    initializeModalTooltips();
-
-    // Add existing event listeners
-    updatePcaButton.addEventListener('click', updatePca);
-    document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
-    document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
-    // NEW: Add CSV export button event listener
-    document.getElementById('aps-export-csv-btn').addEventListener('click', exportCsvWithFeedback);
-    document.querySelectorAll('.aps-selection').forEach(element => {
-        element.addEventListener('change', checkStaleData);
-    });
-
-    chartHelper = new ChartHelper();
-
-    // Load data from API
-    datasets = await ApiService.getDatasets();
-    algorithms = await ApiService.getAlgorithms();
-
-    createSelectAllButtons();
-
-    // Initialize algorithm filter
-    algorithmFilterHeaderElement.innerText = '(All selected)';
-    algorithmFilterArea.innerHTML = '';
-    algorithmFilterArea.appendChild(selectAllAlgorithmArea);
-
-    algorithmFilterCheckboxes = [];
-    selectedAlgorithms = [];
-    algorithms.forEach(algorithm => {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `algorithm-${algorithm.id}`;
-        checkbox.name = 'algorithmCheckbox';
-        checkbox.value = algorithm.name;
-        checkbox.checked = true;
-        checkbox.onchange = onFilterAlgorithm;
-
-        const label = document.createElement('label');
-        label.htmlFor = `algorithm-${algorithm.id}`;
-        label.textContent = algorithm.name;
-        label.style.marginLeft = '0.25rem';
-
-        const wrapper = document.createElement('div');
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(label);
-
-        algorithmFilterArea.appendChild(wrapper);
-        algorithmFilterCheckboxes.push(checkbox);
-        selectedAlgorithms.push(algorithm.id);
-    });
-
-    // Initialize dataset filter
-    datasetFilterHeaderElement.innerText = '(All selected)';
-    datasetFilterArea.innerHTML = '';
-    datasetFilterArea.appendChild(selectAllDatasetArea);
-
-    datasetFilterCheckboxes = [];
-    selectedDatasets = [];
-    datasets.forEach(dataset => {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `dataset-${dataset.id}`;
-        checkbox.name = 'datasetCheckbox';
-        checkbox.value = dataset.name;
-        checkbox.checked = true;
-        checkbox.onchange = onFilterDataset;
-
-        const label = document.createElement('label');
-        label.htmlFor = `dataset-${dataset.id}`;
-        label.textContent = dataset.name;
-        label.style.marginLeft = '0.25rem';
-
-        const wrapper = document.createElement('div');
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(label);
-
-        datasetFilterArea.appendChild(wrapper);
-        datasetFilterCheckboxes.push(checkbox);
-        selectedDatasets.push(dataset.id);
-    });
-    
-    // Update filter headers and button texts
-    updateFilterHeader(algorithmFilterCheckboxes, algorithmFilterHeaderElement, selectedAlgorithms, algorithms);
-    updateSelectAllButtonText(algorithmFilterCheckboxes, selectAllAlgorithmButtonText, selectedAlgorithms);
-    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
-    updateSelectAllButtonText(datasetFilterCheckboxes, selectAllDatasetButtonText, selectedDatasets);
-
-    // Set initial selections
-    lastMetricSelection = 'ndcg';
-    lastKValueSelection = 'one';
-    lastAlgorithmFilter = [...selectedAlgorithms];
-    lastDatasetFilter = [...selectedDatasets];
-
-    // Initial data check and PCA update
-    checkStaleData();
-    await updatePca();
 }
