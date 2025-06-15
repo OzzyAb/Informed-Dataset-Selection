@@ -63,9 +63,9 @@ async function loadTab(fileName) {
 
   activeTabScript = script;
   // Clear query string after successful initialization if there were query parameters
-if (Object.keys(queryOptions).length > 0) {
-  clearQueryString();
-}
+  if (Object.keys(queryOptions).length > 0) {
+    clearQueryString();
+  }
   Loading.hideLoading();
 }
 

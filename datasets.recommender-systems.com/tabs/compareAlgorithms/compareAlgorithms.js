@@ -63,6 +63,8 @@ export async function initialize(queryOptions) {
 
   document.getElementById('aps-redirect').addEventListener('click', apsRedirect);
   document.getElementById('compare-algo-export-btn').addEventListener('click', exportPngWithFeedback);
+  // NEW: Add CSV export button event listener
+  document.getElementById('compare-algo-export-csv-btn').addEventListener('click', exportCsvWithFeedback);
   document.querySelectorAll('.compareAlgorithms').forEach(element => {
     element.addEventListener('change', compareAlgorithms);
   });
@@ -287,6 +289,7 @@ function updateFilterHeader() {
         datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
     }
 }
+
 function apsRedirect() {
   document.getElementById("aps-tab-btn").click();
 }
@@ -393,6 +396,17 @@ function drawChart(
   performanceMetricName,
   kValueName
 ) {
+  // Helper function to add dataset names to data points
+  const addDatasetNames = (dataPoints) => {
+    return dataPoints.map(point => {
+      const dataset = datasets.find(d => d.id === point.id);
+      return {
+        ...point,
+        datasetName: dataset ? dataset.name : `Dataset ${point.id}`
+      };
+    });
+  };
+
   chartHelper.createChart(canvasElement, {
     datasets: [
       {
@@ -400,35 +414,35 @@ function drawChart(
         pointRadius: 5,
         pointBackgroundColor: "rgb(255, 30, 0)",
         pointBorderWidth: 0,
-        data: separatedResults.trueChallenges,
+        data: addDatasetNames(separatedResults.trueChallenges),
       },
       {
         label: "Solved Problems",
         pointRadius: 5,
         pointBackgroundColor: "rgb(0, 150, 30)",
         pointBorderWidth: 0,
-        data: separatedResults.solvedProblems,
+        data: addDatasetNames(separatedResults.solvedProblems),
       },
       {
         label: `Solved By ${algoName1}`,
         pointRadius: 5,
         pointBackgroundColor: "rgb(0, 70, 128)",
         pointBorderWidth: 0,
-        data: separatedResults.solvedByAlgo1,
+        data: addDatasetNames(separatedResults.solvedByAlgo1),
       },
       {
         label: `Solved By ${algoName2}`,
         pointRadius: 5,
         pointBackgroundColor: "rgb(180, 180, 0)",
         pointBorderWidth: 0,
-        data: separatedResults.solvedByAlgo2,
+        data: addDatasetNames(separatedResults.solvedByAlgo2),
       },
       {
         label: "Mediocres",
         pointRadius: 5,
         pointBackgroundColor: "rgb(150, 150, 150)",
         pointBorderWidth: 0,
-        data: separatedResults.mediocres,
+        data: addDatasetNames(separatedResults.mediocres),
       },
     ],
     title: `Performance of ${algoName1} and ${algoName2} (${performanceMetricName}${kValueName})`,
@@ -583,6 +597,50 @@ async function exportPngWithFeedback() {
   }
 }
 
+// Enhanced CSV export function with user feedback
+async function exportCsvWithFeedback() {
+  const exportBtn = document.getElementById('compare-algo-export-csv-btn');
+  const originalText = exportBtn.textContent;
+  
+  try {
+      // Update button to show process is starting
+      exportBtn.textContent = 'Exporting...';
+      exportBtn.disabled = true;
+      
+      // Small delay to ensure UI updates
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get the filename dynamically 
+      const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
+      const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
+      const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
+      const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+      
+      // Call the CSV export function with the same naming convention
+      chartHelper.exportChartAsCsv(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
+      
+      // Show success feedback
+      exportBtn.textContent = 'Exported!';
+      
+      // Reset button after 2 seconds
+      setTimeout(() => {
+          exportBtn.textContent = originalText;
+          exportBtn.disabled = false;
+      }, 2000);
+      
+  } catch (error) {
+      console.error('CSV export error:', error);
+      // Show error feedback
+      exportBtn.textContent = 'Export Failed';
+      
+      // Reset button after 3 seconds
+      setTimeout(() => {
+          exportBtn.textContent = originalText;
+          exportBtn.disabled = false;
+      }, 3000);
+  }
+}
+
 function fillTables(separatedResults, algoName1, algoName2) {
   function fill(tableBodyElement, results) {
     if (results.length === 0) {
@@ -645,6 +703,8 @@ function fillTables(separatedResults, algoName1, algoName2) {
 export function dispose() {
   document.getElementById('aps-redirect').removeEventListener('click', apsRedirect);
   document.getElementById('compare-algo-export-btn').removeEventListener('click', exportPngWithFeedback);
+  // NEW: Remove CSV export button listener
+  document.getElementById('compare-algo-export-csv-btn').removeEventListener('click', exportCsvWithFeedback);
   document.querySelectorAll('.compareAlgorithms').forEach(element => {
       element.removeEventListener('change', compareAlgorithms);
   });

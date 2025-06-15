@@ -76,6 +76,7 @@ export async function initialize() {
     updatePcaButton.addEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
+    document.getElementById('aps-export-csv-btn').addEventListener('click', exportCsvWithFeedback);
     document.querySelectorAll('.aps-selection').forEach(element => {
         element.addEventListener('change', checkStaleData);
     });
@@ -627,7 +628,17 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
                 pointBackgroundColor: filteredResults.map(result => getDatasetDifficultyColor(mappedPcaResults.find(x => x.id === result.id), pcaMinX, pcaMaxX, pcaMinY, pcaMaxY)),
                 pointBorderWidth: 0,
                 backgroundColor: 'red',
-                data: filteredResults
+                data: filteredResults.map(result => {
+                    const dataset = datasets.find(d => d.id === result.id);
+                    return {
+                        x: result.x,
+                        y: result.y,
+                        id: result.id,
+                        datasetName: dataset ? dataset.name : `Dataset ${result.id}`,
+                        ellipseX: result.ellipseX,
+                        ellipseY: result.ellipseY
+                    };
+                })
             },
             {
                 label: 'Variances',
@@ -721,6 +732,44 @@ async function exportPngWithFeedback() {
         }, 2000);
         
     } catch (error) {
+        // Show error feedback
+        exportBtn.textContent = 'Export Failed';
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 3000);
+    }
+}
+
+// Enhanced CSV export function with user feedback
+async function exportCsvWithFeedback() {
+    const exportBtn = document.getElementById('aps-export-csv-btn');
+    const originalText = exportBtn.textContent;
+    
+    try {
+        // Update button to show process is starting
+        exportBtn.textContent = 'Exporting...';
+        exportBtn.disabled = true;
+        
+        // Small delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Call the CSV export function
+        chartHelper.exportChartAsCsv('aps', canvasElement);
+        
+        // Show success feedback
+        exportBtn.textContent = 'Exported!';
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.textContent = originalText;
+            exportBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('CSV export error:', error);
         // Show error feedback
         exportBtn.textContent = 'Export Failed';
         
@@ -931,6 +980,7 @@ export function dispose() {
     updatePcaButton.removeEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').removeEventListener('click', exportPngWithFeedback);
+    document.getElementById('aps-export-csv-btn').removeEventListener('click', exportCsvWithFeedback);
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
