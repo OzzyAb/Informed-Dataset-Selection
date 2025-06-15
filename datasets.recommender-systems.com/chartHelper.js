@@ -75,7 +75,8 @@ export class ChartHelper {
      *       fillColor: string,
      *       features: any[]
      *     }
-     *   ]
+     *   ],
+     *   onClick: function
      * }
      * ```
      * 
@@ -102,7 +103,9 @@ export class ChartHelper {
         else {
             existingCanvas = {
                 canvas: canvas,
-                chart: null
+                chart: null,
+                highlightedPointId: null,
+                originalPointStyles: null
             };
             this.#charts.push(existingCanvas);
         }
@@ -114,6 +117,17 @@ export class ChartHelper {
             },
             options: {
                 aspectRatio: options.aspectRatio ?? 1,
+                // Add onClick handler support
+                onClick: (event, elements) => {
+                    if (options.onClick) {
+                        options.onClick(event, elements);
+                    }
+                },
+                // Add interaction configuration
+                interaction: options.interaction || {
+                    intersect: true,
+                    mode: 'nearest'
+                },
                 plugins: {
                     title: options.title && {
                         text: options.title,
@@ -207,12 +221,12 @@ export class ChartHelper {
                         },
                         zoom: {
                             wheel: {
-                                enabled: true,
+                                enabled: true   
                             },
                             pinch: {
                                 enabled: true
                             },
-                            mode: 'xy',
+                             mode:'xy'
                         }
                     },
                     drawEllipseAroundDots: options.drawEllipseAroundDots && {
@@ -355,6 +369,83 @@ export class ChartHelper {
         });
 
         existingCanvas.chart = newChart;
+    }
+
+    /**
+     * Highlight a specific point on the chart
+     * @param {HTMLCanvasElement} canvas - The canvas element
+     * @param {*} pointId - The ID of the point to highlight
+     */
+    highlightPoint(canvas, pointId) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined || !existingCanvas.chart) {
+            console.log('Chart not found for highlighting');
+            return;
+        }
+
+        const chart = existingCanvas.chart;
+        const dataset = chart.data.datasets[0]; // Assuming first dataset contains the points
+        
+        // Clear previous highlight
+        this.clearHighlight(canvas);
+        
+        // Find the point to highlight
+        const pointIndex = dataset.data.findIndex(point => point.id === pointId);
+        if (pointIndex === -1) {
+            console.log(`Point with ID ${pointId} not found in dataset`);
+            return;
+        }
+
+        // Store original styles before modifying
+        existingCanvas.originalPointStyles = {
+            pointRadius: Array.isArray(dataset.pointRadius) ? [...dataset.pointRadius] : (dataset.pointRadius ? new Array(dataset.data.length).fill(dataset.pointRadius) : new Array(dataset.data.length).fill(5)),
+            pointBorderWidth: Array.isArray(dataset.pointBorderWidth) ? [...dataset.pointBorderWidth] : (dataset.pointBorderWidth ? new Array(dataset.data.length).fill(dataset.pointBorderWidth) : new Array(dataset.data.length).fill(0)),
+            pointBorderColor: Array.isArray(dataset.pointBorderColor) ? [...dataset.pointBorderColor] : (dataset.pointBorderColor ? new Array(dataset.data.length).fill(dataset.pointBorderColor) : new Array(dataset.data.length).fill('transparent'))
+        };
+
+        // Ensure arrays are properly initialized
+        dataset.pointRadius = [...existingCanvas.originalPointStyles.pointRadius];
+        dataset.pointBorderWidth = [...existingCanvas.originalPointStyles.pointBorderWidth];
+        dataset.pointBorderColor = [...existingCanvas.originalPointStyles.pointBorderColor];
+
+        // Highlight the specific point
+        dataset.pointRadius[pointIndex] = 15;
+        dataset.pointBorderWidth[pointIndex] = 6;
+        dataset.pointBorderColor[pointIndex] = '#ff0000';
+
+        // Store highlighted point ID
+        existingCanvas.highlightedPointId = pointId;
+
+        // Update the chart
+        chart.update('none');
+        
+        console.log(`Successfully highlighted point ${pointId} at index ${pointIndex}`);
+    }
+
+    /**
+     * Clear point highlighting
+     * @param {HTMLCanvasElement} canvas - The canvas element
+     */
+    clearHighlight(canvas) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined || !existingCanvas.chart || !existingCanvas.highlightedPointId) return;
+
+        const chart = existingCanvas.chart;
+        const dataset = chart.data.datasets[0];
+
+        // Restore original styles if they were stored
+        if (existingCanvas.originalPointStyles) {
+            dataset.pointRadius = existingCanvas.originalPointStyles.pointRadius;
+            dataset.pointBorderWidth = existingCanvas.originalPointStyles.pointBorderWidth;
+            dataset.pointBorderColor = existingCanvas.originalPointStyles.pointBorderColor;
+        }
+
+        // Clear stored values
+        existingCanvas.highlightedPointId = null;
+        existingCanvas.originalPointStyles = null;
+
+        // Update the chart
+        chart.update('none');
     }
 
     resetChart(canvas) {

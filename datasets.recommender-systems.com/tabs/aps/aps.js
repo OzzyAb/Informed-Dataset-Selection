@@ -22,6 +22,9 @@ var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
 var metadataButton = null;
+var datasetListElement = null;
+var clearHighlightButton = null;
+var highlightedDatasetId = null;
 
 // Modal info icon elements for Difficulties and Similarities
 var difficultiesInfoIcon = null;
@@ -45,6 +48,8 @@ var lastMetricSelection = null;
 var lastKValueSelection = null;
 var lastAlgorithmFilter = [];
 var lastDatasetFilter = [];
+var currentPcaResults = null;
+var currentMappedPcaResults = null;
 
 export async function initialize() {
     // Get existing elements
@@ -62,6 +67,8 @@ export async function initialize() {
     similarityElement = document.getElementById('similar-datasets');
     difficultyElement = document.getElementById('dataset-difficulty');
     metadataButton = document.getElementById('aps-metadata-btn');
+    datasetListElement = document.getElementById('aps-dataset-list');
+    clearHighlightButton = document.getElementById('aps-clear-highlight-btn');
 
     // Get modal elements for info icons
     difficultiesInfoIcon = document.getElementById('difficulties-info-icon');
@@ -81,6 +88,9 @@ export async function initialize() {
         element.addEventListener('change', checkStaleData);
     });
     metadataButton.addEventListener('click', seeMetadata);
+
+    // Add clear highlight button event listener
+    clearHighlightButton.addEventListener('click', clearDatasetHighlight);
 
     chartHelper = new ChartHelper();
 
@@ -416,6 +426,99 @@ function updateSelectAllButtonText(checkboxes, text, selection) {
 }
 
 /**
+ * Create and populate the interactive dataset list
+ */
+function createDatasetList(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY) {
+    datasetListElement.innerHTML = '';
+
+    // Sort datasets alphabetically by name for clean organization
+    const sortedResults = filteredResults.slice().sort((a, b) => {
+        const aDataset = datasets.find(d => d.id === a.id);
+        const bDataset = datasets.find(d => d.id === b.id);
+        return aDataset.name.localeCompare(bDataset.name);
+    });
+
+    sortedResults.forEach(result => {
+        const dataset = datasets.find(d => d.id === result.id);
+
+        // Create dataset item
+        const item = document.createElement('div');
+        item.className = 'aps-dataset-item';
+        item.dataset.datasetId = dataset.id;
+        
+        item.innerHTML = `
+            <span class="aps-dataset-name">${dataset.name}</span>
+        `;
+
+        // Add click event for highlighting
+        item.addEventListener('click', () => {
+            console.log(`Clicked on dataset: ${dataset.name} (ID: ${dataset.id})`);
+            highlightDataset(dataset.id);
+        });
+
+        datasetListElement.appendChild(item);
+    });
+}
+
+/**
+ * Highlight a specific dataset on the chart and in the list
+ */
+function highlightDataset(datasetId) {
+    console.log(`Attempting to highlight dataset: ${datasetId}`);
+    
+    // Clear previous highlight
+    clearDatasetHighlight();
+    
+    // Set new highlight
+    highlightedDatasetId = datasetId;
+    
+    // Update chart highlight
+    if (chartHelper && currentPcaResults) {
+        console.log('Calling chartHelper.highlightPoint...');
+        chartHelper.highlightPoint(canvasElement, datasetId);
+    } else {
+        console.log('ChartHelper or currentPcaResults not available');
+        console.log('chartHelper:', !!chartHelper);
+        console.log('currentPcaResults:', !!currentPcaResults);
+    }
+    
+    // Update list highlight
+    const listItem = datasetListElement.querySelector(`[data-dataset-id="${datasetId}"]`);
+    if (listItem) {
+        listItem.classList.add('highlighted');
+        console.log('List item highlighted successfully');
+    } else {
+        console.log(`List item not found for dataset ID: ${datasetId}`);
+    }
+    
+    // Show clear highlight button
+    clearHighlightButton.style.display = 'inline-block';
+}
+
+/**
+ * Clear dataset highlighting
+ */
+function clearDatasetHighlight() {
+    if (highlightedDatasetId) {
+        // Clear chart highlight
+        if (chartHelper) {
+            chartHelper.clearHighlight(canvasElement);
+        }
+        
+        // Clear list highlight
+        const listItem = datasetListElement.querySelector(`[data-dataset-id="${highlightedDatasetId}"]`);
+        if (listItem) {
+            listItem.classList.remove('highlighted');
+        }
+        
+        highlightedDatasetId = null;
+    }
+    
+    // Hide clear highlight button
+    clearHighlightButton.style.display = 'none';
+}
+
+/**
  * Main function to update PCA analysis and display results
  */
 async function updatePca() {
@@ -423,6 +526,9 @@ async function updatePca() {
     updatePcaButton.disabled = true;
     updatePcaTextStale.style.display = 'none';
     updatePcaTextCalculating.style.display = 'block';
+
+    // Clear any existing highlights
+    clearDatasetHighlight();
 
     // Get selected values from form
     const performanceMetric = performanceMetricElement.value;
@@ -530,6 +636,13 @@ async function updatePca() {
     const pcaMaxX = Math.max(...mappedPcaResults.map(result => result.x));
     const pcaMinY = Math.min(...mappedPcaResults.map(result => result.y));
     const pcaMaxY = Math.max(...mappedPcaResults.map(result => result.y));
+
+    // Store current results for highlighting
+    currentPcaResults = filteredResults;
+    currentMappedPcaResults = mappedPcaResults;
+
+    // Create interactive dataset list
+    createDatasetList(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
 
     // Show difficulties and similarities sections
     showDatasetDifficulties(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
@@ -694,6 +807,22 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
                 stepSize: 0.1
             }
         },
+        // Add click handler for chart points
+        onClick: (event, elements) => {
+            if (elements.length > 0) {
+                const dataIndex = elements[0].index;
+                const datasetId = filteredResults[dataIndex].id;
+                highlightDataset(datasetId);
+            } else {
+                // Click on empty area clears highlight
+                clearDatasetHighlight();
+            }
+        },
+        // Add interaction configuration for better click detection
+        interaction: {
+            intersect: false,
+            mode: 'point'
+        }
     });
 }
 
@@ -999,6 +1128,9 @@ export function dispose() {
         element.removeEventListener('change', checkStaleData);
     });
     metadataButton.removeEventListener('click', seeMetadata);
+    
+    // Remove clear highlight button listener
+    clearHighlightButton.removeEventListener('click', clearDatasetHighlight);
     
     // Remove filter button listeners
     if (selectAllAlgorithmButton) {
