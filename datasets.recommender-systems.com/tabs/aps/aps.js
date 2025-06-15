@@ -709,11 +709,14 @@ function resetGraph() {
  */
 async function exportPngWithFeedback() {
     const exportBtn = document.getElementById('aps-export-png-btn');
-    const originalText = exportBtn.textContent;
+    const icon = exportBtn.querySelector('i');
+    const originalText = exportBtn.lastChild.textContent;
     
     try {
-        // Update button to show process is starting
-        exportBtn.textContent = 'Exporting...';
+        // Update button to show process is starting 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exporting...'));
         exportBtn.disabled = true;
         
         // Small delay to ensure UI updates
@@ -722,22 +725,26 @@ async function exportPngWithFeedback() {
         // Call the export function
         chartHelper.exportChartAsPng('aps', canvasElement);
         
-        // Show success feedback
-        exportBtn.textContent = 'Exported!';
+        // Show success feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exported!'));
         
         // Reset button after 2 seconds
         setTimeout(() => {
-            exportBtn.textContent = originalText;
+            exportBtn.innerHTML = '<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG';
             exportBtn.disabled = false;
         }, 2000);
         
     } catch (error) {
-        // Show error feedback
-        exportBtn.textContent = 'Export Failed';
+        // Show error feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Export Failed'));
         
         // Reset button after 3 seconds
         setTimeout(() => {
-            exportBtn.textContent = originalText;
+            exportBtn.innerHTML = '<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG';
             exportBtn.disabled = false;
         }, 3000);
     }
@@ -746,11 +753,14 @@ async function exportPngWithFeedback() {
 // Enhanced CSV export function with user feedback
 async function exportCsvWithFeedback() {
     const exportBtn = document.getElementById('aps-export-csv-btn');
-    const originalText = exportBtn.textContent;
+    const icon = exportBtn.querySelector('i');
+    const originalText = exportBtn.lastChild.textContent;
     
     try {
-        // Update button to show process is starting
-        exportBtn.textContent = 'Exporting...';
+        // Update button to show process is starting 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exporting...'));
         exportBtn.disabled = true;
         
         // Small delay to ensure UI updates
@@ -759,23 +769,27 @@ async function exportCsvWithFeedback() {
         // Call the CSV export function
         chartHelper.exportChartAsCsv('aps', canvasElement);
         
-        // Show success feedback
-        exportBtn.textContent = 'Exported!';
+        // Show success feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exported!'));
         
         // Reset button after 2 seconds
         setTimeout(() => {
-            exportBtn.textContent = originalText;
+            exportBtn.innerHTML = '<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV';
             exportBtn.disabled = false;
         }, 2000);
         
     } catch (error) {
         console.error('CSV export error:', error);
-        // Show error feedback
-        exportBtn.textContent = 'Export Failed';
+        // Show error feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Export Failed'));
         
         // Reset button after 3 seconds
         setTimeout(() => {
-            exportBtn.textContent = originalText;
+            exportBtn.innerHTML = '<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV';
             exportBtn.disabled = false;
         }, 3000);
     }

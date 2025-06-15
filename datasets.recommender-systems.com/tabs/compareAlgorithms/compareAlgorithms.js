@@ -557,17 +557,20 @@ function seeMetadata() {
 //Enhanced export function with user feedback 
 async function exportPngWithFeedback() {
   const exportBtn = document.getElementById('compare-algo-export-btn');
-  const originalText = exportBtn.textContent;
+  const icon = exportBtn.querySelector('i');
+  const originalHTML = exportBtn.innerHTML;
   
   try {
-      // Update button to show process is starting
-      exportBtn.textContent = 'Exporting...';
+      // Update button to show process is starting 
+      exportBtn.innerHTML = '';
+      exportBtn.appendChild(icon.cloneNode(true));
+      exportBtn.appendChild(document.createTextNode('Exporting...'));
       exportBtn.disabled = true;
       
       // Small delay to ensure UI updates
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Get the filename dynamically like the original exportPng function
+      // Get the filename dynamically 
       const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
       const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
       const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
@@ -576,22 +579,26 @@ async function exportPngWithFeedback() {
       // Call the export function with the same naming convention
       chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
       
-      // Show success feedback
-      exportBtn.textContent = 'Exported!';
+      // Show success feedback 
+      exportBtn.innerHTML = '';
+      exportBtn.appendChild(icon.cloneNode(true));
+      exportBtn.appendChild(document.createTextNode('Exported!'));
       
       // Reset button after 2 seconds
       setTimeout(() => {
-          exportBtn.textContent = originalText;
+          exportBtn.innerHTML = originalHTML;
           exportBtn.disabled = false;
       }, 2000);
       
   } catch (error) {
-      // Show error feedback
-      exportBtn.textContent = 'Export Failed';
+      // Show error feedback 
+      exportBtn.innerHTML = '';
+      exportBtn.appendChild(icon.cloneNode(true));
+      exportBtn.appendChild(document.createTextNode('Export Failed'));
       
       // Reset button after 3 seconds
       setTimeout(() => {
-          exportBtn.textContent = originalText;
+          exportBtn.innerHTML = originalHTML;
           exportBtn.disabled = false;
       }, 3000);
   }
@@ -600,11 +607,14 @@ async function exportPngWithFeedback() {
 // Enhanced CSV export function with user feedback
 async function exportCsvWithFeedback() {
   const exportBtn = document.getElementById('compare-algo-export-csv-btn');
-  const originalText = exportBtn.textContent;
+  const icon = exportBtn.querySelector('i');
+  const originalHTML = exportBtn.innerHTML;
   
   try {
-      // Update button to show process is starting
-      exportBtn.textContent = 'Exporting...';
+      // Update button to show process is starting 
+      exportBtn.innerHTML = '';
+      exportBtn.appendChild(icon.cloneNode(true));
+      exportBtn.appendChild(document.createTextNode('Exporting...'));
       exportBtn.disabled = true;
       
       // Small delay to ensure UI updates
@@ -619,23 +629,27 @@ async function exportCsvWithFeedback() {
       // Call the CSV export function with the same naming convention
       chartHelper.exportChartAsCsv(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
       
-      // Show success feedback
-      exportBtn.textContent = 'Exported!';
+      // Show success feedback 
+      exportBtn.innerHTML = '';
+      exportBtn.appendChild(icon.cloneNode(true));
+      exportBtn.appendChild(document.createTextNode('Exported!'));
       
       // Reset button after 2 seconds
       setTimeout(() => {
-          exportBtn.textContent = originalText;
+          exportBtn.innerHTML = originalHTML;
           exportBtn.disabled = false;
       }, 2000);
       
   } catch (error) {
       console.error('CSV export error:', error);
-      // Show error feedback
-      exportBtn.textContent = 'Export Failed';
+      // Show error feedback 
+      exportBtn.innerHTML = '';
+      exportBtn.appendChild(icon.cloneNode(true));
+      exportBtn.appendChild(document.createTextNode('Export Failed'));
       
       // Reset button after 3 seconds
       setTimeout(() => {
-          exportBtn.textContent = originalText;
+          exportBtn.innerHTML = originalHTML;
           exportBtn.disabled = false;
       }, 3000);
   }
