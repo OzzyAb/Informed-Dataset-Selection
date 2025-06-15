@@ -216,15 +216,17 @@ export class ChartHelper {
                     },
                     zoom: options.zoom && {
                         pan: {
-                            enabled: false
+                            enabled: true,
+                            mode: 'xy'
                         },
                         zoom: {
                             wheel: {
-                                enabled: false
+                                enabled: true   
                             },
                             pinch: {
-                                enabled: false
-                            }
+                                enabled: true
+                            },
+                             mode:'xy'
                         }
                     },
                     drawEllipseAroundDots: options.drawEllipseAroundDots && {

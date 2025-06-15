@@ -80,6 +80,16 @@ body {
     margin: 20px 0;
     align-items: flex-start;
 }
+/* Allow zoom and pan */
+#aps-chart {
+    touch-action: manipulation; 
+    user-select: none; 
+    cursor: grab;
+}
+
+#aps-chart:active {
+    cursor: grabbing; /* Show grabbing cursor when dragging */
+}
 
 .aps-chart-wrapper {
     flex: 4;
