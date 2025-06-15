@@ -455,6 +455,117 @@ export class ChartHelper {
         }
     }
 
+    // NEW: CSV Export functionality - extracts data from chart and downloads as CSV
+    exportChartAsCsv(chartName, canvas) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined) {
+            console.error('Chart not found for CSV export');
+            return;
+        }
+
+        try {
+            // Get chart data from the Chart.js instance
+            const chart = existingCanvas.chart;
+            const datasets = chart.data.datasets;
+            
+            // Prepare CSV data array
+            const csvData = [];
+            
+            // Get axis titles from chart options for column headers
+            const xAxisTitle = chart.options?.scales?.x?.title?.text || 'X';
+            const yAxisTitle = chart.options?.scales?.y?.title?.text || 'Y';
+            
+            // Add CSV header row
+            csvData.push(['Dataset', 'Category', xAxisTitle, yAxisTitle]);
+            
+            // Extract data points from each dataset
+            datasets.forEach(dataset => {
+                const categoryName = dataset.label || 'Unknown';
+                
+                if (dataset.data && Array.isArray(dataset.data)) {
+                    dataset.data.forEach(point => {
+                        if (point && typeof point === 'object') {
+                            // Get dataset name from custom labels if available
+                            let datasetName = 'Unknown Dataset';
+                            
+                            // Try multiple ways to get the dataset name
+                            if (chart.options?.labels?.customLabels && point.id) {
+                                datasetName = chart.options.labels.customLabels[point.id];
+                            } else if (point.datasetName) {
+                                datasetName = point.datasetName;
+                            } else if (point.name) {
+                                datasetName = point.name;
+                            } else if (point.id) {
+                                datasetName = `Dataset ${point.id}`;
+                            }
+                            
+                            // Add data row to CSV
+                            csvData.push([
+                                datasetName || 'Unknown Dataset',
+                                categoryName,
+                                point.x || 0,
+                                point.y || 0
+                            ]);
+                        }
+                    });
+                }
+            });
+            
+            // Convert to CSV format
+            const csvContent = csvData.map(row => 
+                row.map(cell => {
+                    // Handle cells that might contain commas or quotes
+                    const cellStr = String(cell);
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return cellStr;
+                }).join(',')
+            ).join('\n');
+            
+            // Add metadata header with version and source info
+            const metadata = [
+                `# Chart Data Export`,
+                `# Version: ${versionNumber}`,
+                `# Source: datasets.recommender-systems.com`,
+                `# Export Date: ${new Date().toISOString()}`,
+                `# Chart: ${chartName}`,
+                ``,
+            ].join('\n');
+            
+            const finalCsvContent = metadata + csvContent;
+            
+            // Create and download the file
+            this.#downloadCsvFile(finalCsvContent, `${chartName}-v${versionNumber}.csv`);
+            
+        } catch (error) {
+            console.error('Error exporting chart as CSV:', error);
+            throw error;
+        }
+    }
+
+    // NEW: Helper method to download CSV file
+    #downloadCsvFile(csvContent, filename) {
+        // Create blob with CSV content
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Create download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        
+        // Add to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the object URL to prevent memory leaks
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    }
+
        // MODIFIED: Alternative export method using OffscreenCanvas and toBlob to avoid fingerprinting warnings
     exportChartAsPng(chartName, canvas) {
         let existingCanvas = this.#charts.find((value) => value.canvas == canvas);

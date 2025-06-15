@@ -1,6 +1,7 @@
 import { ChartHelper } from "../../chartHelper.js";
 import { ApiService } from "../../apiService.js";
 import { PCA } from 'https://cdn.skypack.dev/ml-pca';
+import { getQueryString } from "../../main.js";
 
 var datasets = null;
 var algorithms = null;
@@ -20,6 +21,7 @@ var updatePcaTextCalculating = null;
 var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
+var metadataButton = null;
 var datasetListElement = null;
 var clearHighlightButton = null;
 var highlightedDatasetId = null;
@@ -64,6 +66,7 @@ export async function initialize() {
     canvasElement = document.getElementById('aps-chart');
     similarityElement = document.getElementById('similar-datasets');
     difficultyElement = document.getElementById('dataset-difficulty');
+    metadataButton = document.getElementById('aps-metadata-btn');
     datasetListElement = document.getElementById('aps-dataset-list');
     clearHighlightButton = document.getElementById('aps-clear-highlight-btn');
 
@@ -80,9 +83,11 @@ export async function initialize() {
     updatePcaButton.addEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').addEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').addEventListener('click', exportPngWithFeedback);
+    document.getElementById('aps-export-csv-btn').addEventListener('click', exportCsvWithFeedback);
     document.querySelectorAll('.aps-selection').forEach(element => {
         element.addEventListener('change', checkStaleData);
     });
+    metadataButton.addEventListener('click', seeMetadata);
 
     // Add clear highlight button event listener
     clearHighlightButton.addEventListener('click', clearDatasetHighlight);
@@ -736,7 +741,17 @@ function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kVa
                 pointBackgroundColor: filteredResults.map(result => getDatasetDifficultyColor(mappedPcaResults.find(x => x.id === result.id), pcaMinX, pcaMaxX, pcaMinY, pcaMaxY)),
                 pointBorderWidth: 0,
                 backgroundColor: 'red',
-                data: filteredResults
+                data: filteredResults.map(result => {
+                    const dataset = datasets.find(d => d.id === result.id);
+                    return {
+                        x: result.x,
+                        y: result.y,
+                        id: result.id,
+                        datasetName: dataset ? dataset.name : `Dataset ${result.id}`,
+                        ellipseX: result.ellipseX,
+                        ellipseY: result.ellipseY
+                    };
+                })
             },
             {
                 label: 'Variances',
@@ -819,22 +834,18 @@ function resetGraph() {
 }
 
 /**
- * Export chart as PNG file
- */
-function exportPng() {
-    chartHelper.exportChartAsPng('aps', canvasElement);
-}
-
-/**
  * Enhanced export function with user feedback to show the process is working
  */
 async function exportPngWithFeedback() {
     const exportBtn = document.getElementById('aps-export-png-btn');
-    const originalText = exportBtn.textContent;
+    const icon = exportBtn.querySelector('i');
+    const originalText = exportBtn.lastChild.textContent;
     
     try {
-        // Update button to show process is starting
-        exportBtn.textContent = 'Exporting...';
+        // Update button to show process is starting 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exporting...'));
         exportBtn.disabled = true;
         
         // Small delay to ensure UI updates
@@ -843,25 +854,84 @@ async function exportPngWithFeedback() {
         // Call the export function
         chartHelper.exportChartAsPng('aps', canvasElement);
         
-        // Show success feedback
-        exportBtn.textContent = 'Exported!';
+        // Show success feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exported!'));
         
         // Reset button after 2 seconds
         setTimeout(() => {
-            exportBtn.textContent = originalText;
+            exportBtn.innerHTML = '<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG';
             exportBtn.disabled = false;
         }, 2000);
         
     } catch (error) {
-        // Show error feedback
-        exportBtn.textContent = 'Export Failed';
+        // Show error feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Export Failed'));
         
         // Reset button after 3 seconds
         setTimeout(() => {
-            exportBtn.textContent = originalText;
+            exportBtn.innerHTML = '<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG';
             exportBtn.disabled = false;
         }, 3000);
     }
+}
+
+// Enhanced CSV export function with user feedback
+async function exportCsvWithFeedback() {
+    const exportBtn = document.getElementById('aps-export-csv-btn');
+    const icon = exportBtn.querySelector('i');
+    const originalText = exportBtn.lastChild.textContent;
+    
+    try {
+        // Update button to show process is starting 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exporting...'));
+        exportBtn.disabled = true;
+        
+        // Small delay to ensure UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Call the CSV export function
+        chartHelper.exportChartAsCsv('aps', canvasElement);
+        
+        // Show success feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Exported!'));
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.innerHTML = '<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV';
+            exportBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('CSV export error:', error);
+        // Show error feedback 
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode('Export Failed'));
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            exportBtn.innerHTML = '<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV';
+            exportBtn.disabled = false;
+        }, 3000);
+    }
+}
+
+function seeMetadata() {
+    const options = {
+      tab: "compareDatasets",
+      datasets: lastDatasetFilter.join(" "),
+    };
+
+    const url = getQueryString(options);
+    window.open(url, '_blank');
 }
 
 /**
@@ -1053,9 +1123,11 @@ export function dispose() {
     updatePcaButton.removeEventListener('click', updatePca);
     document.getElementById('aps-reset-graph-btn').removeEventListener('click', resetGraph);
     document.getElementById('aps-export-png-btn').removeEventListener('click', exportPngWithFeedback);
+    document.getElementById('aps-export-csv-btn').removeEventListener('click', exportCsvWithFeedback);
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
+    metadataButton.removeEventListener('click', seeMetadata);
     
     // Remove clear highlight button listener
     clearHighlightButton.removeEventListener('click', clearDatasetHighlight);
