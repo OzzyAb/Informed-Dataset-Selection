@@ -1,6 +1,7 @@
 import { ChartHelper } from "../../chartHelper.js";
 import { ApiService } from "../../apiService.js";
 import { PCA } from 'https://cdn.skypack.dev/ml-pca';
+import { getQueryString } from "../../main.js";
 
 var datasets = null;
 var algorithms = null;
@@ -20,6 +21,7 @@ var updatePcaTextCalculating = null;
 var canvasElement = null;
 var similarityElement = null;
 var difficultyElement = null;
+var metadataButton = null;
 
 // Modal info icon elements for Difficulties and Similarities
 var difficultiesInfoIcon = null;
@@ -59,6 +61,7 @@ export async function initialize() {
     canvasElement = document.getElementById('aps-chart');
     similarityElement = document.getElementById('similar-datasets');
     difficultyElement = document.getElementById('dataset-difficulty');
+    metadataButton = document.getElementById('aps-metadata-btn');
 
     // Get modal elements for info icons
     difficultiesInfoIcon = document.getElementById('difficulties-info-icon');
@@ -76,6 +79,7 @@ export async function initialize() {
     document.querySelectorAll('.aps-selection').forEach(element => {
         element.addEventListener('change', checkStaleData);
     });
+    metadataButton.addEventListener('click', seeMetadata);
 
     chartHelper = new ChartHelper();
 
@@ -690,13 +694,6 @@ function resetGraph() {
 }
 
 /**
- * Export chart as PNG file
- */
-function exportPng() {
-    chartHelper.exportChartAsPng('aps', canvasElement);
-}
-
-/**
  * Enhanced export function with user feedback to show the process is working
  */
 async function exportPngWithFeedback() {
@@ -733,6 +730,16 @@ async function exportPngWithFeedback() {
             exportBtn.disabled = false;
         }, 3000);
     }
+}
+
+function seeMetadata() {
+    const options = {
+      tab: "compareDatasets",
+      datasets: lastDatasetFilter.join(" "),
+    };
+
+    const url = getQueryString(options);
+    window.open(url, '_blank');
 }
 
 /**
@@ -927,6 +934,7 @@ export function dispose() {
     document.querySelectorAll('.aps-selector').forEach(element => {
         element.removeEventListener('change', checkStaleData);
     });
+    metadataButton.removeEventListener('click', seeMetadata);
     
     // Remove filter button listeners
     if (selectAllAlgorithmButton) {
