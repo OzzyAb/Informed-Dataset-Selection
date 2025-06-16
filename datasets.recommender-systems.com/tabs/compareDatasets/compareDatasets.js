@@ -58,6 +58,7 @@ var metadataElements = [
         }]
     },
     { name: 'Density', key: 'density', fixed: 2, better: 'higher' },
+    { name: 'Feedback Type', key: 'feedbackType' },
     { name: 'Max Rating/User', description: 'Highest Number of Rating By Single User', key: 'highestNumberOfRatingBySingleUser' },
     { name: 'Min Rating/User', description: 'Lowest Number of Rating By Single User', key: 'lowestNumberOfRatingBySingleUser' },
     { name: 'Max Rating/Item', description: 'Highest Number of Rating On Single Item', key: 'highestNumberOfRatingOnSingleItem' },
