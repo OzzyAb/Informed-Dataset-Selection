@@ -4,6 +4,7 @@ import { readQueryString, getQueryString, clearQueryString } from "../../main.js
 
 var datasets = null;
 var selectedDatasets = [];
+var selectedColumns = [];
 
 var tableBodyElement = null;
 var tableHeadElement = null;
@@ -16,11 +17,31 @@ var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
 var datasetFilterCheckboxes = [];
 
+var datasetColumnHeaderElement = null;
+var datasetColumnArea = null;
+var datasetColumnCheckboxes = [];
+
 var selectAllDatasetArea = null;
 var selectAllDatasetButton = null;
 var selectAllDatasetButtonText = null;
 
 var shareButton = null;
+
+const columnDisplayNames = {
+        name: "Dataset",
+        numberOfUsers: "Number of Users",
+        numberOfItems: "Number of Items",
+        numberOfInteractions: "Number of Interactions",
+        userItemRatio: "User-Item Ratio",
+        density: "Density",
+        feedbackType: "Feedback Type",
+        highestNumberOfRatingBySingleUser: "Max Rating/User",
+        lowestNumberOfRatingBySingleUser: "Min Rating/User",
+        highestNumberOfRatingOnSingleItem: "Max Rating/Item",
+        lowestNumberOfRatingOnSingleItem: "Min Rating/Item",
+        meanNumberOfRatingsByUser: "Mean Ratings/User",
+        meanNumberOfRatingsOnItem: "Mean Ratings/Item",
+    };
 
 var metadataElements = [
     { name: 'Name', key: 'name', better: 'higher'},
@@ -136,6 +157,11 @@ export async function initialize(queryOptions) {
     datasetFilterHeaderElement = document.getElementById('dataset-comparison-header');
     datasetFilterArea = document.getElementById('dataset-comparison-filter');
 
+    datasetColumnHeaderElement = document.getElementById('dataset-column-header');
+    datasetColumnArea = document.getElementById('dataset-column-filter');
+    datasetColumnArea.innerHTML = '';
+    createColumnCheckboxes();
+
     datasetFilterArea.innerHTML = '';
     datasetFilterArea.appendChild(selectAllDatasetArea);
 
@@ -177,7 +203,6 @@ export async function initialize(queryOptions) {
         }
     });
 
-    
     tableBodyElement.innerHTML = '';
     document.querySelectorAll('th.sortable').forEach(th => {
         th.addEventListener('click', () => {
@@ -233,15 +258,18 @@ function compareDatasets() {
 
     const tableBodyElement = document.querySelector('#dataset-table tbody');
     tableBodyElement.innerHTML = '';
-
+    renderTableHead();
+    bindSortEvents();
     selectedDatasets.forEach(dataset => {
         const tr = document.createElement('tr');
 
-        const cells = metadataElements.map(meta => {
-            const value = dataset[meta.key];
-            const decimals = meta.fixed ?? 0;
-            return `<td data-key="${meta.key}">${formatValue(value, decimals)}</td>`;
-        });
+        const cells = metadataElements
+            .filter(meta => selectedColumns.includes(meta.key))
+            .map(meta => {
+                const value = dataset[meta.key];
+                const decimals = meta.fixed ?? 0;
+                return `<td data-key="${meta.key}">${formatValue(value, decimals)}</td>`;
+         });
 
         tr.innerHTML = cells.join('');
         tableBodyElement.appendChild(tr);
@@ -316,6 +344,154 @@ function updateSelectAllDatasetButtonText() {
       selectAllDatasetButtonText.textContent = 'Select All';
   }
 }
+
+function createColumnCheckboxes() {
+    datasetColumnCheckboxes = [];
+    selectedColumns = metadataElements.map(el => el.key); 
+
+    metadataElements.forEach(meta => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'column_' + meta.key;
+        checkbox.value = meta.key;
+        checkbox.checked = true;
+        checkbox.onchange = onFilterColumn;
+
+        const label = document.createElement('label');
+        label.htmlFor = checkbox.id;
+        label.textContent = meta.name;
+        label.style.marginRight = '10px';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '6px';
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        datasetColumnCheckboxes.push(checkbox);
+        datasetColumnArea.appendChild(wrapper);
+    });
+
+    updateColumnHeaderLabel();
+}
+
+function onFilterColumn() {
+    selectedColumns = datasetColumnCheckboxes
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+    updateColumnHeaderLabel();
+    renderDatasetComparisonTable();
+    renderTableHead()
+    compareDatasets()
+}
+
+function updateColumnHeaderLabel() {
+    if (selectedColumns.length === metadataElements.length) {
+        datasetColumnHeaderElement.textContent = '(All selected)';
+    } else if (selectedColumns.length === 0) {
+        datasetColumnHeaderElement.textContent = '(None selected)';
+    } else {
+        datasetColumnHeaderElement.textContent = `(${selectedColumns.length} selected)`;
+    }
+}
+
+function renderTableHead() {
+    const theadRow = document.querySelector('#dataset-table thead tr');
+    if (!theadRow) {
+        console.error("thead tr konnte nicht gefunden werden.");
+        return;
+    }
+
+    theadRow.innerHTML = '';
+
+    selectedColumns.forEach((key) => {
+        const th = document.createElement('th');
+        th.classList.add('sortable');
+        th.dataset.key = key;
+
+        const spanText = document.createElement('span');
+        spanText.textContent = columnDisplayNames[key] || key;
+        th.appendChild(spanText);
+
+        const sortIcon = document.createElement('span');
+        sortIcon.classList.add('sort-icon');
+        th.appendChild(sortIcon);
+
+        th.addEventListener('click', () => {
+            if (currentSortKey === key) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortKey = key;
+                currentSortDirection = 'asc';
+            }
+            renderTableHead(); 
+            renderDatasetComparisonTable(); 
+        });
+
+        theadRow.appendChild(th);
+    });
+
+    updateSortIcons(); 
+}
+
+
+function renderDatasetComparisonTable() {
+    if (!Array.isArray(datasets) || datasets.length === 0) {
+        console.warn("Keine datasets geladen.");
+        return;
+    }
+
+    if (!selectedDatasets || selectedDatasets.length === 0) {
+        console.warn("Keine Datensätze ausgewählt.");
+        return;
+    }
+
+    const tableBodyElement = document.querySelector('#dataset-table tbody');
+
+    if (!tableBodyElement) {
+        console.error("tbody konnte nicht gefunden werden.");
+        return;
+    }
+
+    
+    tableBodyElement.innerHTML = '';
+
+    const filteredDatasets = datasets.filter(ds => selectedDatasets.includes(ds.id));
+
+    const sortedDatasets = filteredDatasets.sort((a, b) => {
+        const aValue = a[currentSortKey];
+        const bValue = b[currentSortKey];
+
+        if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // Helfer für Zellen
+    const createCell = (value) => {
+        const td = document.createElement('td');
+        td.textContent = value !== undefined && value !== null ? value : '-';
+        return td;
+    };
+
+    // Zeilen erzeugen
+    for (const dataset of sortedDatasets) {
+        const row = document.createElement('tr');
+
+        selectedColumns.forEach(key => {
+            const value = dataset[key];
+            row.appendChild(createCell(value));
+        });
+
+        tableBodyElement.appendChild(row);
+    }
+
+    if (typeof initializeTooltips === 'function') {
+        initializeTooltips();
+    }
+}
  
 
 
@@ -341,8 +517,10 @@ function sortDatasets(datasets, key) {
 
 function updateSortIcons() {
     document.querySelectorAll('th.sortable').forEach(th => {
-        const key = th.getAttribute('data-key');
         const icon = th.querySelector('.sort-icon');
+        const key = th.dataset.key;  
+        if (!icon || !key) return;
+
         if (key === currentSortKey) {
             icon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
         } else {
@@ -350,6 +528,28 @@ function updateSortIcons() {
         }
     });
 }
+
+function bindSortEvents() {
+    document.querySelectorAll('th.sortable').forEach(th => {
+        const newTh = th.cloneNode(true); 
+        th.parentNode.replaceChild(newTh, th); 
+
+        newTh.addEventListener('click', () => {
+            const key = newTh.getAttribute('data-key');
+
+            if (currentSortKey === key) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortKey = key;
+                currentSortDirection = 'asc';
+            }
+
+            compareDatasets();
+            initializeTooltips();
+        });
+    });
+}
+
 
 function formatValue(value, decimals = 0) {
     if (value === null || value === undefined) return '-';
