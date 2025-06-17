@@ -25,6 +25,10 @@ var selectAllDatasetArea = null;
 var selectAllDatasetButton = null;
 var selectAllDatasetButtonText = null;
 
+var selectAllColumnsArea = null;
+var selectAllColumnsButton = null;
+var selectAllColumnsButtonText = null;
+
 var shareButton = null;
 
 const columnDisplayNames = {
@@ -150,7 +154,6 @@ export async function initialize(queryOptions) {
     document.querySelectorAll('.compareDatasets').forEach(element => {
         element.addEventListener('change', compareDatasets);
     });
-
     datasets = await ApiService.getDatasets();
     createSelectAllButtons();
 
@@ -159,8 +162,6 @@ export async function initialize(queryOptions) {
 
     datasetColumnHeaderElement = document.getElementById('dataset-column-header');
     datasetColumnArea = document.getElementById('dataset-column-filter');
-    datasetColumnArea.innerHTML = '';
-    createColumnCheckboxes();
 
     datasetFilterArea.innerHTML = '';
     datasetFilterArea.appendChild(selectAllDatasetArea);
@@ -203,6 +204,40 @@ export async function initialize(queryOptions) {
         }
     });
 
+    datasetColumnArea.innerHTML = '';
+    datasetColumnArea.appendChild(selectAllColumnsArea); 
+
+    
+    datasetColumnCheckboxes = [];
+    selectedColumns = metadataElements.map(el => el.key);
+
+    metadataElements.forEach(meta => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'column_' + meta.key;
+        checkbox.value = meta.key;
+        checkbox.checked = true;
+        checkbox.onchange = onFilterColumn;
+
+        const label = document.createElement('label');
+        label.htmlFor = checkbox.id;
+        label.textContent = meta.name;
+        label.style.marginRight = '10px';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '6px';
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+
+        datasetColumnCheckboxes.push(checkbox);
+        datasetColumnArea.appendChild(wrapper);
+    });
+
+
+    updateColumnHeaderLabel();
+
     tableBodyElement.innerHTML = '';
     document.querySelectorAll('th.sortable').forEach(th => {
         th.addEventListener('click', () => {
@@ -226,7 +261,22 @@ export async function initialize(queryOptions) {
     currentSortDirection = 'asc';
     compareDatasets();
     initializeTooltips();
-    updateFilterHeader();
+    updateFilterHeader(
+        selectedDatasets.length,
+        datasetFilterCheckboxes.length,
+        datasetFilterHeaderElement,
+        selectedDatasets,
+        datasets,
+        'name'
+    );
+    updateFilterHeader(
+        selectedColumns.length,
+        datasetColumnCheckboxes.length,
+        datasetColumnHeaderElement,
+        selectedColumns,
+        metadataElements,
+        'name'
+    );
 }
 
 async function onFilterDataset(e) {
@@ -239,8 +289,15 @@ async function onFilterDataset(e) {
         selectedDatasets.splice(index, 1);
     }
 
-    updateFilterHeader();
-    updateSelectAllDatasetButtonText();
+        updateFilterHeader(
+        selectedDatasets.length,
+        datasetFilterCheckboxes.length,
+        datasetFilterHeaderElement,
+        selectedDatasets,
+        datasets,
+        'name'
+    )
+    updateSelectAllButtonText(selectedDatasets.length,datasetFilterCheckboxes.length,selectAllDatasetButtonText);;
 
     await compareDatasets();
 }
@@ -281,6 +338,7 @@ function compareDatasets() {
 } 
 
 function createSelectAllButtons() {
+    // Dataset filter select button
 
     selectAllDatasetArea = document.createElement('div');
     selectAllDatasetArea.style.width = '100%';
@@ -301,6 +359,28 @@ function createSelectAllButtons() {
     selectAllDatasetButton.appendChild(icon);
     selectAllDatasetButton.appendChild(selectAllDatasetButtonText);
     selectAllDatasetArea.appendChild(selectAllDatasetButton);
+
+    //Column select button
+
+    selectAllColumnsArea = document.createElement('div');
+    selectAllColumnsArea.style.width = '100%';
+
+    selectAllColumnsButton = document.createElement('button');
+    selectAllColumnsButton.type = 'button';
+    selectAllColumnsButton.className = 'filter-control-btn';
+    selectAllColumnsButton.addEventListener('click', toggleAllColumns);
+
+    icon = document.createElement('i');
+    icon.className = 'fa-solid fa-filter';
+    icon.style.setProperty('color', 'white', 'important');
+    icon.style.marginRight = '0.3rem';
+
+    selectAllColumnsButtonText = document.createElement('span');
+    selectAllColumnsButtonText.textContent = 'Deselect All';
+
+    selectAllColumnsButton.appendChild(icon);
+    selectAllColumnsButton.appendChild(selectAllColumnsButtonText);
+    selectAllColumnsArea.appendChild(selectAllColumnsButton);
 }
 
 function toggleAllDatasets() {
@@ -313,68 +393,51 @@ function toggleAllDatasets() {
 
     selectedDatasets = shouldCheck ? datasets.map(dataset => dataset.id) : [];
 
-    updateFilterHeader(datasetFilterCheckboxes, datasetFilterHeaderElement, selectedDatasets, datasets);
-    updateSelectAllDatasetButtonText();
-    checkStaleData();
+    updateFilterHeader(selectedDatasets.length, datasetFilterCheckboxes.length,datasetFilterHeaderElement,selectedDatasets,datasets,'name');
+    updateSelectAllButtonText(selectedDatasets.length,datasetFilterCheckboxes.length,selectAllDatasetButtonText);
+    compareDatasets()
 }
-function updateFilterHeader() {
-    const checkedCount = selectedDatasets.length;
-    
-    if (checkedCount === datasetFilterCheckboxes.length) {
-        datasetFilterHeaderElement.innerText = '(All selected)';
+
+function toggleAllColumns() {
+    const checkedCount = selectedColumns.length;
+    const shouldCheck = checkedCount !== datasetColumnCheckboxes.length;
+
+    datasetColumnCheckboxes.forEach(checkbox => {
+        checkbox.checked = shouldCheck;
+    });
+
+    selectedColumns = shouldCheck
+        ? metadataElements.map(col => col.key)
+        : [];
+
+    updateFilterHeader(selectedColumns.length,datasetColumnCheckboxes.length,datasetColumnHeaderElement,selectedColumns,'name');
+    updateSelectAllButtonText(selectedColumns.length,datasetColumnCheckboxes.length,selectAllColumnsButtonText);
+    compareDatasets()
+}
+
+
+function updateFilterHeader(checkedCount, totalCount, headerElement, selectedItems, allItems, keyName) {
+    if (checkedCount === totalCount) {
+        headerElement.innerText = '(All selected)';
     } else if (checkedCount === 0) {
-        datasetFilterHeaderElement.innerText = '(None selected)';
+        headerElement.innerText = '(None selected)';
     } else if (checkedCount === 1) {
-        
-        const selectedCheckbox = datasetFilterCheckboxes.find(checkbox => checkbox.checked);
-        const selectedDatasetId = Number(selectedCheckbox.id);
-        const selectedDataset = datasets.find(dataset => dataset.id === selectedDatasetId);
-        datasetFilterHeaderElement.innerText = `(${selectedDataset.name})`;
+        const selectedId = selectedItems[0];
+        const selectedItem = allItems.find(item => item.id === selectedId);
+        headerElement.innerText = `(${selectedItem[keyName]})`;
     } else {
-        datasetFilterHeaderElement.innerText = `(${checkedCount} selected)`;
+        headerElement.innerText = `(${checkedCount} selected)`;
     }
 }
 
-function updateSelectAllDatasetButtonText() {
-  const checkedCount = selectedDatasets.length;
-  
-  if (checkedCount === datasetFilterCheckboxes.length) {
-      selectAllDatasetButtonText.textContent = 'Deselect All';
-  } else {
-      selectAllDatasetButtonText.textContent = 'Select All';
-  }
+function updateSelectAllButtonText(checkedCount, totalCount, buttonTextElement) {
+    if (checkedCount === totalCount) {
+        buttonTextElement.textContent = 'Deselect All';
+    } else {
+        buttonTextElement.textContent = 'Select All';
+    }
 }
 
-function createColumnCheckboxes() {
-    datasetColumnCheckboxes = [];
-    selectedColumns = metadataElements.map(el => el.key); 
-
-    metadataElements.forEach(meta => {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = 'column_' + meta.key;
-        checkbox.value = meta.key;
-        checkbox.checked = true;
-        checkbox.onchange = onFilterColumn;
-
-        const label = document.createElement('label');
-        label.htmlFor = checkbox.id;
-        label.textContent = meta.name;
-        label.style.marginRight = '10px';
-
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.alignItems = 'center';
-        wrapper.style.gap = '6px';
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(label);
-
-        datasetColumnCheckboxes.push(checkbox);
-        datasetColumnArea.appendChild(wrapper);
-    });
-
-    updateColumnHeaderLabel();
-}
 
 function onFilterColumn() {
     selectedColumns = datasetColumnCheckboxes
@@ -469,14 +532,14 @@ function renderDatasetComparisonTable() {
         return 0;
     });
 
-    // Helfer für Zellen
+    
     const createCell = (value) => {
         const td = document.createElement('td');
         td.textContent = value !== undefined && value !== null ? value : '-';
         return td;
     };
 
-    // Zeilen erzeugen
+    
     for (const dataset of sortedDatasets) {
         const row = document.createElement('tr');
 
