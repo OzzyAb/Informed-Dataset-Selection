@@ -257,6 +257,7 @@ export async function initialize(queryOptions) {
 
     shareButton = document.getElementById("compare-database-share-btn");
     shareButton.addEventListener("click", shareDatabaseComparison);
+    document.getElementById('dataset-export-csv-btn').addEventListener('click', exportDatasetTableCsv);
     currentSortKey = 'name';
     currentSortDirection = 'asc';
     compareDatasets();
@@ -723,8 +724,72 @@ function shareDatabaseComparison() {
     });
 }
 
+function exportDatasetTableCsv() {
+    const exportBtn = document.getElementById('dataset-export-csv-btn');
+    const icon = exportBtn.querySelector('i');
+    const originalHTML = exportBtn.innerHTML;
 
-function checkStaleData() {
-    compareDatasets();
+    async function updateUI(text, duration = 2000) {
+        exportBtn.innerHTML = '';
+        exportBtn.appendChild(icon.cloneNode(true));
+        exportBtn.appendChild(document.createTextNode(text));
+        await new Promise(resolve => setTimeout(resolve, duration));
+        exportBtn.innerHTML = originalHTML;
+        exportBtn.disabled = false;
+    }
+
+    (async () => {
+        try {
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '';
+            exportBtn.appendChild(icon.cloneNode(true));
+            exportBtn.appendChild(document.createTextNode('Exporting...'));
+
+            await new Promise(resolve => setTimeout(resolve, 100)); 
+
+            const table = document.getElementById('dataset-table');
+            const rows = Array.from(table.querySelectorAll('tr'));
+
+            const csv = rows.map(row => {
+                const cells = Array.from(row.querySelectorAll('th, td'));
+                return cells.map(cell => {
+                    let text = cell.innerText || '';
+                    text = text.trim();
+                    text = text.replace(/"/g, '""'); 
+
+                    
+                    const isRiskyForExcel = /^(\d{1,2}[.,/-]\d{1,2})$/.test(text) || /^[0-9]+([.,][0-9]+)?$/.test(text);
+                    if (isRiskyForExcel) {
+                        return `="${text}"`;
+                    }
+
+                    return `"${text}"`;
+                }).join(';');
+            }).join('\n');
+                
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 19).replace(/[-T:]/g, '');
+            const filename = `dataset_export_${timestamp}.csv`;
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            await updateUI('Exported!', 2000);
+
+        } catch (error) {
+            console.error('CSV export error:', error);
+            await updateUI('Export Failed', 3000);
+        }
+    })();
 }
+
 
