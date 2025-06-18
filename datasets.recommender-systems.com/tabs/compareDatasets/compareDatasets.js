@@ -6,6 +6,7 @@ var datasets = null;
 var selectedDatasets = [];
 var selectedColumns = [];
 
+
 var tableBodyElement = null;
 var tableHeadElement = null;
 
@@ -168,7 +169,7 @@ export async function initialize(queryOptions) {
 
     datasetFilterCheckboxes = [];
     selectedDatasets = [];
-
+    
     let initialSelectedDatasetIds;
     if (queryOptions && queryOptions.datasets) {
         initialSelectedDatasetIds = queryOptions.datasets.split(' ').map(id => Number(id));
@@ -211,7 +212,7 @@ export async function initialize(queryOptions) {
     datasetColumnCheckboxes = [];
     selectedColumns = metadataElements.map(el => el.key);
 
-    metadataElements.forEach(meta => {
+     metadataElements.forEach(meta => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = 'column_' + meta.key;
@@ -261,7 +262,6 @@ export async function initialize(queryOptions) {
     currentSortKey = 'name';
     currentSortDirection = 'asc';
     compareDatasets();
-    initializeTooltips();
     updateFilterHeader(
         selectedDatasets.length,
         datasetFilterCheckboxes.length,
@@ -278,6 +278,7 @@ export async function initialize(queryOptions) {
         metadataElements,
         'name'
     );
+    initializeTooltips();
 }
 
 async function onFilterDataset(e) {
@@ -460,7 +461,6 @@ function updateColumnHeaderLabel() {
         datasetColumnHeaderElement.textContent = `(${selectedColumns.length} selected)`;
     }
 }
-
 function renderTableHead() {
     const theadRow = document.querySelector('#dataset-table thead tr');
     if (!theadRow) {
@@ -478,6 +478,50 @@ function renderTableHead() {
         const spanText = document.createElement('span');
         spanText.textContent = columnDisplayNames[key] || key;
         th.appendChild(spanText);
+
+        
+        const columnsWithInfo = {
+            userItemRatio: 'user-item-ratio-info',
+            meanNumberOfRatingsByUser: 'mean-ratings-per-user-info',
+            meanNumberOfRatingsOnItem: 'mean-ratings-per-item-info'
+        };
+
+        if (columnsWithInfo[key]) {
+            const infoIcon = document.createElement('span');
+            infoIcon.classList.add('tooltip-icon');
+            infoIcon.dataset.tooltipId = columnsWithInfo[key];
+            infoIcon.style.cursor = 'help';
+            infoIcon.style.marginLeft = '5px';
+
+            const iconElem = document.createElement('i');
+            iconElem.className = 'fa-solid fa-circle-info';
+            infoIcon.appendChild(iconElem);
+
+        
+            infoIcon.addEventListener('mouseover', (e) => {
+                const tooltip = document.getElementById(columnsWithInfo[key]);
+                if (tooltip) {
+                    tooltip.style.display = 'block';
+                    positionTooltip(e, tooltip);
+                }
+            });
+
+            infoIcon.addEventListener('mousemove', (e) => {
+                const tooltip = document.getElementById(columnsWithInfo[key]);
+                if (tooltip) {
+                    positionTooltip(e, tooltip);
+                }
+            });
+
+            infoIcon.addEventListener('mouseleave', () => {
+                const tooltip = document.getElementById(columnsWithInfo[key]);
+                if (tooltip) {
+                    tooltip.style.display = 'none';
+                }
+            });
+
+            th.appendChild(infoIcon);
+        }
 
         const sortIcon = document.createElement('span');
         sortIcon.classList.add('sort-icon');
@@ -621,19 +665,23 @@ function formatValue(value, decimals = 0) {
 }
 
 function initializeTooltips() {
-    document.querySelectorAll('.tooltip-icon').forEach(icon => {
+    const tooltipIcons = document.querySelectorAll('.tooltip-icon');
+
+    tooltipIcons.forEach(icon => {
         const tooltipId = icon.dataset.tooltipId;
         const tooltip = document.getElementById(tooltipId);
 
-        if (!tooltip) return;
+        if (!tooltip) {
+            console.warn(`Tooltip mit ID ${tooltipId} nicht gefunden.`);
+            return;
+        }
 
-        icon.addEventListener('mouseenter', (e) => {
+        // Maus-Ereignisse hinzufügen
+        icon.addEventListener('mouseenter', () => {
+            const rect = icon.getBoundingClientRect();
+            tooltip.style.left = `${rect.left + window.scrollX + 10}px`;
+            tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
             tooltip.style.display = 'block';
-            positionTooltip(e, tooltip);
-        });
-
-        icon.addEventListener('mousemove', (e) => {
-            positionTooltip(e, tooltip);
         });
 
         icon.addEventListener('mouseleave', () => {
@@ -647,20 +695,24 @@ function positionTooltip(e, tooltip) {
     const pageWidth = window.innerWidth;
     const pageHeight = window.innerHeight;
 
-    let left = e.pageX + 10;
-    let top = e.pageY + 10;
+    
+    let left = e.clientX + 10;
+    let top = e.clientY + 10;
 
+    
     if (left + tooltipRect.width > pageWidth) {
-        left = e.pageX - tooltipRect.width - 10;
+        left = e.clientX - tooltipRect.width - 10;
     }
 
+    
     if (top + tooltipRect.height > pageHeight) {
-        top = e.pageY - tooltipRect.height - 10;
+        top = e.clientY - tooltipRect.height - 10;
     }
 
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = top + 'px';
+    tooltip.style.left = `${left + window.scrollX}px`;
+    tooltip.style.top = `${top + window.scrollY}px`;
 }
+
 
 function colorNumbersOnly(table) {
     const rows = table.querySelectorAll('tbody tr');
