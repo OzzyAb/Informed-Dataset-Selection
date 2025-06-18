@@ -105,11 +105,14 @@ export async function initialize(queryOptions) {
   document
     .getElementById("aps-export-png-btn")
     .addEventListener("click", exportPngWithFeedback);
+  document
+    .getElementById("aps-export-csv-btn")
+    .addEventListener("click", exportCsvWithFeedback);
   document.querySelectorAll(".aps-selection").forEach((element) => {
     element.addEventListener("change", checkStaleData);
   });
   document.getElementById("aps-share-btn").addEventListener("click", shareAps);
-  
+
   metadataButton.addEventListener("click", seeMetadata);
 
   // Add clear highlight button event listener
@@ -579,141 +582,160 @@ function updateSelectAllButtonText(checkboxes, text, selection) {
 /**
  * Create and populate the interactive dataset list
  */
-function createDatasetList(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY) {
-    datasetListElement.innerHTML = '';
+function createDatasetList(
+  mappedPcaResults,
+  filteredResults,
+  pcaMinX,
+  pcaMaxX,
+  pcaMinY,
+  pcaMaxY
+) {
+  datasetListElement.innerHTML = "";
 
-    // Sort datasets alphabetically by name for clean organization
-    const sortedResults = filteredResults.slice().sort((a, b) => {
-        const aDataset = datasets.find(d => d.id === a.id);
-        const bDataset = datasets.find(d => d.id === b.id);
-        return aDataset.name.localeCompare(bDataset.name);
-    });
+  // Sort datasets alphabetically by name for clean organization
+  const sortedResults = filteredResults.slice().sort((a, b) => {
+    const aDataset = datasets.find((d) => d.id === a.id);
+    const bDataset = datasets.find((d) => d.id === b.id);
+    return aDataset.name.localeCompare(bDataset.name);
+  });
 
-    sortedResults.forEach(result => {
-        const dataset = datasets.find(d => d.id === result.id);
+  sortedResults.forEach((result) => {
+    const dataset = datasets.find((d) => d.id === result.id);
 
-        // Create dataset item
-        const item = document.createElement("div");
-        item.className = "aps-dataset-item";
-        item.dataset.datasetId = dataset.id;
-        
-        item.innerHTML = `
+    // Create dataset item
+    const item = document.createElement("div");
+    item.className = "aps-dataset-item";
+    item.dataset.datasetId = dataset.id;
+
+    item.innerHTML = `
             <span class="aps-dataset-name">${dataset.name}</span>
         `;
 
-        // Add click event for highlighting
-        item.addEventListener("click", () => {
-            console.log(`Clicked on dataset: ${dataset.name} (ID: ${dataset.id})`);
-            highlightDataset(dataset.id);
-        });
-
-        datasetListElement.appendChild(item);
+    // Add click event for highlighting
+    item.addEventListener("click", () => {
+      console.log(`Clicked on dataset: ${dataset.name} (ID: ${dataset.id})`);
+      highlightDataset(dataset.id);
     });
+
+    datasetListElement.appendChild(item);
+  });
 }
 
 /**
  * Highlight a specific dataset on the chart and in the list
  */
 function highlightDataset(datasetId) {
-    console.log(`Attempting to highlight dataset: ${datasetId}`);
-    
-    // Clear previous highlight
-    clearDatasetHighlight();
-    
-    // Set new highlight
-    highlightedDatasetId = datasetId;
-    
-    // Update chart highlight
-    if (chartHelper && currentPcaResults) {
-        console.log("Calling chartHelper.highlightPoint...");
-        chartHelper.highlightPoint(canvasElement, datasetId);
-    } else {
-        console.log("ChartHelper or currentPcaResults not available");
-        console.log("chartHelper:", !!chartHelper);
-        console.log("currentPcaResults:", !!currentPcaResults);
-    }
-    
-    // Update list highlight
-    const listItem = datasetListElement.querySelector(`[data-dataset-id="${datasetId}"]`);
-    if (listItem) {
-        listItem.classList.add("highlighted");
-        console.log("List item highlighted successfully");
-    } else {
-        console.log(`List item not found for dataset ID: ${datasetId}`);
-    }
-    
-    // Show clear highlight button
-    clearHighlightButton.style.display = "inline-block";
+  console.log(`Attempting to highlight dataset: ${datasetId}`);
+
+  // Clear previous highlight
+  clearDatasetHighlight();
+
+  // Set new highlight
+  highlightedDatasetId = datasetId;
+
+  // Update chart highlight
+  if (chartHelper && currentPcaResults) {
+    console.log("Calling chartHelper.highlightPoint...");
+    chartHelper.highlightPoint(canvasElement, datasetId);
+  } else {
+    console.log("ChartHelper or currentPcaResults not available");
+    console.log("chartHelper:", !!chartHelper);
+    console.log("currentPcaResults:", !!currentPcaResults);
+  }
+
+  // Update list highlight
+  const listItem = datasetListElement.querySelector(
+    `[data-dataset-id="${datasetId}"]`
+  );
+  if (listItem) {
+    listItem.classList.add("highlighted");
+    console.log("List item highlighted successfully");
+  } else {
+    console.log(`List item not found for dataset ID: ${datasetId}`);
+  }
+
+  // Show clear highlight button
+  clearHighlightButton.style.display = "inline-block";
 }
 
 /**
  * Clear dataset highlighting
  */
 function clearDatasetHighlight() {
-    if (highlightedDatasetId) {
-        // Clear chart highlight
-        if (chartHelper) {
-            chartHelper.clearHighlight(canvasElement);
-        }
-        
-        // Clear list highlight
-        const listItem = datasetListElement.querySelector(`[data-dataset-id="${highlightedDatasetId}"]`);
-        if (listItem) {
-            listItem.classList.remove("highlighted");
-        }
-        
-        highlightedDatasetId = null;
+  if (highlightedDatasetId) {
+    // Clear chart highlight
+    if (chartHelper) {
+      chartHelper.clearHighlight(canvasElement);
     }
-    
-    // Hide clear highlight button
-    clearHighlightButton.style.display = "none";
+
+    // Clear list highlight
+    const listItem = datasetListElement.querySelector(
+      `[data-dataset-id="${highlightedDatasetId}"]`
+    );
+    if (listItem) {
+      listItem.classList.remove("highlighted");
+    }
+
+    highlightedDatasetId = null;
+  }
+
+  // Hide clear highlight button
+  clearHighlightButton.style.display = "none";
 }
 
 /**
  * Main function to update PCA analysis and display results
  */
 async function updatePca() {
-    // Show loading state
-    updatePcaButton.disabled = true;
-    updatePcaTextStale.style.display = "none";
-    updatePcaTextCalculating.style.display = "block";
+  // Show loading state
+  updatePcaButton.disabled = true;
+  updatePcaTextStale.style.display = "none";
+  updatePcaTextCalculating.style.display = "block";
 
-    // Clear any existing highlights
-    clearDatasetHighlight();
+  // Clear any existing highlights
+  clearDatasetHighlight();
 
-    // Get selected values from form
-    const performanceMetric = performanceMetricElement.value;
-    const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text;
-    const kValue = kValueElement.value;
-    const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
+  // Get selected values from form
+  const performanceMetric = performanceMetricElement.value;
+  const performanceMetricName =
+    performanceMetricElement.options[performanceMetricElement.selectedIndex]
+      .text;
+  const kValue = kValueElement.value;
+  const kValueName = kValueElement.options[kValueElement.selectedIndex].text;
 
-    // Get performance results from the DB
-    let filteredResults;
-    if (selectedAlgorithms.length === algorithms.length &&
-        selectedDatasets.length === datasets.length
-    ) {
-        // No filter is applied. Get the PCA results directly from the backend
-        const results = await ApiService.getPcaResults();
-        filteredResults = results.map(result => {
-            return {
-                id: result.datasetId,
-                x: result[performanceMetric][kValue].x,
-                y: result[performanceMetric][kValue].y,
-                ellipseX: result[performanceMetric][kValue].varianceX,
-                ellipseY: result[performanceMetric][kValue].varianceY,
-            };
-        });
-    }
-    else {
-        // Get the performance results from the backend calculate the PCA locally
-        const performanceResults = await ApiService.getPerformanceResults(selectedDatasets, selectedAlgorithms);
-        
-        const X = selectedDatasets.map(datasetId => {
-            return selectedAlgorithms.map(algorithmId => {
-                const value = performanceResults[datasetId]?.[algorithmId]?.[performanceMetric]?.[kValue];
-                return value != null ? value : NaN;
-            });
-        });
+  // Get performance results from the DB
+  let filteredResults;
+  if (
+    selectedAlgorithms.length === algorithms.length &&
+    selectedDatasets.length === datasets.length
+  ) {
+    // No filter is applied. Get the PCA results directly from the backend
+    const results = await ApiService.getPcaResults();
+    filteredResults = results.map((result) => {
+      return {
+        id: result.datasetId,
+        x: result[performanceMetric][kValue].x,
+        y: result[performanceMetric][kValue].y,
+        ellipseX: result[performanceMetric][kValue].varianceX,
+        ellipseY: result[performanceMetric][kValue].varianceY,
+      };
+    });
+  } else {
+    // Get the performance results from the backend calculate the PCA locally
+    const performanceResults = await ApiService.getPerformanceResults(
+      selectedDatasets,
+      selectedAlgorithms
+    );
+
+    const X = selectedDatasets.map((datasetId) => {
+      return selectedAlgorithms.map((algorithmId) => {
+        const value =
+          performanceResults[datasetId]?.[algorithmId]?.[performanceMetric]?.[
+            kValue
+          ];
+        return value != null ? value : NaN;
+      });
+    });
 
     const nRows = X.length;
     const nCols = X[0].length;
@@ -775,40 +797,87 @@ async function updatePca() {
       };
     });
 
-    const pcaMinX = Math.min(...mappedPcaResults.map(result => result.x));
-    const pcaMaxX = Math.max(...mappedPcaResults.map(result => result.x));
-    const pcaMinY = Math.min(...mappedPcaResults.map(result => result.y));
-    const pcaMaxY = Math.max(...mappedPcaResults.map(result => result.y));
+    filteredResults = results.map((result) => {
+      return {
+        id: result.datasetId,
+        x: result.x,
+        y: result.y,
+        ellipseX: result.varianceX,
+        ellipseY: result.varianceY,
+      };
+    });
+  }
 
-    // Store current results for highlighting
-    currentPcaResults = filteredResults;
-    currentMappedPcaResults = mappedPcaResults;
+  // Get PCA results from the DB to calculate difficulties and similarities
+  const pcaResults = await ApiService.getPcaResults();
+  const mappedPcaResults = pcaResults.map((result) => {
+    return {
+      id: result.datasetId,
+      x: result[performanceMetric][kValue].x,
+      y: result[performanceMetric][kValue].y,
+    };
+  });
 
-    // Create interactive dataset list
-    createDatasetList(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
+  const pcaMinX = Math.min(...mappedPcaResults.map((result) => result.x));
+  const pcaMaxX = Math.max(...mappedPcaResults.map((result) => result.x));
+  const pcaMinY = Math.min(...mappedPcaResults.map((result) => result.y));
+  const pcaMaxY = Math.max(...mappedPcaResults.map((result) => result.y));
 
-    // Show difficulties and similarities sections
-    showDatasetDifficulties(mappedPcaResults, filteredResults, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
-    showSimilarDatasets(filteredResults);
+  // Store current results for highlighting
+  currentPcaResults = filteredResults;
+  currentMappedPcaResults = mappedPcaResults;
 
-    // Draw the chart
-    const minX = Math.min(...filteredResults.map(result => result.x));
-    const maxX = Math.max(...filteredResults.map(result => result.x));
-    const minY = Math.min(...filteredResults.map(result => result.y));
-    const maxY = Math.max(...filteredResults.map(result => result.y));
+  // Create interactive dataset list
+  createDatasetList(
+    mappedPcaResults,
+    filteredResults,
+    pcaMinX,
+    pcaMaxX,
+    pcaMinY,
+    pcaMaxY
+  );
 
-    drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName,
-        minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY);
-    
-    // Save the last selections for stale data checking
-    lastMetricSelection = performanceMetric;
-    lastKValueSelection = kValue;
-    lastAlgorithmFilter = [...selectedAlgorithms];
-    lastDatasetFilter = [...selectedDatasets];
-    checkStaleData();
+  // Show difficulties and similarities sections
+  showDatasetDifficulties(
+    mappedPcaResults,
+    filteredResults,
+    pcaMinX,
+    pcaMaxX,
+    pcaMinY,
+    pcaMaxY
+  );
+  showSimilarDatasets(filteredResults);
 
-    // Hide loading text
-    updatePcaTextCalculating.style.display = "none";
+  // Draw the chart
+  const minX = Math.min(...filteredResults.map((result) => result.x));
+  const maxX = Math.max(...filteredResults.map((result) => result.x));
+  const minY = Math.min(...filteredResults.map((result) => result.y));
+  const maxY = Math.max(...filteredResults.map((result) => result.y));
+
+  drawChart(
+    filteredResults,
+    mappedPcaResults,
+    performanceMetricName,
+    kValueName,
+    minX,
+    maxX,
+    minY,
+    maxY,
+    pcaMinX,
+    pcaMaxX,
+    pcaMinY,
+    pcaMaxY
+  );
+
+  // Save the last selections for stale data checking
+  lastMetricSelection = performanceMetric;
+  lastKValueSelection = kValue;
+  lastAlgorithmFilter = [...selectedAlgorithms];
+  lastDatasetFilter = [...selectedDatasets];
+  checkStaleData();
+
+  // Hide loading text
+  updatePcaTextCalculating.style.display = "none";
 }
 
 /**
@@ -866,123 +935,146 @@ function onFilterDataset(e) {
 /**
  * Draw the main PCA chart
  */
-function drawChart(filteredResults, mappedPcaResults, performanceMetricName, kValueName, 
-    minX, maxX, minY, maxY, pcaMinX, pcaMaxX, pcaMinY, pcaMaxY) {
-    const difficultyBarTopColor = "rgb(253, 196, 125)";
+function drawChart(
+  filteredResults,
+  mappedPcaResults,
+  performanceMetricName,
+  kValueName,
+  minX,
+  maxX,
+  minY,
+  maxY,
+  pcaMinX,
+  pcaMaxX,
+  pcaMinY,
+  pcaMaxY
+) {
+  const difficultyBarTopColor = "rgb(253, 196, 125)";
 
-    function getDatasetDifficultyColor(point, minX, maxX, minY, maxY) {
-        let topColor = [];
-        let topColorStart = difficultyBarTopColor.indexOf("rgb");
-        let topColorOpen = difficultyBarTopColor.indexOf("(", topColorStart);
-        let topColorClose = difficultyBarTopColor.indexOf(")", topColorOpen);
-        let topColorValues = difficultyBarTopColor.slice(topColorOpen + 1, topColorClose).split(",").map(v => v.trim());
-        topColor.push(Number(topColorValues[0]));
-        topColor.push(Number(topColorValues[1]));
-        topColor.push(Number(topColorValues[2]));
+  function getDatasetDifficultyColor(point, minX, maxX, minY, maxY) {
+    let topColor = [];
+    let topColorStart = difficultyBarTopColor.indexOf("rgb");
+    let topColorOpen = difficultyBarTopColor.indexOf("(", topColorStart);
+    let topColorClose = difficultyBarTopColor.indexOf(")", topColorOpen);
+    let topColorValues = difficultyBarTopColor
+      .slice(topColorOpen + 1, topColorClose)
+      .split(",")
+      .map((v) => v.trim());
+    topColor.push(Number(topColorValues[0]));
+    topColor.push(Number(topColorValues[1]));
+    topColor.push(Number(topColorValues[2]));
 
-        let normX = (point.x - minX) / (maxX - minX);
-        let normY = (point.y - minY) / (maxY - minY);
-        normX = Math.min(Math.max(normX, 0), 1);
-        normY = Math.min(Math.max(normY, 0), 1);
-        const ratio = (normX + normY) / 2;
+    let normX = (point.x - minX) / (maxX - minX);
+    let normY = (point.y - minY) / (maxY - minY);
+    normX = Math.min(Math.max(normX, 0), 1);
+    normY = Math.min(Math.max(normY, 0), 1);
+    const ratio = (normX + normY) / 2;
 
-        const r = Math.round(topColor[0] * (1 - ratio));
-        const g = Math.round(topColor[1] * (1 - ratio));
-        const b = Math.round(topColor[2] * (1 - ratio));
-        return `rgb(${r}, ${g}, ${b})`;
-    }
+    const r = Math.round(topColor[0] * (1 - ratio));
+    const g = Math.round(topColor[1] * (1 - ratio));
+    const b = Math.round(topColor[2] * (1 - ratio));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
 
-   chartHelper.createChart(canvasElement, {
-        datasets: [
-            {
-                label: "Datasets",
-                pointRadius: 5,
-                pointBackgroundColor: filteredResults.map(result => getDatasetDifficultyColor(mappedPcaResults.find(x => x.id === result.id), pcaMinX, pcaMaxX, pcaMinY, pcaMaxY)),
-                pointBorderWidth: 0,
-                backgroundColor: "red",
-                data: filteredResults.map(result => {
-                    const dataset = datasets.find(d => d.id === result.id);
-                    return {
-                        x: result.x,
-                        y: result.y,
-                        id: result.id,
-                        datasetName: dataset ? dataset.name : `Dataset ${result.id}`,
-                        ellipseX: result.ellipseX,
-                        ellipseY: result.ellipseY
-                    };
-                })
-            },
-            {
-                label: "Variances",
-                pointBackgroundColor: "rgb(255, 0, 0)",
-            }
-        ],
-        drawEllipseAroundDots: {
-            show: true,
-            color: "rgba(255, 0, 0, 0.5)",
-            legendTitle: "Variances"
-        },
-        verticalGradientBar: {
-            topColor: difficultyBarTopColor,
-            topText: "1.0",
-            bottomText: "0.0",
-            verticalText: "Dataset Difficulty"
-        },
-        title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
-        axisTitles: {
-            x: {
-                text: "Component 1",
-                size: 14,
-                bold: true
-            },
-            y: {
-                text: "Component 2",
-                size: 14,
-                bold: true
-            }
-        },
-        labels: {
-            showX: true,
-            showY: true,
-            customLabels: filteredResults.reduce((data, result) => {
-                const dataset = datasets.find(dataset => dataset.id == result.id);
-                data[dataset.id] = dataset.name;
-                return data;
-            }, {})
-        },
-        legend: {
-            show: true
-        },
-        zoom: true,
-        points: {
-            x: {
-                min: minX - 0.1,
-                max: maxX + 0.1,
-                stepSize: 0.1,
-            },
-            y: {
-                min: minY - 0.1,
-                max: maxY + 0.1,
-                stepSize: 0.1
-            }
-        },
-        // Add click handler for chart points
-        onClick: (event, elements) => {
-            if (elements.length > 0) {
-                const dataIndex = elements[0].index;
-                const datasetId = filteredResults[dataIndex].id;
-                highlightDataset(datasetId);
-            } else {
-                // Click on empty area clears highlight
-                clearDatasetHighlight();
-            }
-        },
-        // Add interaction configuration for better click detection
-        interaction: {
-            intersect: false,
-            mode: "point"
-        }
-    });
+  chartHelper.createChart(canvasElement, {
+    datasets: [
+      {
+        label: "Datasets",
+        pointRadius: 5,
+        pointBackgroundColor: filteredResults.map((result) =>
+          getDatasetDifficultyColor(
+            mappedPcaResults.find((x) => x.id === result.id),
+            pcaMinX,
+            pcaMaxX,
+            pcaMinY,
+            pcaMaxY
+          )
+        ),
+        pointBorderWidth: 0,
+        backgroundColor: "red",
+        data: filteredResults.map((result) => {
+          const dataset = datasets.find((d) => d.id === result.id);
+          return {
+            x: result.x,
+            y: result.y,
+            id: result.id,
+            datasetName: dataset ? dataset.name : `Dataset ${result.id}`,
+            ellipseX: result.ellipseX,
+            ellipseY: result.ellipseY,
+          };
+        }),
+      },
+      {
+        label: "Variances",
+        pointBackgroundColor: "rgb(255, 0, 0)",
+      },
+    ],
+    drawEllipseAroundDots: {
+      show: true,
+      color: "rgba(255, 0, 0, 0.5)",
+      legendTitle: "Variances",
+    },
+    verticalGradientBar: {
+      topColor: difficultyBarTopColor,
+      topText: "1.0",
+      bottomText: "0.0",
+      verticalText: "Dataset Difficulty",
+    },
+    title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
+    axisTitles: {
+      x: {
+        text: "Component 1",
+        size: 14,
+        bold: true,
+      },
+      y: {
+        text: "Component 2",
+        size: 14,
+        bold: true,
+      },
+    },
+    labels: {
+      showX: true,
+      showY: true,
+      customLabels: filteredResults.reduce((data, result) => {
+        const dataset = datasets.find((dataset) => dataset.id == result.id);
+        data[dataset.id] = dataset.name;
+        return data;
+      }, {}),
+    },
+    legend: {
+      show: true,
+    },
+    zoom: true,
+    points: {
+      x: {
+        min: minX - 0.1,
+        max: maxX + 0.1,
+        stepSize: 0.1,
+      },
+      y: {
+        min: minY - 0.1,
+        max: maxY + 0.1,
+        stepSize: 0.1,
+      },
+    },
+    // Add click handler for chart points
+    onClick: (event, elements) => {
+      if (elements.length > 0) {
+        const dataIndex = elements[0].index;
+        const datasetId = filteredResults[dataIndex].id;
+        highlightDataset(datasetId);
+      } else {
+        // Click on empty area clears highlight
+        clearDatasetHighlight();
+      }
+    },
+    // Add interaction configuration for better click detection
+    interaction: {
+      intersect: false,
+      mode: "point",
+    },
+  });
 }
 
 /**
@@ -996,48 +1088,49 @@ function resetGraph() {
  * Enhanced export function with user feedback to show the process is working
  */
 async function exportPngWithFeedback() {
-    const exportBtn = document.getElementById("aps-export-png-btn");
-    const icon = exportBtn.querySelector("i");
-    const originalText = exportBtn.lastChild.textContent;
-    
-    try {
-        // Update button to show process is starting 
-        exportBtn.innerHTML = '';
-        exportBtn.appendChild(icon.cloneNode(true));
-        exportBtn.appendChild(document.createTextNode("Exporting..."));
-        exportBtn.disabled = true;
-        
-        // Small delay to ensure UI updates
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Call the export function
-        chartHelper.exportChartAsPng("aps", canvasElement);
-        
-        // Show success feedback 
-        exportBtn.innerHTML = '';
-        exportBtn.appendChild(icon.cloneNode(true));
-        exportBtn.appendChild(document.createTextNode("Exported!"));
-        
-        // Reset button after 2 seconds
-        setTimeout(() => {
-            exportBtn.innerHTML = "<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG";
-            exportBtn.disabled = false;
-        }, 2000);
-        
-    } catch (error) {
-        // Show error feedback 
-        exportBtn.innerHTML = '';
-        exportBtn.appendChild(icon.cloneNode(true));
-        exportBtn.appendChild(document.createTextNode("Export Failed"));
-        
-        // Reset button after 3 seconds
-        setTimeout(() => {
-            exportBtn.innerHTML = "<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG";
-            exportBtn.disabled = false;
-        }, 3000);
-    }
+  const exportBtn = document.getElementById("aps-export-png-btn");
+  const icon = exportBtn.querySelector("i");
+  const originalText = exportBtn.lastChild.textContent;
+
+  try {
+    // Update button to show process is starting
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exporting..."));
+    exportBtn.disabled = true;
+
+    // Small delay to ensure UI updates
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Call the export function
+    chartHelper.exportChartAsPng("aps", canvasElement);
+
+    // Show success feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exported!"));
+
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML =
+        '<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG';
+      exportBtn.disabled = false;
+    }, 2000);
+  } catch (error) {
+    // Show error feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Export Failed"));
+
+    // Reset button after 3 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML =
+        '<i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG';
+      exportBtn.disabled = false;
+    }, 3000);
+  }
 }
-  
+
 // Enhanced CSV export function with user feedback
 async function exportCsvWithFeedback() {
   const exportBtn = document.getElementById("aps-export-csv-btn");
@@ -1045,41 +1138,42 @@ async function exportCsvWithFeedback() {
   const originalText = exportBtn.lastChild.textContent;
 
   try {
-      // Update button to show process is starting 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Exporting..."));
-      exportBtn.disabled = true;
+    // Update button to show process is starting
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exporting..."));
+    exportBtn.disabled = true;
 
-      // Small delay to ensure UI updates
-      await new Promise(resolve => setTimeout(resolve, 100));
+    // Small delay to ensure UI updates
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Call the CSV export function
-      chartHelper.exportChartAsCsv("aps", canvasElement);
+    // Call the CSV export function
+    chartHelper.exportChartAsCsv("aps", canvasElement);
 
-      // Show success feedback 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Exported!"));
+    // Show success feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exported!"));
 
-      // Reset button after 2 seconds
-      setTimeout(() => {
-          exportBtn.innerHTML = "<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV";
-          exportBtn.disabled = false;
-      }, 2000);
-
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML =
+        '<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV';
+      exportBtn.disabled = false;
+    }, 2000);
   } catch (error) {
-      console.error("CSV export error:", error);
-      // Show error feedback 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Export Failed"));
+    console.error("CSV export error:", error);
+    // Show error feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Export Failed"));
 
-      // Reset button after 3 seconds
-      setTimeout(() => {
-          exportBtn.innerHTML = "<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV";
-          exportBtn.disabled = false;
-      }, 3000);
+    // Reset button after 3 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML =
+        '<i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV';
+      exportBtn.disabled = false;
+    }, 3000);
   }
 }
 
@@ -1107,13 +1201,13 @@ function shareAps() {
 }
 
 function seeMetadata() {
-    const options = {
-      tab: "compareDatasets",
-      datasets: lastDatasetFilter.join(" "),
-    };
+  const options = {
+    tab: "compareDatasets",
+    datasets: lastDatasetFilter.join(" "),
+  };
 
-    const url = getQueryString(options);
-    window.open(url, "_blank");
+  const url = getQueryString(options);
+  window.open(url, "_blank");
 }
 
 /**
@@ -1313,14 +1407,15 @@ export function dispose() {
   document
     .getElementById("aps-export-png-btn")
     .removeEventListener("click", exportPngWithFeedback);
-   document.getElementById("aps-export-csv-btn")
-     .removeEventListener("click", exportCsvWithFeedback);
+  document
+    .getElementById("aps-export-csv-btn")
+    .removeEventListener("click", exportCsvWithFeedback);
   document.querySelectorAll(".aps-selector").forEach((element) => {
     element.removeEventListener("change", checkStaleData);
   });
-  
+
   metadataButton.removeEventListener("click", seeMetadata);
-    
+
   // Remove clear highlight button listener
   clearHighlightButton.removeEventListener("click", clearDatasetHighlight);
 
