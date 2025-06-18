@@ -264,11 +264,17 @@
     </div>
 
     <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 1rem;">
+        <!-- Button to refresh the view -->
         <button id="aps-reset-graph-btn" type="button" class="btn btn-primary">
             <i class="fa-solid fa-rotate-right" style="color: white !important; margin-right: 0.3rem;"></i>Refresh View
         </button>
+        <!-- Button to export the chart as PNG -->
         <button id="aps-export-png-btn" type="button" class="btn btn-primary">
             <i class="fa-solid fa-download" style="color: white !important; margin-right: 0.3rem;"></i>Export as PNG
+        </button>
+        <!-- Button to share the comparison -->
+        <button id="aps-share-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-link"></i> Share
         </button>
         <!-- CSV Export Button -->
         <button id="aps-export-csv-btn" type="button" class="btn btn-primary">
@@ -369,7 +375,7 @@
                             <p>In PCA-based APS, lower scores mean worse algorithm performance. The research paper identifies datasets near the origin as "unsolved problems." 0–0.2 captures this extreme difficulty.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge hard">Hard</div>
                         <div class="info-modal-info">
@@ -377,7 +383,7 @@
                             <p>This range captures a <strong>transition zone</strong> — separating total failure (&lt;0.2) from early-stage success. These values still represent low overall performance.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge medium">Medium</div>
                         <div class="info-modal-info">
@@ -385,7 +391,7 @@
                             <p>Around this range, datasets begin to <strong>diversify</strong>. It's a middle band between failure and success, as also reflected in PCA clusters in the APS visualization.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge easy">Easy</div>
                         <div class="info-modal-info">
@@ -393,7 +399,7 @@
                             <p>Scores above 0.4 indicate datasets where <strong>multiple algorithms</strong> succeed. The upper limit (0.7) stops before the "solved" zone mentioned in the research paper.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-easy">Very Easy</div>
                         <div class="info-modal-info">
@@ -466,7 +472,7 @@
                             <p>Datasets are highly different; algorithm behavior is inconsistent, and uncertainty is high. This corresponds to <strong>distance > 1.4</strong>. After applying <code>confidence = e<sup>(-distance)</sup></code>, values fall below 0.25.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge low">Low</div>
                         <div class="info-modal-info">
@@ -474,7 +480,7 @@
                             <p>Datasets have weak similarity. Some patterns may match, but results are not reliable. From <code>e<sup>(-1.0)</sup> ≈ 0.37</code>, we know this captures <strong>distance ~0.7-1.4</strong> — medium-long range.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge moderate">Moderate</div>
                         <div class="info-modal-info">
@@ -482,7 +488,7 @@
                             <p>Some similarity in algorithm performance; useful but not close enough to assume equivalence. <code>e<sup>(-0.7)</sup> ≈ 0.5</code>, <code>e<sup>(-0.3)</sup> ≈ 0.74</code> — this captures <strong>distance ~0.3-0.7</strong> and shows noticeable, but not strong, similarity.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge high">High</div>
                         <div class="info-modal-info">
@@ -490,7 +496,7 @@
                             <p>Strong overlap in performance; datasets behave similarly in most cases. Very small distances: <code>e<sup>(-0.25 to -0.1)</sup></code> gives high confidence (around 0.78-0.9).</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-high">Very High</div>
                         <div class="info-modal-info">
