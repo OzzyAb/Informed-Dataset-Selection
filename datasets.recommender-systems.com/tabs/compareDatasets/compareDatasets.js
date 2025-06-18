@@ -169,6 +169,14 @@ export async function initialize(queryOptions) {
 
     datasetFilterCheckboxes = [];
     selectedDatasets = [];
+    selectedColumns = [
+        'name',
+        'numberOfUsers',
+        'numberOfItems',
+        'numberOfInteractions',
+        'userItemRatio',
+        'density'
+    ];
     
     let initialSelectedDatasetIds;
     if (queryOptions && queryOptions.datasets) {
@@ -210,14 +218,13 @@ export async function initialize(queryOptions) {
 
     
     datasetColumnCheckboxes = [];
-    selectedColumns = metadataElements.map(el => el.key);
-
+    
      metadataElements.forEach(meta => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = 'column_' + meta.key;
         checkbox.value = meta.key;
-        checkbox.checked = true;
+        checkbox.checked = selectedColumns.includes(meta.key);
         checkbox.onchange = onFilterColumn;
 
         const label = document.createElement('label');
