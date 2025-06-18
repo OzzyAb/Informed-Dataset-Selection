@@ -77,7 +77,8 @@ export async function initialize(queryOptions) {
     element.addEventListener("change", compareAlgorithms);
   });
   shareButtonElement.addEventListener("click", shareAlgorithmComparison);
-  document.getElementById("compare-algo-export-csv-btn")
+  document
+    .getElementById("compare-algo-export-csv-btn")
     .addEventListener("click", exportCsvWithFeedback);
   metadataButton = document.getElementById("compare-algo-metadata-btn");
   metadataButton.addEventListener("click", seeMetadata);
@@ -416,11 +417,11 @@ function drawChart(
 ) {
   // Helper function to add dataset names to data points
   const addDatasetNames = (dataPoints) => {
-    return dataPoints.map(point => {
-      const dataset = datasets.find(d => d.id === point.id);
+    return dataPoints.map((point) => {
+      const dataset = datasets.find((d) => d.id === point.id);
       return {
         ...point,
-        datasetName: dataset ? dataset.name : `Dataset ${point.id}`
+        datasetName: dataset ? dataset.name : `Dataset ${point.id}`,
       };
     });
   };
@@ -550,62 +551,74 @@ function shareAlgorithmComparison() {
 }
 
 function seeMetadata() {
-    const options = {
-      tab: "compareDatasets",
-      datasets: selectedDatasets.join(" "),
-    };
+  const options = {
+    tab: "compareDatasets",
+    datasets: selectedDatasets.join(" "),
+  };
 
-    const url = getQueryString(options);
-    window.open(url, "_blank");
+  const url = getQueryString(options);
+  window.open(url, "_blank");
 }
 
-//Enhanced export function with user feedback 
+//Enhanced export function with user feedback
 async function exportPngWithFeedback() {
   const exportBtn = document.getElementById("compare-algo-export-btn");
   const icon = exportBtn.querySelector("i");
   const originalHTML = exportBtn.innerHTML;
-  
+
   try {
-      // Update button to show process is starting 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Exporting..."));
-      exportBtn.disabled = true;
-      
-      // Small delay to ensure UI updates
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Get the filename dynamically 
-      const algoName1 = firstAlgorithmElement.options[firstAlgorithmElement.selectedIndex].text.toLowerCase();
-      const algoName2 = secondAlgorithmElement.options[secondAlgorithmElement.selectedIndex].text.toLowerCase();
-      const performanceMetricName = performanceMetricElement.options[performanceMetricElement.selectedIndex].text.toLowerCase();
-      const kValueName = kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
-      
-      // Call the export function with the same naming convention
-      chartHelper.exportChartAsPng(`comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, canvasElement);
-      
-      // Show success feedback 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Exported!"));
-      
-      // Reset button after 2 seconds
-      setTimeout(() => {
-          exportBtn.innerHTML = originalHTML;
-          exportBtn.disabled = false;
-      }, 2000);
-      
+    // Update button to show process is starting
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exporting..."));
+    exportBtn.disabled = true;
+
+    // Small delay to ensure UI updates
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Get the filename dynamically
+    const algoName1 =
+      firstAlgorithmElement.options[
+        firstAlgorithmElement.selectedIndex
+      ].text.toLowerCase();
+    const algoName2 =
+      secondAlgorithmElement.options[
+        secondAlgorithmElement.selectedIndex
+      ].text.toLowerCase();
+    const performanceMetricName =
+      performanceMetricElement.options[
+        performanceMetricElement.selectedIndex
+      ].text.toLowerCase();
+    const kValueName =
+      kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+
+    // Call the export function with the same naming convention
+    chartHelper.exportChartAsPng(
+      `comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`,
+      canvasElement
+    );
+
+    // Show success feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exported!"));
+
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML = originalHTML;
+      exportBtn.disabled = false;
+    }, 2000);
   } catch (error) {
-      // Show error feedback 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Export Failed"));
-      
-      // Reset button after 3 seconds
-      setTimeout(() => {
-          exportBtn.innerHTML = originalHTML;
-          exportBtn.disabled = false;
-      }, 3000);
+    // Show error feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Export Failed"));
+
+    // Reset button after 3 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML = originalHTML;
+      exportBtn.disabled = false;
+    }, 3000);
   }
 }
 
@@ -614,61 +627,61 @@ async function exportCsvWithFeedback() {
   const exportBtn = document.getElementById("compare-algo-export-csv-btn");
   const icon = exportBtn.querySelector("i");
   const originalHTML = exportBtn.innerHTML;
-  
+
   try {
-      // Update button to show process is starting 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Exporting..."));
-      exportBtn.disabled = true;
-      
-      // Small delay to ensure UI updates
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Get the filename dynamically 
-      const algoName1 = firstAlgorithmElement
-        .options[firstAlgorithmElement.selectedIndex]
-        .text.toLowerCase();
-      const algoName2 = secondAlgorithmElement
-        .options[secondAlgorithmElement.selectedIndex]
-        .text.toLowerCase();
-      const performanceMetricName = performanceMetricElement
-        .options[performanceMetricElement.selectedIndex]
-        .text.toLowerCase();
-      const kValueName = kValueElement
-        .options[kValueElement.selectedIndex]
-        .text.toLowerCase();
-      
-      // Call the CSV export function with the same naming convention
-      chartHelper
-        .exportChartAsCsv(
-          `comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`, 
-          canvasElement
-        );
-      
-      // Show success feedback 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Exported!"));
-      
-      // Reset button after 2 seconds
-      setTimeout(() => {
-          exportBtn.innerHTML = originalHTML;
-          exportBtn.disabled = false;
-      }, 2000);
-      
+    // Update button to show process is starting
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exporting..."));
+    exportBtn.disabled = true;
+
+    // Small delay to ensure UI updates
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Get the filename dynamically
+    const algoName1 =
+      firstAlgorithmElement.options[
+        firstAlgorithmElement.selectedIndex
+      ].text.toLowerCase();
+    const algoName2 =
+      secondAlgorithmElement.options[
+        secondAlgorithmElement.selectedIndex
+      ].text.toLowerCase();
+    const performanceMetricName =
+      performanceMetricElement.options[
+        performanceMetricElement.selectedIndex
+      ].text.toLowerCase();
+    const kValueName =
+      kValueElement.options[kValueElement.selectedIndex].text.toLowerCase();
+
+    // Call the CSV export function with the same naming convention
+    chartHelper.exportChartAsCsv(
+      `comparison-${algoName1}-${algoName2}-${performanceMetricName}${kValueName}`,
+      canvasElement
+    );
+
+    // Show success feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Exported!"));
+
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML = originalHTML;
+      exportBtn.disabled = false;
+    }, 2000);
   } catch (error) {
-      console.error("CSV export error:", error);
-      // Show error feedback 
-      exportBtn.innerHTML = '';
-      exportBtn.appendChild(icon.cloneNode(true));
-      exportBtn.appendChild(document.createTextNode("Export Failed"));
-      
-      // Reset button after 3 seconds
-      setTimeout(() => {
-          exportBtn.innerHTML = originalHTML;
-          exportBtn.disabled = false;
-      }, 3000);
+    console.error("CSV export error:", error);
+    // Show error feedback
+    exportBtn.innerHTML = "";
+    exportBtn.appendChild(icon.cloneNode(true));
+    exportBtn.appendChild(document.createTextNode("Export Failed"));
+
+    // Reset button after 3 seconds
+    setTimeout(() => {
+      exportBtn.innerHTML = originalHTML;
+      exportBtn.disabled = false;
+    }, 3000);
   }
 }
 
@@ -741,11 +754,10 @@ export function dispose() {
   document
     .getElementById("compare-algo-export-csv-btn")
     .removeEventListener("click", exportCsvWithFeedback);
-  document
-    .querySelectorAll(".compareAlgorithms").forEach(element => {
-      element.removeEventListener("change", compareAlgorithms);
+  document.querySelectorAll(".compareAlgorithms").forEach((element) => {
+    element.removeEventListener("change", compareAlgorithms);
   });
   selectAllDatasetButton.removeEventListener("click", toggleAllDatasets);
-  shareButton.removeEventListener("click", shareAlgorithmComparison);
+  shareButtonElement.removeEventListener("click", shareAlgorithmComparison);
   metadataButton.removeEventListener("click", seeMetadata);
 }
