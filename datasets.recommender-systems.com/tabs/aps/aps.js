@@ -24,6 +24,7 @@ var updatePcaTextStale = null;
 var updatePcaTextCalculating = null;
 var canvasElement = null;
 var similarityElement = null;
+var dissimilarityElement = null; 
 var difficultyElement = null;
 var metadataButton = null;
 var datasetListElement = null;
@@ -35,7 +36,8 @@ var difficultiesInfoIcon = null;
 var difficultiesModal = null;
 var similaritiesInfoIcon = null;
 var similaritiesModal = null;
-
+var dissimilaritiesInfoIcon = null; 
+var dissimilaritiesModal = null; 
 var selectAllAlgorithmArea = null;
 var selectAllAlgorithmButton = null;
 var selectAllAlgorithmButtonText = null;
@@ -83,6 +85,7 @@ export async function initialize(queryOptions) {
   );
   canvasElement = document.getElementById("aps-chart");
   similarityElement = document.getElementById("similar-datasets");
+  dissimilarityElement = document.getElementById("dissimilar-datasets"); 
   difficultyElement = document.getElementById("dataset-difficulty");
 
   // Get modal elements for info icons
@@ -90,6 +93,8 @@ export async function initialize(queryOptions) {
   difficultiesModal = document.getElementById("difficulties-modal");
   similaritiesInfoIcon = document.getElementById("similarities-info-icon");
   similaritiesModal = document.getElementById("similarities-modal");
+  dissimilaritiesInfoIcon = document.getElementById("dissimilarities-info-icon"); 
+  dissimilaritiesModal = document.getElementById("dissimilarities-modal"); 
   metadataButton = document.getElementById("aps-metadata-btn");
   datasetListElement = document.getElementById("aps-dataset-list");
   clearHighlightButton = document.getElementById("aps-clear-highlight-btn");
@@ -312,7 +317,7 @@ export async function initialize(queryOptions) {
 }
 
 /**
- * Initialize modal tooltips for Difficulties and Similarities sections
+ * Initialize modal tooltips for Difficulties, Similarities, and Dissimilarities sections
  * This creates click-to-open modal functionality for info icons
  */
 function initializeModalTooltips() {
@@ -362,6 +367,31 @@ function initializeModalTooltips() {
     similaritiesModal.addEventListener("click", (e) => {
       if (e.target === similaritiesModal) {
         closeModal(similaritiesModal);
+      }
+    });
+  }
+
+  // Dissimilarities info icon modal
+  if (dissimilaritiesInfoIcon && dissimilaritiesModal) {
+    // Open modal on click
+    dissimilaritiesInfoIcon.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openModal(dissimilaritiesModal);
+    });
+
+    // Close modal when clicking close button
+    const closeBtn = dissimilaritiesModal.querySelector(".info-modal-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        closeModal(dissimilaritiesModal);
+      });
+    }
+
+    // Close modal when clicking overlay
+    dissimilaritiesModal.addEventListener("click", (e) => {
+      if (e.target === dissimilaritiesModal) {
+        closeModal(dissimilaritiesModal);
       }
     });
   }
@@ -837,7 +867,7 @@ async function updatePca() {
     pcaMaxY
   );
 
-  // Show difficulties and similarities sections
+  // Show difficulties, similarities, and dissimilarities sections
   showDatasetDifficulties(
     mappedPcaResults,
     filteredResults,
@@ -847,6 +877,7 @@ async function updatePca() {
     pcaMaxY
   );
   showSimilarDatasets(filteredResults);
+  showDissimilarDatasets(filteredResults);
 
   // Draw the chart
   const minX = Math.min(...filteredResults.map((result) => result.x));
@@ -1205,6 +1236,122 @@ function seeMetadata() {
 }
 
 /**
+ * Uses dissimilarity = 1 - similarity 
+ */
+function showDissimilarDatasets(filteredResults) {
+  // Find dissimilar datasets using 1 - similarity
+  const result = {};
+
+  for (let i = 0; i < filteredResults.length; i++) {
+    const a = filteredResults[i];
+    const dissimilar = [];
+
+    for (let j = 0; j < filteredResults.length; j++) {
+      if (i === j) continue;
+
+      const b = filteredResults[j];
+
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+
+      const varX = (a.ellipseX ?? 0) ** 2 + (b.ellipseX ?? 0) ** 2;
+      const varY = (a.ellipseY ?? 0) ** 2 + (b.ellipseY ?? 0) ** 2;
+
+      if (varX === 0 || varY === 0) continue;
+
+      const distance = Math.sqrt((dx * dx) / varX + (dy * dy) / varY);
+      const similarity = Math.exp(-distance);
+      const dissimilarity = 1 - similarity; 
+      
+      // Show datasets with high dissimilarity 
+      if (dissimilarity > 0.95) { // Only show very high dissimilarity(threshold)
+        dissimilar.push({
+          id: b.id,
+          similarity: parseFloat(similarity.toFixed(3)),
+          dissimilarity: parseFloat(dissimilarity.toFixed(3)),
+        });
+      }
+    }
+
+    result[a.id] = dissimilar;
+  }
+
+  // Show dissimilarities in accordion format
+  dissimilarityElement.innerHTML = "";
+  Object.entries(result).forEach(([id, dissimilarList]) => {
+    const collapseId = `collapse-dissimilar-${id}`;
+    const headingId = `heading-dissimilar-${id}`;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "accordion";
+    wrapper.style.marginBottom = "1rem";
+
+    const item = document.createElement("div");
+    item.className = "accordion-item";
+
+    const h2 = document.createElement("h2");
+    h2.className = "accordion-header";
+    h2.id = headingId;
+
+    const button = document.createElement("button");
+    button.className = "accordion-button collapsed";
+    button.type = "button";
+    button.setAttribute("data-bs-toggle", "collapse");
+    button.setAttribute("data-bs-target", `#${collapseId}`);
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", collapseId);
+    button.textContent = datasets.find((dataset) => dataset.id == id).name;
+
+    h2.appendChild(button);
+
+    const collapse = document.createElement("div");
+    collapse.id = collapseId;
+    collapse.className = "accordion-collapse collapse";
+    collapse.setAttribute("aria-labelledby", headingId);
+    collapse.setAttribute("data-bs-parent", "#accordionAPSDissimilar");
+
+    const body = document.createElement("div");
+    body.className = "accordion-body";
+    body.style.display = "flex";
+    body.style.flexWrap = "wrap";
+    body.style.gap = "1rem";
+
+    if (dissimilarList.length === 0) {
+      const noDissimilar = document.createElement("span");
+      noDissimilar.textContent = "(No highly dissimilar datasets)";
+      body.appendChild(noDissimilar);
+    } else {
+      dissimilarList
+        .sort((a, b) => b.dissimilarity - a.dissimilarity) // Sort by highest dissimilarity first
+        .forEach(({ id: dissimId, similarity, dissimilarity }) => {
+          const badge = document.createElement("span");
+          const { label, className } = getDissimilarityConfidence(dissimilarity);
+          badge.className = `badge ${className}`;
+          const name = datasets.find((dataset) => dataset.id == dissimId).name;
+          badge.textContent = `${name} (${label}: ${dissimilarity.toFixed(3)})`;
+          body.appendChild(badge);
+        });
+    }
+
+    collapse.appendChild(body);
+    item.appendChild(h2);
+    item.appendChild(collapse);
+    wrapper.appendChild(item);
+    dissimilarityElement.appendChild(wrapper);
+  });
+}
+
+/**
+ * Ranges for dissimilarity = 1 - similarity
+ */
+function getDissimilarityConfidence(dissimilarity) {
+  if (dissimilarity >= 0.99) return { label: "Very High", className: "bg-success" };
+  if (dissimilarity >= 0.95) return { label: "High", className: "bg-primary" };
+  if (dissimilarity >= 0.90) return { label: "Moderate", className: "bg-warning text-dark" };
+  if (dissimilarity >= 0.75) return { label: "Low", className: "bg-danger" };
+  return { label: "Very Low", className: "bg-secondary" };
+}
+/**
  * Display similar datasets based on variance-normalized distance
  */
 function showSimilarDatasets(filteredResults) {
@@ -1376,7 +1523,6 @@ function showDatasetDifficulties(
     difficultyElement.appendChild(container);
   });
 }
-
 /**
  * Get confidence level and CSS class based on confidence score
  */
@@ -1430,6 +1576,10 @@ export function dispose() {
 
   if (similaritiesInfoIcon) {
     similaritiesInfoIcon.removeEventListener("click", () => {});
+  }
+
+  if (dissimilaritiesInfoIcon) {
+    dissimilaritiesInfoIcon.removeEventListener("click", () => {});
   }
 
   // Remove escape key listener
