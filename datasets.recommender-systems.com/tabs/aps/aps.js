@@ -1014,12 +1014,6 @@ function drawChart(
       color: "rgba(255, 0, 0, 0.5)",
       legendTitle: "Variances",
     },
-    verticalGradientBar: {
-      topColor: difficultyBarTopColor,
-      topText: "1.0",
-      bottomText: "0.0",
-      verticalText: "Dataset Difficulty",
-    },
     title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
     axisTitles: {
       x: {
