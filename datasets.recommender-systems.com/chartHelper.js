@@ -75,7 +75,8 @@ export class ChartHelper {
      *       fillColor: string,
      *       features: any[]
      *     }
-     *   ]
+     *   ],
+     *   onClick: function
      * }
      * ```
      * 
@@ -102,7 +103,9 @@ export class ChartHelper {
         else {
             existingCanvas = {
                 canvas: canvas,
-                chart: null
+                chart: null,
+                highlightedPointId: null,
+                originalPointStyles: null
             };
             this.#charts.push(existingCanvas);
         }
@@ -114,6 +117,17 @@ export class ChartHelper {
             },
             options: {
                 aspectRatio: options.aspectRatio ?? 1,
+                // Add onClick handler support
+                onClick: (event, elements) => {
+                    if (options.onClick) {
+                        options.onClick(event, elements);
+                    }
+                },
+                // Add interaction configuration
+                interaction: options.interaction || {
+                    intersect: true,
+                    mode: 'nearest'
+                },
                 plugins: {
                     title: options.title && {
                         text: options.title,
@@ -207,12 +221,12 @@ export class ChartHelper {
                         },
                         zoom: {
                             wheel: {
-                                enabled: true,
+                                enabled: true   
                             },
                             pinch: {
                                 enabled: true
                             },
-                            mode: 'xy',
+                             mode:'xy'
                         }
                     },
                     drawEllipseAroundDots: options.drawEllipseAroundDots && {
@@ -357,11 +371,199 @@ export class ChartHelper {
         existingCanvas.chart = newChart;
     }
 
+    /**
+     * Highlight a specific point on the chart
+     * @param {HTMLCanvasElement} canvas - The canvas element
+     * @param {*} pointId - The ID of the point to highlight
+     */
+    highlightPoint(canvas, pointId) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined || !existingCanvas.chart) {
+            console.log('Chart not found for highlighting');
+            return;
+        }
+
+        const chart = existingCanvas.chart;
+        const dataset = chart.data.datasets[0]; // Assuming first dataset contains the points
+        
+        // Clear previous highlight
+        this.clearHighlight(canvas);
+        
+        // Find the point to highlight
+        const pointIndex = dataset.data.findIndex(point => point.id === pointId);
+        if (pointIndex === -1) {
+            console.log(`Point with ID ${pointId} not found in dataset`);
+            return;
+        }
+
+        // Store original styles before modifying
+        existingCanvas.originalPointStyles = {
+            pointRadius: Array.isArray(dataset.pointRadius) ? [...dataset.pointRadius] : (dataset.pointRadius ? new Array(dataset.data.length).fill(dataset.pointRadius) : new Array(dataset.data.length).fill(5)),
+            pointBorderWidth: Array.isArray(dataset.pointBorderWidth) ? [...dataset.pointBorderWidth] : (dataset.pointBorderWidth ? new Array(dataset.data.length).fill(dataset.pointBorderWidth) : new Array(dataset.data.length).fill(0)),
+            pointBorderColor: Array.isArray(dataset.pointBorderColor) ? [...dataset.pointBorderColor] : (dataset.pointBorderColor ? new Array(dataset.data.length).fill(dataset.pointBorderColor) : new Array(dataset.data.length).fill('transparent'))
+        };
+
+        // Ensure arrays are properly initialized
+        dataset.pointRadius = [...existingCanvas.originalPointStyles.pointRadius];
+        dataset.pointBorderWidth = [...existingCanvas.originalPointStyles.pointBorderWidth];
+        dataset.pointBorderColor = [...existingCanvas.originalPointStyles.pointBorderColor];
+
+        // Highlight the specific point
+        dataset.pointRadius[pointIndex] = 15;
+        dataset.pointBorderWidth[pointIndex] = 6;
+        dataset.pointBorderColor[pointIndex] = '#ff0000';
+
+        // Store highlighted point ID
+        existingCanvas.highlightedPointId = pointId;
+
+        // Update the chart
+        chart.update('none');
+        
+        console.log(`Successfully highlighted point ${pointId} at index ${pointIndex}`);
+    }
+
+    /**
+     * Clear point highlighting
+     * @param {HTMLCanvasElement} canvas - The canvas element
+     */
+    clearHighlight(canvas) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined || !existingCanvas.chart || !existingCanvas.highlightedPointId) return;
+
+        const chart = existingCanvas.chart;
+        const dataset = chart.data.datasets[0];
+
+        // Restore original styles if they were stored
+        if (existingCanvas.originalPointStyles) {
+            dataset.pointRadius = existingCanvas.originalPointStyles.pointRadius;
+            dataset.pointBorderWidth = existingCanvas.originalPointStyles.pointBorderWidth;
+            dataset.pointBorderColor = existingCanvas.originalPointStyles.pointBorderColor;
+        }
+
+        // Clear stored values
+        existingCanvas.highlightedPointId = null;
+        existingCanvas.originalPointStyles = null;
+
+        // Update the chart
+        chart.update('none');
+    }
+
     resetChart(canvas) {
         let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
         if (existingCanvas !== undefined) {
             existingCanvas.chart.resetZoom();
         }
+    }
+
+    // NEW: CSV Export functionality - extracts data from chart and downloads as CSV
+    exportChartAsCsv(chartName, canvas) {
+        let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
+        if (existingCanvas === undefined) {
+            console.error('Chart not found for CSV export');
+            return;
+        }
+
+        try {
+            // Get chart data from the Chart.js instance
+            const chart = existingCanvas.chart;
+            const datasets = chart.data.datasets;
+            
+            // Prepare CSV data array
+            const csvData = [];
+            
+            // Get axis titles from chart options for column headers
+            const xAxisTitle = chart.options?.scales?.x?.title?.text || 'X';
+            const yAxisTitle = chart.options?.scales?.y?.title?.text || 'Y';
+            
+            // Add CSV header row
+            csvData.push(['Dataset', 'Category', xAxisTitle, yAxisTitle]);
+            
+            // Extract data points from each dataset
+            datasets.forEach(dataset => {
+                const categoryName = dataset.label || 'Unknown';
+                
+                if (dataset.data && Array.isArray(dataset.data)) {
+                    dataset.data.forEach(point => {
+                        if (point && typeof point === 'object') {
+                            // Get dataset name from custom labels if available
+                            let datasetName = 'Unknown Dataset';
+                            
+                            // Try multiple ways to get the dataset name
+                            if (chart.options?.labels?.customLabels && point.id) {
+                                datasetName = chart.options.labels.customLabels[point.id];
+                            } else if (point.datasetName) {
+                                datasetName = point.datasetName;
+                            } else if (point.name) {
+                                datasetName = point.name;
+                            } else if (point.id) {
+                                datasetName = `Dataset ${point.id}`;
+                            }
+                            
+                            // Add data row to CSV
+                            csvData.push([
+                                datasetName || 'Unknown Dataset',
+                                categoryName,
+                                point.x || 0,
+                                point.y || 0
+                            ]);
+                        }
+                    });
+                }
+            });
+            
+            // Convert to CSV format
+            const csvContent = csvData.map(row => 
+                row.map(cell => {
+                    // Handle cells that might contain commas or quotes
+                    const cellStr = String(cell);
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return cellStr;
+                }).join(',')
+            ).join('\n');
+            
+            // Add metadata header with version and source info
+            const metadata = [
+                `# Chart Data Export`,
+                `# Version: ${versionNumber}`,
+                `# Source: datasets.recommender-systems.com`,
+                `# Export Date: ${new Date().toISOString()}`,
+                `# Chart: ${chartName}`,
+                ``,
+            ].join('\n');
+            
+            const finalCsvContent = metadata + csvContent;
+            
+            // Create and download the file
+            this.#downloadCsvFile(finalCsvContent, `${chartName}-v${versionNumber}.csv`);
+            
+        } catch (error) {
+            console.error('Error exporting chart as CSV:', error);
+            throw error;
+        }
+    }
+
+    // NEW: Helper method to download CSV file
+    #downloadCsvFile(csvContent, filename) {
+        // Create blob with CSV content
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Create download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        
+        // Add to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the object URL to prevent memory leaks
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 
        // MODIFIED: Alternative export method using OffscreenCanvas and toBlob to avoid fingerprinting warnings
