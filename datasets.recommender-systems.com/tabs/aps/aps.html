@@ -28,16 +28,22 @@
         of the original results and allow us to visualize and compare complex multi-dimensional results in a simplified two-dimensional space.
         As a result, the position of each dataset on the plot indicates its overall performance profile relative to others
         based on the selected metrics and K-values.
-        <br style="margin-bottom: 1rem;">
-        <strong>Difficulties:</strong> The difficulty levels of datasets are inferred from their positions on the graph, where each point
-        corresponds to a dataset. Because PCA preserves variance, the axes reflect the amount of variability captured among all datasets.
-        To establish difficulty levels, the minimum values along the X and Y axes are identified independently across all datasets, which
-        defines a reference point that represents the highest difficulty. Each dataset's position is then assessed relative to this reference,
-        making the difficulty levels inherently relative to the overall performance of all algorithms on all datasets. This relativity arises
-        because the range and distribution of points on the PCA graph depend on the combined characteristics of all datasets, which affects
-        how difficult a dataset appears in comparison to others.
-        <br style="margin-bottom: 1rem;">
-        <strong>Similarities:</strong> Dataset similarity is assessed not only by their Euclidean distances on the PCA graph but also by the uncertainty in their positions, which is shown as ellipses surrounding each point. These ellipses represent the variance of each dataset along the X and Y axes. To account for this positional uncertainty, a <strong>variance-normalized distance metric</strong> based on the <strong>Mahalanobis distance</strong> is employed. This method evaluates the closeness of two datasets relative to their combined uncertainty, providing a more robust measure of similarity than simple Euclidean distance alone:
+       <br style="margin-bottom: 1rem;">
+        <strong>Difficulties:</strong> The difficulty levels of datasets are determined using a <strong> quintile statistical model </strong> 
+        which calculates difficulty from their positions on the PCA graph through a two-step process. 
+        First, each dataset's X and Y coordinates are normalized to a 0-1 range and averaged to create a single difficulty score. 
+        Second, these scores are ranked across all datasets and divided into statistical quintiles (20th, 40th, 60th, 80th percentiles) 
+        to create five difficulty levels. This quintile-based approach ensures that exactly 20% of datasets fall into each difficulty 
+        category, making the classification inherently relative to the performance characteristics of the entire dataset collection. 
+        Lower average normalized coordinates correspond to higher difficulty levels, reflecting areas of the PCA space where algorithms generally struggle more.
+        <br style="margin-bottom: 1rem;"> 
+        <strong>Similarities:</strong> Dataset similarity is assessed not only by their Euclidean distances
+         on the PCA graph but also by the uncertainty in their positions, which is shown as ellipses surrounding each point. 
+         These ellipses represent the variance of each dataset along the X and Y axes. 
+         To account for this positional uncertainty, a <strong>variance-normalized distance metric</strong>
+         based on the <strong>Mahalanobis distance</strong> is employed. 
+         This method evaluates the closeness of two datasets relative to their combined uncertainty, 
+         providing a more robust measure of similarity than simple Euclidean distance alone:
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
             <msup>
                 <mi>distance</mi>
@@ -172,7 +178,10 @@
                 <span style="margin-left: 0.5rem;">The function is smooth, differentiable, and always positive.</span>
             </li>
         </ul>
-       Since the distance is already computed using a <strong>variance-normalized distance metric</strong>, there is no need for an additional σ parameter to control the spread. In other words, this approach automatically adapts to each dataset's uncertainty achieving the same effect that the Gaussian kernel obtains by tuning σ.
+       Since the distance is already computed using a <strong>variance-normalized distance metric</strong>, 
+       there is no need for an additional σ parameter to control the spread. 
+       In other words, this approach automatically adapts to each dataset's uncertainty achieving 
+       the same effect that the Gaussian kernel obtains by tuning σ.
        
     </p>
 
@@ -287,44 +296,43 @@
 
     <hr style="margin-bottom: 1.5rem;">
 
-    <!-- DIFFICULTIES SECTION WITH MODAL INFO ICON -->
-    <div class="accordion" id="aps-dataset-difficulties-container">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne-diff">
-                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
-                    style="display: flex; justify-content: space-between; width: 100%;">
-                    <span>Dataset Difficulties</span>
-                </button>
-            </h2>
-            <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne-diff"
-                data-bs-parent="#accordionAPS-diff">
-                <div id="aps-dataset-difficulties-body" class="accordion-body"
-                    style="display: flex; flex-direction: column;">
-                    <div>
-                        <h5 style="font-weight: bold; display: flex; flex-direction: row; align-content: center;">Difficulty Levels
-                            <span id="difficulties-info-icon" class="info-icon-modal" style="padding-top: 0.17rem;">&#8505;</span>
-                        </h5>
-                    </div>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
-                        <span class="badge bg-dark">Very Hard (&lt;= 0.2)</span>
-                        <span class="badge bg-danger">Hard (0.2 - 0.3)</span>
-                        <span class="badge bg-warning text-dark">Medium (0.3 - 0.4)</span>
-                        <span class="badge bg-primary">Easy (0.4 - 0.7)</span>
-                        <span class="badge bg-success">Very Easy (&gt;= 0.7)</span>
-                    </div>
-                    <div id="dataset-difficulty" style="margin-top: 2rem;">
-                        <!-- Dataset Difficulties -->
-                        <div><strong>Dataset D</strong></div>
-                        <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: 85%;" aria-valuenow="85"
-                                aria-valuemin="0" aria-valuemax="100">Hard</div>
-                        </div>
-                    </div>
+<!-- DIFFICULTIES SECTION WITH MODAL INFO ICON --> 
+<div class="accordion" id="aps-dataset-difficulties-container">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne-diff">
+            <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                data-bs-target="#aps-dataset-difficulties" aria-expanded="false" aria-controls="collapseOne"
+                style="display: flex; justify-content: space-between; width: 100%;">
+                <span>Dataset Difficulties</span>
+            </button>
+        </h2>
+        <div id="aps-dataset-difficulties" class="accordion-collapse collapse" aria-labelledby="headingOne-diff"
+            data-bs-parent="#accordionAPS-diff">
+            <div id="aps-dataset-difficulties-body" class="accordion-body"
+                style="display: flex; flex-direction: column;">
+                <div>
+                    <h5 style="font-weight: bold; display: flex; flex-direction: row; align-content: center;">Dataset Difficulty Levels
+                        <span id="difficulties-info-icon" class="info-icon-modal" style="padding-top: 0.17rem;">&#8505;</span>
+                    </h5>
+                </div>
+                <!-- This div will be populated dynamically by JavaScript with statistical ranges -->
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
+                    <!-- Statistical ranges will be inserted here by createDifficultyLegend() -->
+                </div>
+
+                <!-- DISCLAIMER -->
+                <div class="difficulty-disclaimer" style="margin-top: 1rem; padding: 0.75rem; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 0.375rem; color: #856404;">
+                    <strong>Important note:</strong> Dataset difficulty levels are dynamic and adjust automatically. 
+                    The ranges for "Hard," "Medium," etc. change whenever you modify the K-value, or performance metric selection.
+                </div>
+
+                <div id="dataset-difficulty" style="margin-top: 2rem;">
+                    <!-- Dataset Difficulties will be populated by JavaScript -->
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <!-- SIMILARITIES SECTION WITH MODAL INFO ICON -->
     <div class="accordion" id="aps-dataset-similarities-container" style="margin-top: 1rem;">
@@ -359,55 +367,69 @@
         </div>
     </div>
 
-    <!-- DIFFICULTIES MODAL -->
+<!-- DIFFICULTIES MODAL -->
     <div id="difficulties-modal" class="info-modal-overlay">
         <div class="info-modal-content">
             <div class="info-modal-header">
-                <h2 class="info-modal-title">Difficulty Levels</h2>
+                <h2 class="info-modal-title">Dataset Difficulty Levels</h2>
                 <button class="info-modal-close" type="button">&times;</button>
             </div>
             <div class="info-modal-body">
+                <div class="info-modal-explanation" style="margin-bottom: 1.5rem; padding: 1.2rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #dee2e6;">
+                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #495057; font-weight: 500;">
+                        Our difficulty classification uses a <strong>quintile-based statistical model</strong> rather than arbitrary fixed ranges. 
+                        Each difficulty level represents exactly <strong>20% of all datasets</strong>, creating a balanced distribution based on 
+                        actual data. The statistical thresholds are calculated using the 20th, 40th, 60th, and 80th percentiles of difficulty 
+                        scores across all datasets in our collection.
+                    </p>
+                </div>
+                
                 <div class="info-modal-section">
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-hard">Very Hard</div>
                         <div class="info-modal-info">
-                            <h4>0.00 - 0.20</h4>
-                            <p>In PCA-based APS, lower scores mean worse algorithm performance. The research paper identifies datasets near the origin as "unsolved problems." 0–0.2 captures this extreme difficulty.</p>
+                            <h4>0th - 20th Percentile (Bottom 20%)</h4>
+                            <p>Datasets where algorithms struggle the most. These represent the most challenging problems
+                            in our collection, requiring specialized approaches or algorithmic innovations to achieve reasonable performance.</p>
                         </div>
                     </div>
-
+                    
                     <div class="info-modal-level">
                         <div class="info-modal-badge hard">Hard</div>
                         <div class="info-modal-info">
-                            <h4>0.20 - 0.30</h4>
-                            <p>This range captures a <strong>transition zone</strong> — separating total failure (&lt;0.2) from early-stage success. These values still represent low overall performance.</p>
+                            <h4>20th - 40th Percentile</h4>
+                            <p>Datasets with below-average algorithm performance. 
+                            These problems present significant challenges and often require careful tuning or advanced techniques to achieve good results.</p>
                         </div>
                     </div>
-
+                    
                     <div class="info-modal-level">
                         <div class="info-modal-badge medium">Medium</div>
                         <div class="info-modal-info">
-                            <h4>0.30 - 0.40</h4>
-                            <p>Around this range, datasets begin to <strong>diversify</strong>. It's a middle band between failure and success, as also reflected in PCA clusters in the APS visualization.</p>
+                            <h4>40th - 60th Percentile (Middle 20%)</h4>
+                            <p>Datasets with moderate difficulty levels that represent typical challenges. 
+                            These provide a good balance for testing and benchmarking algorithm performance.</p>
                         </div>
                     </div>
-
+                    
                     <div class="info-modal-level">
                         <div class="info-modal-badge easy">Easy</div>
                         <div class="info-modal-info">
-                            <h4>0.40 - 0.70</h4>
-                            <p>Scores above 0.4 indicate datasets where <strong>multiple algorithms</strong> succeed. The upper limit (0.7) stops before the "solved" zone mentioned in the research paper.</p>
+                            <h4>60th - 80th Percentile</h4>
+                            <p>Datasets where multiple algorithms achieve above-average performance. 
+                            These are suitable for initial testing and validation of new approaches.</p>
                         </div>
                     </div>
-
+                    
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-easy">Very Easy</div>
                         <div class="info-modal-info">
-                            <h4>0.70 - 1.00</h4>
-                            <p>The research paper describes top-right datasets as "solved" — where nearly all algorithms do well. These are at or near <strong>maximum PCA scores</strong>, normalized to 1.0.</p>
+                            <h4>80th - 100th Percentile (Top 20%)</h4>
+                            <p>Datasets where most algorithms perform very well. 
+                            These represent "solved" problems where incremental improvements are typically small and most standard approaches work effectively.</p>
                         </div>
                     </div>
-                </div>
+                </div> 
             </div>
         </div>
     </div>
