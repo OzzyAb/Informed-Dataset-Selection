@@ -44,8 +44,8 @@ const columnDisplayNames = {
         lowestNumberOfRatingBySingleUser: "Min Rating/User",
         highestNumberOfRatingOnSingleItem: "Max Rating/Item",
         lowestNumberOfRatingOnSingleItem: "Min Rating/Item",
-        meanNumberOfRatingsByUser: "Mean Ratings/User",
-        meanNumberOfRatingsOnItem: "Mean Ratings/Item",
+        meanNumberOfRatingsByUser: "Mean Interaction per User",
+        meanNumberOfRatingsOnItem: "Mean Interaction per Item",
     };
 
 var metadataElements = [
@@ -89,7 +89,7 @@ var metadataElements = [
     { name: 'Min Rating/User', description: 'Lowest Number of Rating By Single User', key: 'lowestNumberOfRatingBySingleUser' },
     { name: 'Max Rating/Item', description: 'Highest Number of Rating On Single Item', key: 'highestNumberOfRatingOnSingleItem' },
     { name: 'Min Rating/Item', description: 'Lowest Number of Rating On Single Item', key: 'lowestNumberOfRatingOnSingleItem', fixed: 2 },
-    { name: 'Mean Ratings/User', description: 'Mean Number of Ratings By User', info: 'mean-ratings-per-user-info', key: 'meanNumberOfRatingsByUser', fixed: 2, better: 'range', rangeDescription: [
+    { name: 'Mean Interactions per User', description: 'Mean Number of Ratings By User', info: 'mean-ratings-per-user-info', key: 'meanNumberOfRatingsByUser', fixed: 2, better: 'range', rangeDescription: [
         {
             value: [0, 5],
             color: 'text-danger'
@@ -111,7 +111,7 @@ var metadataElements = [
             color: 'text-danger'
         }]
     },
-    { name: 'Mean Ratings/Item', description: 'Mean Number of Ratings On Item', info: 'mean-ratings-per-item-info', key: 'meanNumberOfRatingsOnItem', fixed: 2, better: 'range', rangeDescription: [
+    { name: 'Mean Interactions per Item', description: 'Mean Number of Ratings On Item', info: 'mean-ratings-per-item-info', key: 'meanNumberOfRatingsOnItem', fixed: 2, better: 'range', rangeDescription: [
         {
             value: [0, 5],
             color: 'text-danger'
@@ -385,7 +385,7 @@ function createSelectAllButtons() {
     icon.style.marginRight = '0.3rem';
 
     selectAllColumnsButtonText = document.createElement('span');
-    selectAllColumnsButtonText.textContent = 'Deselect All';
+    selectAllColumnsButtonText.textContent = 'Select All';
 
     selectAllColumnsButton.appendChild(icon);
     selectAllColumnsButton.appendChild(selectAllColumnsButtonText);
@@ -455,8 +455,9 @@ function onFilterColumn() {
 
     updateColumnHeaderLabel();
     renderDatasetComparisonTable();
-    renderTableHead()
-    compareDatasets()
+    renderTableHead();
+    compareDatasets();
+    initializeTooltips();
 }
 
 function updateColumnHeaderLabel() {
@@ -490,7 +491,7 @@ function renderTableHead() {
         const columnsWithInfo = {
             userItemRatio: 'user-item-ratio-info',
             meanNumberOfRatingsByUser: 'mean-ratings-per-user-info',
-            meanNumberOfRatingsOnItem: 'mean-ratings-per-item-info'
+            meanNumberOfRatingsOnItem: 'mean-ratings-per-item-info',
         };
 
         if (columnsWithInfo[key]) {
@@ -548,7 +549,8 @@ function renderTableHead() {
         theadRow.appendChild(th);
     });
 
-    updateSortIcons(); 
+    updateSortIcons();
+    initializeTooltips();
 }
 
 
@@ -672,23 +674,20 @@ function formatValue(value, decimals = 0) {
 }
 
 function initializeTooltips() {
-    const tooltipIcons = document.querySelectorAll('.tooltip-icon');
-
-    tooltipIcons.forEach(icon => {
+    console.log("Tooltips initialisiert!");
+    document.querySelectorAll('.tooltip-icon').forEach(icon => {
         const tooltipId = icon.dataset.tooltipId;
         const tooltip = document.getElementById(tooltipId);
 
-        if (!tooltip) {
-            console.warn(`Tooltip mit ID ${tooltipId} nicht gefunden.`);
-            return;
-        }
+        if (!tooltip) return;
 
-        // Maus-Ereignisse hinzufügen
-        icon.addEventListener('mouseenter', () => {
-            const rect = icon.getBoundingClientRect();
-            tooltip.style.left = `${rect.left + window.scrollX + 10}px`;
-            tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
+        icon.addEventListener('mouseenter', (e) => {
             tooltip.style.display = 'block';
+            positionTooltip(e, tooltip);
+        });
+
+        icon.addEventListener('mousemove', (e) => {
+            positionTooltip(e, tooltip);
         });
 
         icon.addEventListener('mouseleave', () => {
@@ -698,11 +697,14 @@ function initializeTooltips() {
 }
 
 function positionTooltip(e, tooltip) {
+    
+    tooltip.style.visibility = 'hidden';
+    tooltip.style.display = 'block';
+
     const tooltipRect = tooltip.getBoundingClientRect();
     const pageWidth = window.innerWidth;
     const pageHeight = window.innerHeight;
 
-    
     let left = e.clientX + 10;
     let top = e.clientY + 10;
 
@@ -711,14 +713,19 @@ function positionTooltip(e, tooltip) {
         left = e.clientX - tooltipRect.width - 10;
     }
 
-    
+   
     if (top + tooltipRect.height > pageHeight) {
         top = e.clientY - tooltipRect.height - 10;
     }
 
     tooltip.style.left = `${left + window.scrollX}px`;
     tooltip.style.top = `${top + window.scrollY}px`;
+
+    
+    tooltip.style.visibility = 'visible';
 }
+
+
 
 
 function colorNumbersOnly(table) {

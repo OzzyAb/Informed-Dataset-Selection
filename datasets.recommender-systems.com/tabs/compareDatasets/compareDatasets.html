@@ -5,6 +5,11 @@
         generalize, and personalize. This dataset comparison table allows you to select any two datasets and compare them side-by-side
         using key metadata metrics. This comparison gives insight into data sparsity, bias risks and cold-start risks,
         which has an impact on model design, training strategy, and final performance.
+        <br style="margin-bottom: 1rem;">
+        All datasets in this tab are preprocessed using "5-core pruning". 
+        This method removes users and items with fewer than five interactions and applies the rule recursively until all entries meet the threshold. 
+        The approach enhances data quality by reducing sparsity and helps mitigate cold-start issues common in recommender systems.
+
     </p>
 
     <div class="accordion" id="accordionDatasetInformation" style="margin-bottom: 1rem;">
@@ -156,7 +161,6 @@
             <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (users)</td>
         </tr>
     </table>
-</div>
 
 <div id="mean-ratings-per-user-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
     <p id="mean-ratings-per-user-info-p" style="margin: 0.3rem;">
