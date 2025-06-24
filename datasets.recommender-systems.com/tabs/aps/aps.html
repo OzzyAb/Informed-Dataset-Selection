@@ -448,7 +448,7 @@
                         Dataset similarity reflects not only how close datasets are on the PCA graph, but also how uncertain their positions are (as shown by ellipses). To account for this uncertainty, we use a variance-normalized distance metric based on the Mahalanobis distance that adjusts for the spread of each dataset:
 
                     </p>
-                    
+
                     <!-- Mathematical formula with proper styling -->
                     <div style="text-align: center; margin: 1.2rem 0; padding: 0.8rem;">
                         <div style="font-size: 16px; color:  #495057; font-family: 'Times New Roman', serif; font-weight: bold; display: flex; align-items: center; justify-content: center;">
@@ -472,20 +472,20 @@
                             </span>
                         </div>
                     </div>
-                    
+
                     <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #495057; font-weight: 500;">
                         This gives us a more accurate sense of similarity by considering both distance and variance. We then apply an exponential decay function to convert this into a confidence score between 0 and 1:
                     </p>
-                    
+
                     <div style="text-align: center; margin: 1rem 0; font-size: 16px; font-family: 'Times New Roman', serif">
                         <code>confidence = e<sup>–distance</sup></code>
                     </div>
-                    
+
                     <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #495057; font-weight: 500;">
                       This method acts like a simplified Gaussian (RBF) kernel: nearby datasets yield high confidence, while distant ones result in low confidence. Datasets are then classified into the similarity confidence levels shown below.
                     </p>
                 </div>
-                
+
                 <div class="info-modal-section">
                     <div class="info-modal-level">
                         <div class="info-modal-badge very-low">Very Low</div>
@@ -524,6 +524,122 @@
                         <div class="info-modal-info">
                             <h4>0.90 - 1.00</h4>
                             <p>Datasets are nearly identical in how algorithms perform on them. <code>distance ≈ 0</code>, so <code>confidence = e<sup>0</sup> = 1</code>. Any distance < ~0.1 gives <code>confidence > 0.9</code>, indicating redundancy.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- DISSIMILARITIES SECTION WITH MODAL INFO ICON -->
+    <div class="accordion" id="aps-dataset-dissimilarities-container" style="margin-top: 1rem;">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne-dissim">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#aps-dataset-dissimilarities" aria-expanded="false" aria-controls="collapseOne"
+                    style="display: flex; justify-content: space-between; width: 100%;">
+                    <span>Dataset Dissimilarities</span>
+                </button>
+            </h2>
+            <div id="aps-dataset-dissimilarities" class="accordion-collapse collapse" aria-labelledby="headingOne-dissim"
+                data-bs-parent="#accordionAPS-dissim">
+                <div id="aps-dataset-dissimilarities-body" class="accordion-body" style="display: flex; flex-direction: column;">
+                    <div>
+                        <h5 style="font-weight: bold; display: flex; flex-direction: row; align-content: center;">Dissimilarity Confidence Levels
+                            <span id="dissimilarities-info-icon" class="info-icon-modal" style="padding-top: 0.17rem;">&#8505;</span>
+                        </h5>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.5rem;">
+                        <span class="badge bg-success">Very High (&gt;= 0.99)</span>
+                        <span class="badge bg-primary">High (0.95 - 0.99)</span>
+                        <span class="badge bg-warning text-dark">Moderate (0.90 - 0.95)</span>
+                        <span class="badge bg-danger">Low (0.75 - 0.90)</span>
+                        <span class="badge bg-secondary">Very Low (&lt; 0.75)</span>
+                    </div>
+                    <div id="dissimilar-datasets" style="margin-top: 2rem;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DISSIMILARITIES MODAL -->
+    <div id="dissimilarities-modal" class="info-modal-overlay">
+        <div class="info-modal-content">
+            <div class="info-modal-header">
+                <h2 class="info-modal-title">Dissimilarity Confidence Levels</h2>
+                <button class="info-modal-close" type="button">&times;</button>
+            </div>
+            <div class="info-modal-body">
+                <div class="info-modal-explanation" style="margin-bottom: 1.5rem; padding: 1.2rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #dee2e6;">
+                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #495057; font-weight: 500;">
+                        Dataset dissimilarity is calculated as the mathematical inverse of similarity: <strong>dissimilarity = 1 - similarity</strong>. We focus on datasets with high dissimilarity values (close to 1.0):
+                    </p> 
+                    <div style="text-align: center; margin: 1.2rem 0; padding: 0.8rem;">
+                        <div style="font-size: 16px; color:  #495057; font-family: 'Times New Roman', serif; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                            <span style="margin-right: 8px;">distance<sup>2</sup> =</span>
+                            <span style="display: inline-block; margin: 0 8px;">
+                                <div style="text-align: center; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 2px;">
+                                    (x<sub>2</sub> - x<sub>1</sub>)<sup>2</sup>
+                                </div>
+                                <div style="text-align: center; font-size: 14px;">
+                                    var<sub>X1</sub> + var<sub>X2</sub>
+                                </div>
+                            </span>
+                            <span style="margin: 0 8px;">+</span>
+                            <span style="display: inline-block; margin: 0 8px;">
+                                <div style="text-align: center; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 2px;">
+                                    (y<sub>2</sub> - y<sub>1</sub>)<sup>2</sup>
+                                </div>
+                                <div style="text-align: center; font-size: 14px;">
+                                    var<sub>Y1</sub> + var<sub>Y2</sub>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin: 1rem 0; font-size: 16px; font-family: 'Times New Roman', serif">
+                        <code>dissimilarity = 1 - e<sup>–distance</sup></code>
+                    </div>
+                </div>
+
+                <div class="info-modal-section">
+                    <div class="info-modal-level">
+                        <div class="info-modal-badge very-high">Very High</div>
+                        <div class="info-modal-info">
+                            <h4>0.99 - 1.00</h4>
+                            <p>Datasets are extremely different; similarity ≤ 0.01. These represent the most dissimilar dataset pairs with completely different algorithm performance patterns.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-modal-level">
+                        <div class="info-modal-badge high">High</div>
+                        <div class="info-modal-info">
+                            <h4>0.95 - 0.99</h4>
+                            <p>Strong dissimilarity; similarity between 0.01-0.05. These datasets show very different algorithm behaviors with minimal overlap in performance patterns.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-modal-level">
+                        <div class="info-modal-badge moderate">Moderate</div>
+                        <div class="info-modal-info">
+                            <h4>0.90 - 0.95</h4>
+                            <p>Moderate dissimilarity; similarity between 0.05-0.10. Datasets have notable differences but may share some common algorithm behaviors.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-modal-level">
+                        <div class="info-modal-badge low">Low</div>
+                        <div class="info-modal-info">
+                            <h4>0.75 - 0.90</h4>
+                            <p>Low dissimilarity; similarity between 0.10-0.25. These datasets are more similar than different, representing the transition zone.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-modal-level">
+                        <div class="info-modal-badge very-low">Very Low</div>
+                        <div class="info-modal-info">
+                            <h4>&lt; 0.75</h4>
+                            <p>Very low dissimilarity; similarity > 0.25. These datasets are primarily similar and are not typically shown in the dissimilarity section.</p>
                         </div>
                     </div>
                 </div>
