@@ -5,9 +5,14 @@
         generalize, and personalize. This dataset comparison table allows you to select any two datasets and compare them side-by-side
         using key metadata metrics. This comparison gives insight into data sparsity, bias risks and cold-start risks,
         which has an impact on model design, training strategy, and final performance.
+        <br style="margin-bottom: 1rem;">
+        All datasets in this tab are preprocessed using "5-core pruning". 
+        This method removes users and items with fewer than five interactions and applies the rule recursively until all entries meet the threshold. 
+        The approach enhances data quality by reducing sparsity and helps mitigate cold-start issues common in recommender systems.
+
     </p>
 
-    <div class="accordion" id="accordionDatasetInformation">
+    <div class="accordion" id="accordionDatasetInformation" style="margin-bottom: 1rem;">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
                 <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
@@ -25,6 +30,24 @@
         </div>
     </div>
 
+    <div class="accordion" id="accordionColumnFilter">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed acc-btn-icon" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <span>Column Filter</span>
+                    <span id="dataset-column-header" style="margin-left: auto;">(All selected)</span>
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+                data-bs-parent="#accordionDatasetFilter">
+                <div id="dataset-column-filter" class="accordion-body" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    <!-- Column filter checkboxes -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <hr style="margin-top: 2rem; margin-bottom: 2rem;">
 
     <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 1rem;">
@@ -32,41 +55,20 @@
         <button id="compare-database-share-btn" type="button" class="btn btn-primary">
             <i class="fa-solid fa-link"></i> Share
         </button>
+        <button id="dataset-export-csv-btn" type="button" class="btn btn-primary">
+            <i class="fa-solid fa-file-csv" style="color: white !important; margin-right: 0.3rem;"></i>Export as CSV
+        </button>
     </div>
 
    <hr style="margin-top: 2rem; margin-bottom: 2rem;">
 
     <div class="container mt-5" style="margin-top: 0px !important; padding: 0px;">
-        <div class=" table-responsive"style="transform: rotateX(180deg);">
+        <div class="table-responsive" style="transform: rotateX(180deg);">
             <table class="table table-bordered text-center" id="dataset-table" style="width:100%; border-collapse:collapse; transform: rotateX(180deg);">
                 <thead class="table-light">
-                    <tr>
-                        <th data-key="name" class="sortable">Dataset <span class="sort-icon"></span></th>
-                        <th data-key="numberOfUsers" class="sortable">Number of Users <span class="sort-icon"></span></th>
-                        <th data-key="numberOfItems" class="sortable">Number of Items <span class="sort-icon"></span></th>
-                        <th data-key="numberOfInteractions" class="sortable">Number of Interactions <span class="sort-icon"></span></th>
-                        <th data-key="userItemRatio" class="sortable">
-                            User-Item Ratio
-                            <span class="tooltip-icon" data-tooltip-id="user-item-ratio-info" style="cursor: help;">ℹ️</span>
-                            <span class="sort-icon"></span>
-                        </th>
-                        <th data-key="density" class="sortable">Density <span class="sort-icon"></span></th>
-                        <th data-key="highestNumberOfRatingBySingleUser" class="sortable">Max Rating/User <span class="sort-icon"></span></th>
-                        <th data-key="lowestNumberOfRatingBySingleUser" class="sortable">Min Rating/User <span class="sort-icon"></span></th>
-                        <th data-key="highestNumberOfRatingOnSingleItem" class="sortable">Max Rating/Item <span class="sort-icon"></span></th>
-                        <th data-key="lowestNumberOfRatingOnSingleItem" class="sortable">Min Rating/Item <span class="sort-icon"></span></th>
-                        <th data-key="meanNumberOfRatingsByUser" class="sortable">
-                            Mean Ratings/User
-                            <span class="tooltip-icon" data-tooltip-id="mean-ratings-per-user-info" style="cursor: help;">ℹ️</span>
-                            <span class="sort-icon"></span>
-                        </th>
-                        <th data-key="meanNumberOfRatingsOnItem" class="sortable">
-                            Mean Ratings/Item
-                            <span class="tooltip-icon" data-tooltip-id="mean-ratings-per-item-info" style="cursor: help;">ℹ️</span>
-                            <span class="sort-icon"></span>
-                        </th>
+                    <tr id="table-head-row">
+                        <!-- Header -->
                     </tr>
-
                 </thead>
                 <tbody>
                     <!-- Comparison -->
@@ -74,7 +76,7 @@
             </table>
         </div>
     </div>
-</div>
+
 
 <div id="user-item-ratio-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
     <table style="
@@ -159,7 +161,6 @@
             <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (users)</td>
         </tr>
     </table>
-</div>
 
 <div id="mean-ratings-per-user-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
     <p id="mean-ratings-per-user-info-p" style="margin: 0.3rem;">
