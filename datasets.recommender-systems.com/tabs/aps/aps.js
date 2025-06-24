@@ -58,6 +58,147 @@ var currentPcaResults = null;
 var currentMappedPcaResults = null;
 
 /**
+ * Calculate percentile using linear interpolation method
+ * @param {Array} sortedData - Sorted array of values
+ * @param {Number} percentile - Percentile to calculate (0-100)
+ * @returns {Number} Percentile value
+ */
+function calculatePercentile(sortedData, percentile) {
+    const n = sortedData.length;
+    const index = (percentile / 100) * (n - 1);
+    
+    if (index % 1 === 0) {
+        // Exact index
+        return sortedData[index];
+    } else {
+        // Interpolate between two values
+        const lower = Math.floor(index);
+        const upper = Math.ceil(index);
+        const weight = index - lower;
+        return sortedData[lower] * (1 - weight) + sortedData[upper] * weight;
+    }
+}
+
+/**
+ * Calculate statistical difficulty thresholds using quantile-based distribution
+ * @param {Array} difficultyScores - Array of difficulty scores for all datasets
+ * @returns {Object} Thresholds and statistical info
+ */
+function calculateStatisticalDifficultyThresholds(difficultyScores) {
+    // Sort scores in ascending order
+    const sortedScores = [...difficultyScores].sort((a, b) => a - b);
+    const n = sortedScores.length;
+    
+    // Calculate quintiles (20% quantiles)
+    const quantiles = {
+        q20: calculatePercentile(sortedScores, 20),
+        q40: calculatePercentile(sortedScores, 40), 
+        q60: calculatePercentile(sortedScores, 60),
+        q80: calculatePercentile(sortedScores, 80)
+    };
+    
+    // Calculate basic statistics
+    const mean = sortedScores.reduce((sum, score) => sum + score, 0) / n;
+    const variance = sortedScores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / n;
+    const stdDev = Math.sqrt(variance);
+    
+    return {
+        thresholds: quantiles,
+        statistics: {
+            min: sortedScores[0],
+            max: sortedScores[n - 1],
+            mean: mean,
+            standardDeviation: stdDev,
+            median: calculatePercentile(sortedScores, 50),
+            count: n
+        },
+        // Define difficulty levels based on quantiles
+        levels: {
+            veryHard: { min: sortedScores[0], max: quantiles.q20, label: "Very Hard", class: "bg-dark" },
+            hard: { min: quantiles.q20, max: quantiles.q40, label: "Hard", class: "bg-danger" },
+            medium: { min: quantiles.q40, max: quantiles.q60, label: "Medium", class: "bg-warning text-dark" },
+            easy: { min: quantiles.q60, max: quantiles.q80, label: "Easy", class: "bg-primary" },
+            veryEasy: { min: quantiles.q80, max: sortedScores[n - 1], label: "Very Easy", class: "bg-success" }
+        }
+    };
+}
+
+/**
+ * Classify difficulty level using statistical thresholds
+ * @param {Number} difficultyScore - The difficulty score to classify
+ * @param {Object} thresholds - Threshold object from calculateStatisticalDifficultyThresholds
+ * @returns {Object} Level information
+ */
+function classifyDifficultyLevel(difficultyScore, thresholds) {
+    const { levels } = thresholds;
+    
+    if (difficultyScore <= levels.veryHard.max) {
+        return levels.veryHard;
+    } else if (difficultyScore <= levels.hard.max) {
+        return levels.hard;
+    } else if (difficultyScore <= levels.medium.max) {
+        return levels.medium;
+    } else if (difficultyScore <= levels.easy.max) {
+        return levels.easy;
+    } else {
+        return levels.veryEasy;
+    }
+}
+
+function createDifficultyLegend(statisticalModel) {
+    let legendContainer = document.querySelector('.difficulty-legend-badges');
+    
+    if (!legendContainer) {
+        const existingBadges = document.querySelector('div[style*="display: flex"][style*="gap: 12px"][style*="flex-wrap"]');
+        if (existingBadges && existingBadges.querySelector('.badge')) {
+            legendContainer = existingBadges;
+            legendContainer.className = 'difficulty-legend-badges';
+        } else {
+            // Create new container if not found
+            legendContainer = document.createElement('div');
+            legendContainer.className = 'difficulty-legend-badges';
+            legendContainer.style.display = 'flex';
+            legendContainer.style.gap = '12px';
+            legendContainer.style.flexWrap = 'wrap';
+            legendContainer.style.marginTop = '0.5rem';
+                        
+            const difficultyHeader = document.querySelector('h5[style*="font-weight: bold"]');
+            if (difficultyHeader && difficultyHeader.parentNode) {
+                difficultyHeader.parentNode.insertBefore(legendContainer, difficultyHeader.nextSibling);
+            }
+        }
+    }
+    
+    legendContainer.innerHTML = '';
+
+        Object.values(statisticalModel.levels).forEach(level => {
+        const badge = document.createElement('span');
+        badge.className = `badge ${level.class}`;
+        badge.textContent = `${level.label} (${level.min.toFixed(3)} - ${level.max.toFixed(3)})`;
+        legendContainer.appendChild(badge);
+    });
+    
+    let statsInfo = document.querySelector('.difficulty-stats-info');
+    if (!statsInfo) {
+        statsInfo = document.createElement('div');
+        statsInfo.className = 'difficulty-stats-info';
+        statsInfo.style.marginTop = '0.5rem';
+        statsInfo.style.fontSize = '0.9em';
+        statsInfo.style.color = '#666';
+        legendContainer.parentNode.insertBefore(statsInfo, legendContainer.nextSibling);
+    }
+    
+    statsInfo.innerHTML = `
+        <small>
+            <strong>Statistical Model:</strong> Quintile-based distribution | 
+            <strong>Mean:</strong> ${statisticalModel.statistics.mean.toFixed(3)} | 
+            <strong>Standard Deviation:</strong> ${statisticalModel.statistics.standardDeviation.toFixed(3)} | 
+            <strong>Sample Size:</strong> ${statisticalModel.statistics.count}
+        </small>
+    `;
+}
+
+/**
  * Initializes the APS tab with the given query options.
  * @param {Object} queryOptions - The query options to initialize the tab with.
  */
@@ -1454,74 +1595,65 @@ function showSimilarDatasets(filteredResults) {
 }
 
 /**
- * Display dataset difficulties with progress bars
+ * Display dataset difficulties using statistical model
  */
-function showDatasetDifficulties(
-  mappedPcaResults,
-  filteredResults,
-  minX,
-  maxX,
-  minY,
-  maxY
-) {
-  difficultyElement.innerHTML = "";
+function showDatasetDifficulties(mappedPcaResults, filteredResults, minX, maxX, minY, maxY) {
+    difficultyElement.innerHTML = '';
 
-  mappedPcaResults.forEach((result) => {
-    if (filteredResults.find((r) => r.id === result.id) == undefined) return;
+    // Calculate difficulty scores for all datasets (both filtered and unfiltered)
+    const allDifficultyScores = mappedPcaResults.map(result => {
+        const normX = (result.x - minX) / (maxX - minX);
+        const normY = (result.y - minY) / (maxY - minY);
+        return (normX + normY) / 2;
+    });
 
-    const dataset = datasets.find((d) => d.id === result.id);
+    // Calculate statistical thresholds based on ALL datasets
+    const statisticalModel = calculateStatisticalDifficultyThresholds(allDifficultyScores);
+    console.log('Difficulty Statistics:', statisticalModel.statistics);
+    console.log('Difficulty Thresholds:', statisticalModel.thresholds);
+    createDifficultyLegend(statisticalModel);
 
-    const normX = (result.x - minX) / (maxX - minX);
-    const normY = (result.y - minY) / (maxY - minY);
+    // Display difficulties for filtered datasets only
+    mappedPcaResults.forEach(result => {
+        const normX = (result.x - minX) / (maxX - minX);
+        const normY = (result.y - minY) / (maxY - minY);
+        const difficultyScore = (normX + normY) / 2;
+        const levelInfo = classifyDifficultyLevel(difficultyScore, statisticalModel);
 
-    const difficultyScore = (normX + normY) / 2;
-    const difficultyPercent = Math.round(difficultyScore * 100);
-    const difficultyDisplay = difficultyScore.toFixed(5);
+        if (filteredResults.find(r => r.id === result.id) == undefined)
+            return;
 
-    let level = "",
-      color = "";
-    if (difficultyScore >= 0.7) {
-      level = "Very Easy";
-      color = "bg-success";
-    } else if (difficultyScore >= 0.4) {
-      level = "Easy";
-      color = "bg-primary";
-    } else if (difficultyScore >= 0.3) {
-      level = "Medium";
-      color = "bg-warning text-dark";
-    } else if (difficultyScore >= 0.2) {
-      level = "Hard";
-      color = "bg-danger";
-    } else {
-      level = "Very Hard";
-      color = "bg-dark";
-    }
+        const dataset = datasets.find(d => d.id === result.id);
 
-    const container = document.createElement("div");
-    container.style.marginBottom = "1rem";
+        // Use statistical classification
+        const difficultyPercent = Math.round(difficultyScore * 100);
+        const difficultyDisplay = difficultyScore.toFixed(5);
 
-    const nameEl = document.createElement("div");
-    nameEl.innerHTML = `<strong>${dataset.name}</strong>`;
-    container.appendChild(nameEl);
+        const container = document.createElement('div');
+        container.style.marginBottom = '1rem';
 
-    const progressWrapper = document.createElement("div");
-    progressWrapper.className = "progress";
-    progressWrapper.style.height = "20px";
+        const nameEl = document.createElement('div');
+        nameEl.innerHTML = `<strong>${dataset.name}</strong>`;
+        container.appendChild(nameEl);
 
-    const progressBar = document.createElement("div");
-    progressBar.className = `progress-bar ${color}`;
-    progressBar.role = "progressbar";
-    progressBar.style.width = `${difficultyPercent}%`;
-    progressBar.setAttribute("aria-valuenow", difficultyPercent);
-    progressBar.setAttribute("aria-valuemin", 0);
-    progressBar.setAttribute("aria-valuemax", 100);
-    progressBar.innerText = `${level} (${difficultyDisplay})`;
+        const progressWrapper = document.createElement('div');
+        progressWrapper.className = 'progress';
+        progressWrapper.style.height = '20px';
 
-    progressWrapper.appendChild(progressBar);
-    container.appendChild(progressWrapper);
+        const progressBar = document.createElement('div');
+        progressBar.className = `progress-bar ${levelInfo.class}`;
+        progressBar.role = 'progressbar';
+        progressBar.style.width = `${difficultyPercent}%`;
+        progressBar.setAttribute('aria-valuenow', difficultyPercent);
+        progressBar.setAttribute('aria-valuemin', 0);
+        progressBar.setAttribute('aria-valuemax', 100);
+        progressBar.innerText = `${levelInfo.label} (${difficultyDisplay})`;
 
-    difficultyElement.appendChild(container);
-  });
+        progressWrapper.appendChild(progressBar);
+        container.appendChild(progressWrapper);
+
+        difficultyElement.appendChild(container);
+    });
 }
 /**
  * Get confidence level and CSS class based on confidence score
