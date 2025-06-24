@@ -784,7 +784,6 @@ function createDatasetList(
 
     // Add click event for highlighting
     item.addEventListener("click", () => {
-      console.log(`Clicked on dataset: ${dataset.name} (ID: ${dataset.id})`);
       highlightDataset(dataset.id);
     });
 
@@ -796,7 +795,6 @@ function createDatasetList(
  * Highlight a specific dataset on the chart and in the list
  */
 function highlightDataset(datasetId) {
-  console.log(`Attempting to highlight dataset: ${datasetId}`);
 
   // Clear previous highlight
   clearDatasetHighlight();
@@ -806,12 +804,7 @@ function highlightDataset(datasetId) {
 
   // Update chart highlight
   if (chartHelper && currentPcaResults) {
-    console.log("Calling chartHelper.highlightPoint...");
     chartHelper.highlightPoint(canvasElement, datasetId);
-  } else {
-    console.log("ChartHelper or currentPcaResults not available");
-    console.log("chartHelper:", !!chartHelper);
-    console.log("currentPcaResults:", !!currentPcaResults);
   }
 
   // Update list highlight
@@ -820,9 +813,6 @@ function highlightDataset(datasetId) {
   );
   if (listItem) {
     listItem.classList.add("highlighted");
-    console.log("List item highlighted successfully");
-  } else {
-    console.log(`List item not found for dataset ID: ${datasetId}`);
   }
 
   // Show clear highlight button
@@ -1609,8 +1599,6 @@ function showDatasetDifficulties(mappedPcaResults, filteredResults, minX, maxX, 
 
     // Calculate statistical thresholds based on ALL datasets
     const statisticalModel = calculateStatisticalDifficultyThresholds(allDifficultyScores);
-    console.log('Difficulty Statistics:', statisticalModel.statistics);
-    console.log('Difficulty Thresholds:', statisticalModel.thresholds);
     createDifficultyLegend(statisticalModel);
 
     // Display difficulties for filtered datasets only

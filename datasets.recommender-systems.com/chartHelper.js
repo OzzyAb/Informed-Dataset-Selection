@@ -379,7 +379,6 @@ export class ChartHelper {
     highlightPoint(canvas, pointId) {
         let existingCanvas = this.#charts.find((value) => value.canvas == canvas);
         if (existingCanvas === undefined || !existingCanvas.chart) {
-            console.log('Chart not found for highlighting');
             return;
         }
 
@@ -392,7 +391,6 @@ export class ChartHelper {
         // Find the point to highlight
         const pointIndex = dataset.data.findIndex(point => point.id === pointId);
         if (pointIndex === -1) {
-            console.log(`Point with ID ${pointId} not found in dataset`);
             return;
         }
 
@@ -418,8 +416,6 @@ export class ChartHelper {
 
         // Update the chart
         chart.update('none');
-        
-        console.log(`Successfully highlighted point ${pointId} at index ${pointIndex}`);
     }
 
     /**
@@ -576,12 +572,10 @@ export class ChartHelper {
             // Method 1: Try using OffscreenCanvas (most privacy-friendly)
             this.#exportUsingOffscreenCanvas(chartName, existingCanvas);
         } catch (error) {
-            console.log('OffscreenCanvas not supported, trying alternative method...');
             try {
                 // Method 2: Use toBlob instead of toDataURL (more privacy-friendly than toDataURL)
                 this.#exportUsingToBlob(chartName, existingCanvas);
             } catch (blobError) {
-                console.log('toBlob not supported, falling back to original method...');
                 // Method 3: Fallback to original method if others fail
                 this.#exportUsingDataURL(chartName, existingCanvas);
             }

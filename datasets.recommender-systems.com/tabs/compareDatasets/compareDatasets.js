@@ -674,7 +674,6 @@ function formatValue(value, decimals = 0) {
 }
 
 function initializeTooltips() {
-    console.log("Tooltips initialisiert!");
     document.querySelectorAll('.tooltip-icon').forEach(icon => {
         const tooltipId = icon.dataset.tooltipId;
         const tooltip = document.getElementById(tooltipId);
