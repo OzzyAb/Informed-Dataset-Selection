@@ -1,6 +1,11 @@
 <div class="tab-pane fade show active" id="aps-tab-pane" role="tabpanel" aria-labelledby="aps-tab" tabindex="0">
     <!-- APS Tab content begins here -->
-    <h2>Algorithm Performance Space</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="margin: 0;">Algorithm Performance Space</h2>
+        <button id="aps-readme-btn" type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aps-readme-modal">
+            <i class="fa-solid fa-info-circle" style="margin-right: 0.3rem;"></i>README
+        </button>
+    </div>
     <p>
         <strong>Algorithm Performance Space (APS)</strong> is a tool to help you pick better, more diverse datasets for testing your
         recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on how different algorithms
@@ -19,171 +24,189 @@
                 <span style="margin-left: 0.5rem;">You can see which datasets are very similar and might not add much new information for training and benchmarking.</span>
             </li>
         </ul>
-        The graph below visualizes this by reducing the performance results of datasets into two dimensions using
-        <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such as nDCG, Hit Ratio (HR)
-        or Recall and the selected K-value. The graph axes, <strong>Component 1</strong> and <strong>Component 2</strong>, represent
-        new composite variables that capture the most significant patterns in the original performance results. Specifically,
-        Component 1 explains the largest portion of the variance that reflects the dominant trend across datasets, whereas Component 2
-        accounts for the second-largest variance that highlights additional, independent patterns. These components are linear combinations
-        of the original results and allow us to visualize and compare complex multi-dimensional results in a simplified two-dimensional space.
-        As a result, the position of each dataset on the plot indicates its overall performance profile relative to others
-        based on the selected metrics and K-values.
-       <br style="margin-bottom: 1rem;">
-        <strong>Difficulties:</strong> The difficulty levels of datasets are determined using a <strong> quintile statistical model </strong> 
-        which calculates difficulty from their positions on the PCA graph through a two-step process. 
-        First, each dataset's X and Y coordinates are normalized to a 0-1 range and averaged to create a single difficulty score. 
-        Second, these scores are ranked across all datasets and divided into statistical quintiles (20th, 40th, 60th, 80th percentiles) 
-        to create five difficulty levels. This quintile-based approach ensures that exactly 20% of datasets fall into each difficulty 
-        category, making the classification inherently relative to the performance characteristics of the entire dataset collection. 
-        Lower average normalized coordinates correspond to higher difficulty levels, reflecting areas of the PCA space where algorithms generally struggle more.
-        <br style="margin-bottom: 1rem;"> 
-        <strong>Similarities:</strong> Dataset similarity is assessed not only by their Euclidean distances
-         on the PCA graph but also by the uncertainty in their positions, which is shown as ellipses surrounding each point. 
-         These ellipses represent the variance of each dataset along the X and Y axes. 
-         To account for this positional uncertainty, a <strong>variance-normalized distance metric</strong>
-         based on the <strong>Mahalanobis distance</strong> is employed. 
-         This method evaluates the closeness of two datasets relative to their combined uncertainty, 
-         providing a more robust measure of similarity than simple Euclidean distance alone:
-        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
-            <msup>
-                <mi>distance</mi>
-                <mn>2</mn>
-            </msup>
-            <mo>=</mo>
-            <mfrac>
-                <msup>
-                    <mrow>
-                        <mo>(</mo>
-                        <msub>
-                            <mi>x</mi>
-                            <mn>2</mn>
-                        </msub>
-                        <mo>-</mo>
-                        <msub>
-                            <mi>x</mi>
-                            <mn>1</mn>
-                        </msub>
-                        <mo>)</mo>
-                    </mrow>
-                    <mn>2</mn>
-                </msup>
-                <mrow>
-                    <msub>
-                        <mi>varX</mi>
-                        <mn>1</mn>
-                    </msub>
-                    <mo>+</mo>
-                    <msub>
-                        <mi>varX</mi>
-                        <mn>2</mn>
-                    </msub>
-                </mrow>
-            </mfrac>
-            <mo>+</mo>
-            <mfrac>
-                <msup>
-                    <mrow>
-                        <mo>(</mo>
-                        <msub>
-                            <mi>y</mi>
-                            <mn>2</mn>
-                        </msub>
-                        <mo>-</mo>
-                        <msub>
-                            <mi>y</mi>
-                            <mn>1</mn>
-                        </msub>
-                        <mo>)</mo>
-                    </mrow>
-                    <mn>2</mn>
-                </msup>
-                <mrow>
-                    <msub>
-                        <mi>varY</mi>
-                        <mn>1</mn>
-                    </msub>
-                    <mo>+</mo>
-                    <msub>
-                        <mi>varY</mi>
-                        <mn>2</mn>
-                    </msub>
-                </mrow>
-            </mfrac>
-        </math>
-        A smaller distance indicates a higher similarity between two datasets while accounting for their relative uncertainty along each axis. To quantify this similarity, a <strong>confidence score</strong> is computed by applying an <strong>exponential decay function</strong>, transforming the distance into a bounded score between 0 and 1. This approach is conceptually related to the <strong>Gaussian (RBF) kernel</strong>, commonly used in machine learning to measure similarity and statistical confidence:
-        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
-            <mi>RBF</mi>
-            <mo>(</mo>
-            <mi>x</mi>
-            <mo>,</mo>
-            <msup>
-                <mi>x</mi>
-                <mo>′</mo>
-            </msup>
-            <mo>)</mo>
-            <mo>=</mo>
-            <mi>exp</mi>
-            <mrow>
-                <mo>(</mo>
-                <mo>-</mo>
-                <mfrac>
+    </p>
+    <!-- Modal -->
+    <div class="modal fade" id="aps-readme-modal" tabindex="-1" aria-labelledby="apsReadmeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="apsReadmeModalLabel">Algorithm Performance Space (APS) README</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                The graph below visualizes this by reducing the performance results of datasets into two dimensions using
+                <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such as nDCG, Hit Ratio (HR)
+                or Recall and the selected K-value. The graph axes, <strong>Component 1</strong> and <strong>Component 2</strong>, represent
+                new composite variables that capture the most significant patterns in the original performance results. Specifically,
+                Component 1 explains the largest portion of the variance that reflects the dominant trend across datasets, whereas Component 2
+                accounts for the second-largest variance that highlights additional, independent patterns. These components are linear combinations
+                of the original results and allow us to visualize and compare complex multi-dimensional results in a simplified two-dimensional space.
+                As a result, the position of each dataset on the plot indicates its overall performance profile relative to others
+                based on the selected metrics and K-values.
+            <br style="margin-bottom: 1rem;">
+                <strong>Difficulties:</strong> The difficulty levels of datasets are determined using a <strong> quintile statistical model </strong> 
+                which calculates difficulty from their positions on the PCA graph through a two-step process. 
+                First, each dataset's X and Y coordinates are normalized to a 0-1 range and averaged to create a single difficulty score. 
+                Second, these scores are ranked across all datasets and divided into statistical quintiles (20th, 40th, 60th, 80th percentiles) 
+                to create five difficulty levels. This quintile-based approach ensures that exactly 20% of datasets fall into each difficulty 
+                category, making the classification inherently relative to the performance characteristics of the entire dataset collection. 
+                Lower average normalized coordinates correspond to higher difficulty levels, reflecting areas of the PCA space where algorithms generally struggle more.
+                <br style="margin-bottom: 1rem;"> 
+                <strong>Similarities:</strong> Dataset similarity is assessed not only by their Euclidean distances
+                on the PCA graph but also by the uncertainty in their positions, which is shown as ellipses surrounding each point. 
+                These ellipses represent the variance of each dataset along the X and Y axes. 
+                To account for this positional uncertainty, a <strong>variance-normalized distance metric</strong>
+                based on the <strong>Mahalanobis distance</strong> is employed. 
+                This method evaluates the closeness of two datasets relative to their combined uncertainty, 
+                providing a more robust measure of similarity than simple Euclidean distance alone:
+                <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
                     <msup>
-                        <mrow>
-                            <mo>||</mo>
-                            <mi>x</mi>
-                            <mo>-</mo>
-                            <msup>
-                                <mi>x</mi>
-                                <mo>′</mo>
-                            </msup>
-                            <mo>||</mo>
-                        </mrow>
+                        <mi>distance</mi>
                         <mn>2</mn>
                     </msup>
-                    <mrow>
-                        <mn>2</mn>
+                    <mo>=</mo>
+                    <mfrac>
                         <msup>
-                            <mi>σ</mi>
+                            <mrow>
+                                <mo>(</mo>
+                                <msub>
+                                    <mi>x</mi>
+                                    <mn>2</mn>
+                                </msub>
+                                <mo>-</mo>
+                                <msub>
+                                    <mi>x</mi>
+                                    <mn>1</mn>
+                                </msub>
+                                <mo>)</mo>
+                            </mrow>
                             <mn>2</mn>
                         </msup>
+                        <mrow>
+                            <msub>
+                                <mi>varX</mi>
+                                <mn>1</mn>
+                            </msub>
+                            <mo>+</mo>
+                            <msub>
+                                <mi>varX</mi>
+                                <mn>2</mn>
+                            </msub>
+                        </mrow>
+                    </mfrac>
+                    <mo>+</mo>
+                    <mfrac>
+                        <msup>
+                            <mrow>
+                                <mo>(</mo>
+                                <msub>
+                                    <mi>y</mi>
+                                    <mn>2</mn>
+                                </msub>
+                                <mo>-</mo>
+                                <msub>
+                                    <mi>y</mi>
+                                    <mn>1</mn>
+                                </msub>
+                                <mo>)</mo>
+                            </mrow>
+                            <mn>2</mn>
+                        </msup>
+                        <mrow>
+                            <msub>
+                                <mi>varY</mi>
+                                <mn>1</mn>
+                            </msub>
+                            <mo>+</mo>
+                            <msub>
+                                <mi>varY</mi>
+                                <mn>2</mn>
+                            </msub>
+                        </mrow>
+                    </mfrac>
+                </math>
+                A smaller distance indicates a higher similarity between two datasets while accounting for their relative uncertainty along each axis. To quantify this similarity, a <strong>confidence score</strong> is computed by applying an <strong>exponential decay function</strong>, transforming the distance into a bounded score between 0 and 1. This approach is conceptually related to the <strong>Gaussian (RBF) kernel</strong>, commonly used in machine learning to measure similarity and statistical confidence:
+                <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <mi>RBF</mi>
+                    <mo>(</mo>
+                    <mi>x</mi>
+                    <mo>,</mo>
+                    <msup>
+                        <mi>x</mi>
+                        <mo>′</mo>
+                    </msup>
+                    <mo>)</mo>
+                    <mo>=</mo>
+                    <mi>exp</mi>
+                    <mrow>
+                        <mo>(</mo>
+                        <mo>-</mo>
+                        <mfrac>
+                            <msup>
+                                <mrow>
+                                    <mo>||</mo>
+                                    <mi>x</mi>
+                                    <mo>-</mo>
+                                    <msup>
+                                        <mi>x</mi>
+                                        <mo>′</mo>
+                                    </msup>
+                                    <mo>||</mo>
+                                </mrow>
+                                <mn>2</mn>
+                            </msup>
+                            <mrow>
+                                <mn>2</mn>
+                                <msup>
+                                    <mi>σ</mi>
+                                    <mn>2</mn>
+                                </msup>
+                            </mrow>
+                        </mfrac>
+                        <mo>)</mo>
                     </mrow>
-                </mfrac>
-                <mo>)</mo>
-            </mrow>
-        </math>
-        In our case, we use the simplified form:
-        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
-            <mi>confidence</mi>
-            <mo>=</mo>
-            <msup>
-                <mi>e</mi>
-                <mrow>
-                    <mo>-</mo>
-                    <mi>distance</mi>
-                </mrow>
-            </msup>
-        </math>
-        This version skips the constant factor 1/(2σ²) typically found in Gaussian kernels. However, this simplification still gives the same behavior:
-<ul style="list-style: none; padding-left: 1rem; margin-top: 1rem;">
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">Small distances produce confidence values near 1.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">Large distances cause the confidence to decay rapidly toward 0.</span>
-            </li>
-            <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
-                <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
-                <span style="margin-left: 0.5rem;">The function is smooth, differentiable, and always positive.</span>
-            </li>
-        </ul>
-       Since the distance is already computed using a <strong>variance-normalized distance metric</strong>, 
-       there is no need for an additional σ parameter to control the spread. 
-       In other words, this approach automatically adapts to each dataset's uncertainty achieving 
-       the same effect that the Gaussian kernel obtains by tuning σ.
-       
-    </p>
+                </math>
+                In our case, we use the simplified form:
+                <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <mi>confidence</mi>
+                    <mo>=</mo>
+                    <msup>
+                        <mi>e</mi>
+                        <mrow>
+                            <mo>-</mo>
+                            <mi>distance</mi>
+                        </mrow>
+                    </msup>
+                </math>
+                This version skips the constant factor 1/(2σ²) typically found in Gaussian kernels. However, this simplification still gives the same behavior:
+        <ul style="list-style: none; padding-left: 1rem; margin-top: 1rem;">
+                    <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                        <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                        <span style="margin-left: 0.5rem;">Small distances produce confidence values near 1.</span>
+                    </li>
+                    <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                        <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                        <span style="margin-left: 0.5rem;">Large distances cause the confidence to decay rapidly toward 0.</span>
+                    </li>
+                    <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
+                        <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
+                        <span style="margin-left: 0.5rem;">The function is smooth, differentiable, and always positive.</span>
+                    </li>
+                </ul>
+            Since the distance is already computed using a <strong>variance-normalized distance metric</strong>, 
+            there is no need for an additional σ parameter to control the spread. 
+            In other words, this approach automatically adapts to each dataset's uncertainty achieving 
+            the same effect that the Gaussian kernel obtains by tuning σ.
+            
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <hr>
 
