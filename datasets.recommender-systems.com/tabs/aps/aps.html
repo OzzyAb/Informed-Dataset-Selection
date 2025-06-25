@@ -2,11 +2,27 @@
     <!-- APS Tab content begins here -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h2 style="margin: 0;">Algorithm Performance Space</h2>
-        <button id="aps-readme-btn" type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aps-readme-modal">
-            <i class="fa-solid fa-info-circle" style="margin-right: 0.3rem;"></i>README
+        <button id="aps-readme-btn" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#aps-readme-modal" style="font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <i class="fa-solid fa-info-circle" style="margin-right: 0.4rem;"></i>README
         </button>
     </div>
-    <p>
+    <p style="margin-bottom: 1.5rem; color: #6c757d; font-style: italic;">
+        Visualize dataset relationships through PCA analysis to identify diverse, challenging datasets for better algorithm testing — click README for detailed explanations.
+    </p>
+    
+    <!-- Modal -->
+    <div class="modal fade" id="aps-readme-modal" tabindex="-1" aria-labelledby="apsReadmeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="position: relative;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="apsReadmeModalLabel">Algorithm Performance Space (APS): README</h5>
+                    <small class="text-muted ms-2" style="display: flex; align-items: center;">
+                        <i class="fa-solid fa-arrows-up-down" style="margin-right: 0.3rem;"></i>Scroll for more content
+                    </small>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="position: relative;">
+                    <p>
         <strong>Algorithm Performance Space (APS)</strong> is a tool to help you pick better, more diverse datasets for testing your
         recommender systems algorithms. Instead of selecting popular datasets blindly, APS maps datasets based on how different algorithms
         perform on them. By using this tool:
@@ -25,15 +41,6 @@
             </li>
         </ul>
     </p>
-    <!-- Modal -->
-    <div class="modal fade" id="aps-readme-modal" tabindex="-1" aria-labelledby="apsReadmeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="apsReadmeModalLabel">Algorithm Performance Space (APS) README</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
                     <p>
                 The graph below visualizes this by reducing the performance results of datasets into two dimensions using
                 <strong>Principal Component Analysis (PCA)</strong> based on the select performance metric such as nDCG, Hit Ratio (HR)
@@ -180,7 +187,7 @@
                     </msup>
                 </math>
                 This version skips the constant factor 1/(2σ²) typically found in Gaussian kernels. However, this simplification still gives the same behavior:
-        <ul style="list-style: none; padding-left: 1rem; margin-top: 1rem;">
+                <ul style="list-style: none; padding-left: 1rem; margin-top: 1rem;">
                     <li style="display: flex; align-items: center; position: relative; padding-left: 1rem; margin-bottom: 0.5rem;">
                         <span style="position: absolute; left: 0; width: 12px; height: 12px; background-color: #8d8d8d; border-radius: 50%;"></span>
                         <span style="margin-left: 0.5rem;">Small distances produce confidence values near 1.</span>
@@ -194,21 +201,23 @@
                         <span style="margin-left: 0.5rem;">The function is smooth, differentiable, and always positive.</span>
                     </li>
                 </ul>
-            Since the distance is already computed using a <strong>variance-normalized distance metric</strong>, 
-            there is no need for an additional σ parameter to control the spread. 
-            In other words, this approach automatically adapts to each dataset's uncertainty achieving 
-            the same effect that the Gaussian kernel obtains by tuning σ.
+                Since the distance is already computed using a <strong>variance-normalized distance metric</strong>, 
+                there is no need for an additional σ parameter to control the spread. 
+                In other words, this approach automatically adapts to each dataset's uncertainty achieving 
+                the same effect that the Gaussian kernel obtains by tuning σ.
             
                     </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                 </div>
+                <!-- Scroll indicator gradient - positioned at bottom of modal content -->
+                <div style="position: absolute; bottom: 70px; left: 15px; right: 15px; height: 30px; background: linear-gradient(transparent, rgba(255,255,255,0.9)); pointer-events: none; z-index: 10;"></div>
             </div>
         </div>
     </div>
 
-    <hr>
+   <!--  <hr> -->
 
     <!-- Form controls to select performance metric an k value for the PCA -->
     <div class="row mb-3">
