@@ -343,7 +343,7 @@ function compareDatasets() {
 
     updateSortIcons();
     const table = document.querySelector("#dataset-table");
-    colorNumbersOnly(table);
+    // colorNumbersOnly(table);
 } 
 
 function createSelectAllButtons() {
@@ -481,6 +481,7 @@ function renderTableHead() {
     selectedColumns.forEach((key) => {
         const th = document.createElement('th');
         th.classList.add('sortable');
+        th.style.cursor = 'pointer'; 
         th.dataset.key = key;
 
         const spanText = document.createElement('span');
@@ -495,18 +496,36 @@ function renderTableHead() {
         };
 
         if (columnsWithInfo[key]) {
-            const infoIcon = document.createElement('span');
+            const infoIcon = document.createElement('button');
             infoIcon.classList.add('tooltip-icon');
             infoIcon.dataset.tooltipId = columnsWithInfo[key];
+            infoIcon.setAttribute('type', 'button');
+            infoIcon.setAttribute('aria-label', 'Info');
+            infoIcon.style.background = 'none';
+            infoIcon.style.border = 'none';
             infoIcon.style.cursor = 'help';
+            infoIcon.style.padding = '0';
             infoIcon.style.marginLeft = '5px';
 
             const iconElem = document.createElement('i');
             iconElem.className = 'fa-solid fa-circle-info';
             infoIcon.appendChild(iconElem);
 
+
+            infoIcon.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const tooltip = document.getElementById(columnsWithInfo[key]);
+                if (tooltip) {
+                    const isVisible = tooltip.style.display === 'block';
+                    tooltip.style.display = isVisible ? 'none' : 'block';
+                    if (!isVisible) {
+                        positionTooltip(e, tooltip);
+                    }
+                }
+            });
+
         
-            infoIcon.addEventListener('mouseover', (e) => {
+            infoIcon.addEventListener('focus', (e) => {
                 const tooltip = document.getElementById(columnsWithInfo[key]);
                 if (tooltip) {
                     tooltip.style.display = 'block';
@@ -514,14 +533,8 @@ function renderTableHead() {
                 }
             });
 
-            infoIcon.addEventListener('mousemove', (e) => {
-                const tooltip = document.getElementById(columnsWithInfo[key]);
-                if (tooltip) {
-                    positionTooltip(e, tooltip);
-                }
-            });
-
-            infoIcon.addEventListener('mouseleave', () => {
+        
+            infoIcon.addEventListener('blur', () => {
                 const tooltip = document.getElementById(columnsWithInfo[key]);
                 if (tooltip) {
                     tooltip.style.display = 'none';
@@ -533,6 +546,9 @@ function renderTableHead() {
 
         const sortIcon = document.createElement('span');
         sortIcon.classList.add('sort-icon');
+        sortIcon.style.marginLeft = '6px';
+        sortIcon.textContent = '⇵'; 
+
         th.appendChild(sortIcon);
 
         th.addEventListener('click', () => {
@@ -550,8 +566,9 @@ function renderTableHead() {
     });
 
     updateSortIcons();
-    initializeTooltips();
+    // initializeTooltips();
 }
+
 
 
 function renderDatasetComparisonTable() {
@@ -641,10 +658,11 @@ function updateSortIcons() {
         if (key === currentSortKey) {
             icon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
         } else {
-            icon.textContent = '';
+            icon.textContent = '⇵'; // Neutraler Pfeil
         }
     });
 }
+
 
 function bindSortEvents() {
     document.querySelectorAll('th.sortable').forEach(th => {
@@ -680,20 +698,31 @@ function initializeTooltips() {
 
         if (!tooltip) return;
 
-        icon.addEventListener('mouseenter', (e) => {
-            tooltip.style.display = 'block';
-            positionTooltip(e, tooltip);
-        });
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation(); 
 
-        icon.addEventListener('mousemove', (e) => {
-            positionTooltip(e, tooltip);
-        });
+            const isVisible = tooltip.style.display === 'block';
 
-        icon.addEventListener('mouseleave', () => {
-            tooltip.style.display = 'none';
+            
+            document.querySelectorAll('.tooltip').forEach(t => t.style.display = 'none');
+
+            if (!isVisible) {
+                tooltip.style.display = 'block';
+                positionTooltip(e, tooltip);
+            } else {
+                tooltip.style.display = 'none';
+            }
         });
     });
+
+   
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.tooltip').forEach(t => t.style.display = 'none');
+    });
 }
+
+
+
 
 function positionTooltip(e, tooltip) {
     
@@ -766,7 +795,8 @@ function shareDatabaseComparison() {
 
   const options = {
     tab: "compareDatasets",
-    datasets: datasetIds.join(" "), 
+    datasets: datasetIds.join(","),             
+    columns: selectedColumns.join(","),         
   };
 
   const url = getQueryString(options);
