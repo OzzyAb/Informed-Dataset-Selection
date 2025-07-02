@@ -844,6 +844,51 @@ function clearDatasetHighlight() {
   clearHighlightButton.style.display = "none";
 }
 
+function calculatePca(performanceResults, performanceMetric, kValue) {
+  const X = selectedDatasets.map((datasetId) => {
+    return selectedAlgorithms.map((algorithmId) => {
+      const value =
+        performanceResults[datasetId]?.[algorithmId]?.[performanceMetric]?.[
+        kValue
+        ];
+      return value != null ? value : NaN;
+    });
+  });
+
+  const nRows = X.length;
+  const nCols = X[0].length;
+  const colMeans = [];
+  for (let c = 0; c < nCols; c++) {
+    let sum = 0,
+      count = 0;
+    for (let r = 0; r < nRows; r++) {
+      if (!Number.isNaN(X[r][c])) {
+        sum += X[r][c];
+        count++;
+      }
+    }
+    colMeans[c] = count > 0 ? sum / count : 0;
+  }
+
+  const X_imputed = X.map((row) =>
+    row.map((v, c) => (Number.isNaN(v) ? colMeans[c] : v))
+  );
+  const pca = new PCA(X_imputed, { center: true, scale: false });
+
+  const eigenvalues = pca.getEigenvalues();
+  const totalVariance = eigenvalues.reduce((sum, v) => sum + v, 0);
+  const component1Percentage = (eigenvalues[0] / totalVariance * 100).toFixed(1);
+  const component2Percentage = (eigenvalues[1] / totalVariance * 100).toFixed(1);
+
+  return {
+    pca,
+    nCols,
+    X_imputed,
+    component1Percentage,
+    component2Percentage
+  };
+}
+
 /**
  * Main function to update PCA analysis and display results
  */
@@ -866,11 +911,21 @@ async function updatePca() {
 
   // Get performance results from the DB
   let filteredResults;
+  let component1Percentage;
+  let component2Percentage;
   if (
     selectedAlgorithms.length === algorithms.length &&
     selectedDatasets.length === datasets.length
   ) {
     // No filter is applied. Get the PCA results directly from the backend
+    const allDatasets = (await ApiService.getDatasets()).map((dataset) => dataset.id);
+    const allAlgorithms = (await ApiService.getAlgorithms()).map((algorithm) => algorithm.id);
+    const performanceResults = await ApiService.getPerformanceResults(
+      allDatasets,
+      allAlgorithms
+    );
+    ({ component1Percentage, component2Percentage } = calculatePca(performanceResults, performanceMetric, kValue));
+
     const results = await ApiService.getPcaResults();
     filteredResults = results.map((result) => {
       return {
@@ -888,35 +943,8 @@ async function updatePca() {
       selectedAlgorithms
     );
 
-    const X = selectedDatasets.map((datasetId) => {
-      return selectedAlgorithms.map((algorithmId) => {
-        const value =
-          performanceResults[datasetId]?.[algorithmId]?.[performanceMetric]?.[
-            kValue
-          ];
-        return value != null ? value : NaN;
-      });
-    });
-
-    const nRows = X.length;
-    const nCols = X[0].length;
-    const colMeans = [];
-    for (let c = 0; c < nCols; c++) {
-      let sum = 0,
-        count = 0;
-      for (let r = 0; r < nRows; r++) {
-        if (!Number.isNaN(X[r][c])) {
-          sum += X[r][c];
-          count++;
-        }
-      }
-      colMeans[c] = count > 0 ? sum / count : 0;
-    }
-
-    const X_imputed = X.map((row) =>
-      row.map((v, c) => (Number.isNaN(v) ? colMeans[c] : v))
-    );
-    const pca = new PCA(X_imputed, { center: true, scale: false });
+    let pca, nCols, X_imputed;
+    ({ pca, nCols, X_imputed, component1Percentage, component2Percentage } = calculatePca(performanceResults, performanceMetric, kValue));
     const X_pca = pca.predict(X_imputed).data.map((arr) => Array.from(arr));
 
     const results = selectedDatasets.map((datasetId, i) => {
@@ -1028,7 +1056,9 @@ async function updatePca() {
     pcaMinX,
     pcaMaxX,
     pcaMinY,
-    pcaMaxY
+    pcaMaxY,
+    component1Percentage,
+    component2Percentage
   );
 
   // Save the last selections for stale data checking
@@ -1109,7 +1139,9 @@ function drawChart(
   pcaMinX,
   pcaMaxX,
   pcaMinY,
-  pcaMaxY
+  pcaMaxY,
+  component1Percentage,
+  component2Percentage
 ) {
   const difficultyBarTopColor = "rgb(253, 196, 125)";
 
@@ -1179,12 +1211,12 @@ function drawChart(
     title: `Algorithm Performance Space (${performanceMetricName}${kValueName})`,
     axisTitles: {
       x: {
-        text: "Component 1",
+        text: "Component 1 - " + component1Percentage + "%",
         size: 14,
         bold: true,
       },
       y: {
-        text: "Component 2",
+        text: "Component 2 - " + component2Percentage + "%",
         size: 14,
         bold: true,
       },
@@ -1318,7 +1350,6 @@ async function exportCsvWithFeedback() {
       exportBtn.disabled = false;
     }, 2000);
   } catch (error) {
-    console.error("CSV export error:", error);
     // Show error feedback
     exportBtn.innerHTML = "";
     exportBtn.appendChild(icon.cloneNode(true));
