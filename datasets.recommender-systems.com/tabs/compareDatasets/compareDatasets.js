@@ -460,6 +460,7 @@ function onFilterColumn() {
     renderDatasetComparisonTable();
     renderTableHead();
     compareDatasets();
+    updateSelectAllButtonText(selectedColumns.length,datasetColumnCheckboxes.length,selectAllColumnsButtonText);
     initializeTooltips();
 }
 
