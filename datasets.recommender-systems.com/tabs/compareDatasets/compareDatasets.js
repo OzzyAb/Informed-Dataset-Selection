@@ -175,7 +175,9 @@ export async function initialize(queryOptions) {
         'numberOfItems',
         'numberOfInteractions',
         'userItemRatio',
-        'density'
+        'density',
+        'meanNumberOfRatingsByUser',
+        'meanNumberOfRatingsOnItem'
     ];
     
     let initialSelectedDatasetIds;
@@ -566,6 +568,10 @@ function renderTableHead() {
     });
 
     updateSortIcons();
+    renderDatasetComparisonTable();
+    generateUserItemRatioTooltip(datasets);
+    generateMeanRatingsPerUserTooltip(datasets);
+    generateMeanRatingsPerItemTooltip(datasets);
     // initializeTooltips();
 }
 
@@ -886,5 +892,345 @@ function exportDatasetTableCsv() {
         }
     })();
 }
+
+// This function creates the tooltip for the mean interaction per user column, which can be opened by clicking the info icon
+
+function generateUserItemRatioTooltip(datasets) {
+    const ratios = datasets
+        .map(d => d.meanNumberOfRatingsByUser)
+        .filter(r => typeof r === 'number' && !isNaN(r));
+
+    if (ratios.length === 0) return;
+
+        const container = document.getElementById('user-item-ratio-info');
+    if (!container) return;
+
+   
+        container.innerHTML = '';
+
+    
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            font-size: 0.8rem;
+            color: #333;
+        `;
+
+        
+        const explanationText = `
+            The user-item ratio is an indicator for evaluating the balance of the interaction matrix. An extreme imbalance
+            hinders the model's capacity to learn robust collaborative patterns. In contrast, a more moderate ratio helps adequate
+            interaction overlap between users and items. Therefore, a moderate user-item ratio improves the effectiveness of
+            co-embedding representations. This subsequently helps you to reduce the issues of data sparsity and the risk of
+            overfitting to popular users or items.
+        `;
+        const p = document.createElement('p');
+        p.style.cssText = `
+            border: 1px solid #ccc;
+            background-color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            padding: 8px;
+            margin-bottom: 0.5rem;
+        `;
+        p.textContent = explanationText.trim();
+        wrapper.appendChild(p);
+
+        
+        const table = document.createElement('table');
+        table.style.cssText = `
+            border: 1px solid #ccc;
+            background-color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            padding: 0px;
+            font-size: 0.8rem;
+            width: 100%;
+        `;
+
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        ['Ratio', 'Description', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk'].forEach(title => {
+            const th = document.createElement('th');
+            th.textContent = title;
+            th.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const levels = [
+            { description: 'Extremely item-heavy', risk: 'High', cause: 'Too many items with too few users', bias: 'Strong long-tail bias', coldStart: 'High (items)' },
+            { description: 'Very item-heavy', risk: 'Medium', cause: 'Items start getting ignored', bias: 'Long-tail bias', coldStart: 'Medium (items)' },
+            { description: 'Slightly item-heavy', risk: 'Low', cause: 'Good coverage of items and users', bias: 'Low', coldStart: 'Low' },
+            { description: 'Balanced', risk: 'Low', cause: 'Optimal learning conditions', bias: 'Minimal', coldStart: 'Low' },
+            { description: 'Slightly user-heavy', risk: 'Medium', cause: 'Fewer items, users converge on same content', bias: 'Popularity bias', coldStart: 'Medium (users)' },
+            { description: 'Very user-heavy', risk: 'High', cause: 'Too few items for many users', bias: 'Heavy popularity bias', coldStart: 'High (users)' },
+            { description: 'Extremely user-heavy', risk: 'High', cause: 'Severe lack of items', bias: 'Strong popularity bias', coldStart: 'High (users)' }
+        ];
+
+        const ranges = createQuantileRanges(ratios, levels);
+
+        const tbody = document.createElement('tbody');
+        ranges.forEach(r => {
+            const row = document.createElement('tr');
+            [
+                r.label,
+                r.description,
+                r.risk,
+                r.cause,
+                r.bias,
+                r.coldStart
+            ].forEach(value => {
+                const td = document.createElement('td');
+                td.textContent = value;
+                td.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+                row.appendChild(td);
+            });
+            tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        wrapper.appendChild(table);
+        container.appendChild(wrapper);
+}
+
+// This function creates the tooltip for the user-item ratio column, which can be opened by clicking the info icon
+
+function generateMeanRatingsPerUserTooltip(datasets) {
+    const ratios = datasets
+        .map(d => d.userItemRatio)
+        .filter(r => typeof r === 'number' && !isNaN(r));
+
+    if (ratios.length === 0) return;
+
+    const container = document.getElementById('mean-ratings-per-user-info');
+    if (!container) return;
+
+   
+    container.innerHTML = '';
+
+   
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+        font-size: 0.8rem;
+        color: #333;
+    `;
+
+    
+    const explanationText = `
+        A sufficient volume of user interactions is essential for learning reliable preference patterns in collaborative
+        filtering (CF) systems. However, an excessive concentration of interactions among a small subset of highly active users
+        can introduce activity bias, leading the model to overfit to these users and compromising its generalizability. Optimal
+        performance is typically achieved when users contribute enough interactions to show consistent behavioral patterns
+        without dominating the training of your model.
+    `;
+    const p = document.createElement('p');
+    p.style.cssText = `
+        border: 1px solid #ccc;
+        background-color: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        padding: 8px;
+        margin-bottom: 0.5rem;
+    `;
+    p.textContent = explanationText.trim();
+    wrapper.appendChild(p);
+
+    
+    const table = document.createElement('table');
+    table.style.cssText = `
+        border: 1px solid #ccc;
+        background-color: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        padding: 0px;
+        font-size: 0.8rem;
+        width: 100%;
+    `;
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk',].forEach(title => {
+        const th = document.createElement('th');
+        th.textContent = title;
+        th.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const levels = [
+        { risk: 'High', cause: 'Users do not interact enough to learn preferences', bias: 'Strong long-tail bias', coldStart: 'High(users))' },
+        { risk: 'Medium', cause: 'Sparse signals', bias: 'Slight popularity bias', coldStart: 'Medium (users)' },
+        { risk: 'Low', cause: 'Balanced', bias: 'Low', coldStart: 'Low' },
+        { risk: 'Medium', cause: 'Power users dominate, skewed model', bias: 'Activity bias', coldStart: 'Low' },
+        { risk: 'High', cause: 'Overfitting to active users', bias: 'User bias', coldStart: 'High' },
+    ];
+
+    const ranges = createQuantileRanges(ratios, levels);
+
+    const tbody = document.createElement('tbody');
+    ranges.forEach(r => {
+        const row = document.createElement('tr');
+        [
+            r.label,
+            r.risk,
+            r.cause,
+            r.bias,
+            r.coldStart
+        ].forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            td.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+}
+
+// This function creates the tooltip for the mean interactions per item column, which can be opened by clicking the info icon
+
+function generateMeanRatingsPerItemTooltip(datasets) {
+    const ratios = datasets
+        .map(d => d.meanNumberOfRatingsOnItem)
+        .filter(r => typeof r === 'number' && !isNaN(r));
+
+    if (ratios.length === 0) return;
+
+    const container = document.getElementById('mean-ratings-per-item-info');
+    if (!container) return;
+
+   
+    container.innerHTML = '';
+
+   
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+        font-size: 0.8rem;
+        color: #333;
+    `;
+
+    
+    const explanationText = `
+        Balanced item exposure is crucial for learning robust item representations in recommender systems. Items with sparse
+        interactions tend to be underrepresented in the learned latent space, which results in poor generalization and increase in
+        the cold-start problem. In contrast, items with high interactions can dominate the representation space and can lead
+        to popularity bias. Maintaining a moderate and well-distributed range of item interactions helps the training of your model
+        across the item catalog and improves the recommendation diversity.
+    `;
+    const p = document.createElement('p');
+    p.style.cssText = `
+        border: 1px solid #ccc;
+        background-color: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        padding: 8px;
+        margin-bottom: 0.5rem;
+    `;
+    p.textContent = explanationText.trim();
+    wrapper.appendChild(p);
+
+    
+    const table = document.createElement('table');
+    table.style.cssText = `
+        border: 1px solid #ccc;
+        background-color: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        padding: 0px;
+        font-size: 0.8rem;
+        width: 100%;
+    `;
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk',].forEach(title => {
+        const th = document.createElement('th');
+        th.textContent = title;
+        th.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const levels = [
+        { risk: 'High', cause: 'Items too underexposed for learning', bias: 'Long-tail bias', coldStart: 'High (items)' },
+        { risk: 'Medium', cause: 'Weak signals for most items', bias: 'Slight popularity bias', coldStart: 'Medium (items)' },
+        { risk: 'Low', cause: 'Balanced', bias: 'Low', coldStart: 'Low' },
+        { risk: 'Medium', cause: 'Few dominant items get most ratings', bias: 'Popularity bias', coldStart: 'Low' },
+        { risk: 'High', cause: 'Tail items get buried, head dominates', bias: 'Strong popularity bias', coldStart: 'High' }
+    ];
+
+    const ranges = createQuantileRanges(ratios, levels);
+
+    const tbody = document.createElement('tbody');
+    ranges.forEach(r => {
+        const row = document.createElement('tr');
+        [
+            r.label,
+            r.risk,
+            r.cause,
+            r.bias,
+            r.coldStart
+        ].forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            td.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+}
+
+// This function creates the statistical model for the ranges of the info icons in the dataset-tab
+function createQuantileRanges(values, levels) {
+    const sorted = [...values].sort((a, b) => a - b);
+
+    const quantile = (q) => {
+        const pos = (sorted.length - 1) * q;
+        const base = Math.floor(pos);
+        const rest = pos - base;
+        return sorted[base + 1] !== undefined
+            ? sorted[base] + rest * (sorted[base + 1] - sorted[base])
+            : sorted[base];
+    };
+
+    const count = levels.length;
+    const thresholds = [];
+    for (let i = 1; i < count; i++) {
+        thresholds.push(quantile(i / count));
+    }
+
+    const ranges = [];
+    for (let i = 0; i < count; i++) {
+        const min = i === 0 ? -Infinity : thresholds[i - 1];
+        const max = i === count - 1 ? Infinity : thresholds[i];
+
+        const label = i === 0
+            ? `< ${max.toFixed(2)}`
+            : i === count - 1
+            ? `> ${min.toFixed(2)}`
+            : `${min.toFixed(2)} - ${max.toFixed(2)}`;
+
+        ranges.push({
+            label,
+            ...levels[i]
+        });
+    }
+
+    return ranges;
+}
+
 
 
