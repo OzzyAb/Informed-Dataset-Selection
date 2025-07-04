@@ -313,6 +313,7 @@ async function onFilterDataset(e) {
     await compareDatasets();
 }
 
+// main function of the comparison
 
 function compareDatasets() {
     const selectedDatasetIds = Array.from(document.querySelectorAll('#dataset-comparison-filter input[type="checkbox"]:checked'))
@@ -471,6 +472,8 @@ function updateColumnHeaderLabel() {
         datasetColumnHeaderElement.textContent = `(${selectedColumns.length} selected)`;
     }
 }
+
+//renders the table head of the dataset tab
 function renderTableHead() {
     const theadRow = document.querySelector('#dataset-table thead tr');
     if (!theadRow) {
@@ -496,7 +499,7 @@ function renderTableHead() {
             meanNumberOfRatingsByUser: 'mean-ratings-per-user-info',
             meanNumberOfRatingsOnItem: 'mean-ratings-per-item-info',
         };
-
+        //creates the info icons for columsn in columnsWithIndo
         if (columnsWithInfo[key]) {
             const infoIcon = document.createElement('button');
             infoIcon.classList.add('tooltip-icon');
@@ -508,11 +511,14 @@ function renderTableHead() {
             infoIcon.style.cursor = 'help';
             infoIcon.style.padding = '0';
             infoIcon.style.marginLeft = '5px';
+            
 
             const iconElem = document.createElement('i');
             iconElem.className = 'fa-solid fa-circle-info';
             infoIcon.appendChild(iconElem);
 
+
+            //The tooltip reveals after clicking on the info icon
 
             infoIcon.addEventListener('click', (e) => {
                 e.stopPropagation(); 
@@ -576,6 +582,7 @@ function renderTableHead() {
 }
 
 
+//renders the body of the dataset comparison table
 
 function renderDatasetComparisonTable() {
     if (!Array.isArray(datasets) || datasets.length === 0) {
@@ -633,7 +640,7 @@ function renderDatasetComparisonTable() {
     }
 }
  
-
+// main function of the sorting 
 
 function sortDatasets(datasets, key) {
     return datasets.sort((a, b) => {
@@ -664,7 +671,7 @@ function updateSortIcons() {
         if (key === currentSortKey) {
             icon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
         } else {
-            icon.textContent = '⇵'; // Neutraler Pfeil
+            icon.textContent = '⇵'; 
         }
     });
 }
@@ -695,8 +702,9 @@ function bindSortEvents() {
 function formatValue(value, decimals = 0) {
     if (value === null || value === undefined) return '-';
     return typeof value === 'number' ? value.toFixed(decimals) : value;
-}
+} 
 
+// initializes the tooltips of the dataset-tab
 function initializeTooltips() {
     document.querySelectorAll('.tooltip-icon').forEach(icon => {
         const tooltipId = icon.dataset.tooltipId;
@@ -998,11 +1006,14 @@ function generateUserItemRatioTooltip(datasets) {
 // This function creates the tooltip for the user-item ratio column, which can be opened by clicking the info icon
 
 function generateMeanRatingsPerUserTooltip(datasets) {
+    // Extract the User-Item Ratio from all Datasets
     const ratios = datasets
         .map(d => d.userItemRatio)
         .filter(r => typeof r === 'number' && !isNaN(r));
 
     if (ratios.length === 0) return;
+
+    // Creates the container of the tooltip
 
     const container = document.getElementById('mean-ratings-per-user-info');
     if (!container) return;
@@ -1020,7 +1031,7 @@ function generateMeanRatingsPerUserTooltip(datasets) {
         color: #333;
     `;
 
-    
+    // Add a text for explanation
     const explanationText = `
         A sufficient volume of user interactions is essential for learning reliable preference patterns in collaborative
         filtering (CF) systems. However, an excessive concentration of interactions among a small subset of highly active users
@@ -1039,7 +1050,7 @@ function generateMeanRatingsPerUserTooltip(datasets) {
     p.textContent = explanationText.trim();
     wrapper.appendChild(p);
 
-    
+    //Creates the table of the tooltip
     const table = document.createElement('table');
     table.style.cssText = `
         border: 1px solid #ccc;
@@ -1051,6 +1062,9 @@ function generateMeanRatingsPerUserTooltip(datasets) {
     `;
 
     const thead = document.createElement('thead');
+
+
+    //header of the table
     const headRow = document.createElement('tr');
     ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk',].forEach(title => {
         const th = document.createElement('th');
@@ -1060,7 +1074,7 @@ function generateMeanRatingsPerUserTooltip(datasets) {
     });
     thead.appendChild(headRow);
     table.appendChild(thead);
-
+    //content of the table
     const levels = [
         { risk: 'High', cause: 'Users do not interact enough to learn preferences', bias: 'Strong long-tail bias', coldStart: 'High(users))' },
         { risk: 'Medium', cause: 'Sparse signals', bias: 'Slight popularity bias', coldStart: 'Medium (users)' },
@@ -1068,7 +1082,7 @@ function generateMeanRatingsPerUserTooltip(datasets) {
         { risk: 'Medium', cause: 'Power users dominate, skewed model', bias: 'Activity bias', coldStart: 'Low' },
         { risk: 'High', cause: 'Overfitting to active users', bias: 'User bias', coldStart: 'High' },
     ];
-
+    // Calculate the ranges with QuantileRanges
     const ranges = createQuantileRanges(ratios, levels);
 
     const tbody = document.createElement('tbody');
@@ -1097,12 +1111,14 @@ function generateMeanRatingsPerUserTooltip(datasets) {
 // This function creates the tooltip for the mean interactions per item column, which can be opened by clicking the info icon
 
 function generateMeanRatingsPerItemTooltip(datasets) {
+    
+    // Get the meanNumberOfRatingsOnItem values from all datasets
     const ratios = datasets
         .map(d => d.meanNumberOfRatingsOnItem)
         .filter(r => typeof r === 'number' && !isNaN(r));
 
     if (ratios.length === 0) return;
-
+    // Creates container for the tooltips
     const container = document.getElementById('mean-ratings-per-item-info');
     if (!container) return;
 
@@ -1119,7 +1135,7 @@ function generateMeanRatingsPerItemTooltip(datasets) {
         color: #333;
     `;
 
-    
+    //explanation Text
     const explanationText = `
         Balanced item exposure is crucial for learning robust item representations in recommender systems. Items with sparse
         interactions tend to be underrepresented in the learned latent space, which results in poor generalization and increase in
@@ -1167,7 +1183,7 @@ function generateMeanRatingsPerItemTooltip(datasets) {
         { risk: 'Medium', cause: 'Few dominant items get most ratings', bias: 'Popularity bias', coldStart: 'Low' },
         { risk: 'High', cause: 'Tail items get buried, head dominates', bias: 'Strong popularity bias', coldStart: 'High' }
     ];
-
+    //Calculate the ranges
     const ranges = createQuantileRanges(ratios, levels);
 
     const tbody = document.createElement('tbody');
