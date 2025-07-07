@@ -1123,8 +1123,11 @@ function generateMeanRatingsPerItemTooltip(datasets) {
     const explanation = document.createElement('div');
     explanation.innerHTML = `
         <p>
-            Balanced item exposure is crucial for learning robust item representations...
-            Maintaining a moderate and well-distributed range of item interactions helps improve recommendation diversity.
+            Balanced item exposure is crucial for learning robust item representations in recommender systems. Items with sparse
+            interactions tend to be underrepresented in the learned latent space, which results in poor generalization and increase in
+            the cold-start problem. In contrast, items with high interactions can dominate the representation space and can lead
+            to popularity bias. Maintaining a moderate and well-distributed range of item interactions helps the training of your model
+            across the item catalog and improves the recommendation diversity.
         </p>
     `;
     explanation.style.cssText = `
