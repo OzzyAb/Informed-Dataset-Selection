@@ -32,6 +32,9 @@ var selectAllColumnsButtonText = null;
 
 var shareButton = null;
 
+let columnsWithInfo = {};
+
+
 const columnDisplayNames = {
         name: "Dataset",
         numberOfUsers: "Number of Users",
@@ -144,10 +147,11 @@ export async function initialize(queryOptions) {
     infoElements['mean-ratings-per-item-info'] = document.getElementById('mean-ratings-per-item-info');
     infoElements['mean-ratings-per-item-info-p'] = document.getElementById('mean-ratings-per-item-info-p');
 
-    document.body.appendChild(infoElements['user-item-ratio-info']);
-    document.body.appendChild(infoElements['mean-ratings-per-user-info']);
-    document.body.appendChild(infoElements['mean-ratings-per-item-info']);
-
+    
+    //document.body.appendChild(infoElements['user-item-ratio-info']);
+    //document.body.appendChild(infoElements['mean-ratings-per-user-info']);
+    //document.body.appendChild(infoElements['mean-ratings-per-item-info']);
+    
     const table = document.querySelector("#dataset-table");
     tableHeadElement = table.querySelector("thead");
     tableBodyElement = table.querySelector("tbody");
@@ -267,7 +271,55 @@ export async function initialize(queryOptions) {
             }
 
             compareDatasets();
-            initializeTooltips();
+            
+        });
+    });
+
+    columnsWithInfo = {
+        userItemRatio: {
+            modalId: 'user-item-ratio-modal',
+            generator: () => generateUserItemRatioTooltip(datasets),
+        },
+        meanNumberOfRatingsByUser: {
+            modalId: 'mean-ratings-per-user-modal',
+            generator: () => generateMeanRatingsPerUserTooltip(datasets),
+        },
+        meanNumberOfRatingsOnItem: {
+            modalId: 'mean-ratings-per-item-modal',
+            generator: () => generateMeanRatingsPerItemTooltip(datasets),
+        },
+    };
+
+    const theadRow = document.querySelector('#dataset-table thead tr');
+    if (theadRow) {
+        theadRow.addEventListener('click', (event) => {
+            const btn = event.target.closest('button.tooltip-icon');
+            if (!btn) return;
+
+            event.stopPropagation();
+
+            const modalId = btn.dataset.modalId;
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                console.log("Modal geöffnet:", modalId);
+
+                // NEU: Tooltip dynamisch erzeugen
+                const key = btn.closest('th')?.dataset.key;
+                if (columnsWithInfo[key]?.generator) {
+                    columnsWithInfo[key].generator(); // Tooltip generieren
+                }
+
+            } else {
+                console.warn("Modal nicht gefunden:", modalId);
+            }
+        });
+    }
+
+    document.querySelectorAll('.info-modal-close').forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = button.closest('.info-modal-overlay');
+            if (modal) modal.style.display = 'none';
         });
     });
 
@@ -293,7 +345,7 @@ export async function initialize(queryOptions) {
         metadataElements,
         'name'
     );
-    initializeTooltips();
+    
 }
 
 async function onFilterDataset(e) {
@@ -467,7 +519,7 @@ function onFilterColumn() {
     renderTableHead();
     compareDatasets();
     updateSelectAllButtonText(selectedColumns.length,datasetColumnCheckboxes.length,selectAllColumnsButtonText);
-    initializeTooltips();
+    
 }
 
 function updateColumnHeaderLabel() {
@@ -490,27 +542,34 @@ function renderTableHead() {
 
     theadRow.innerHTML = '';
 
+    const columnsWithInfo = {
+        userItemRatio: {
+            modalId: 'user-item-ratio-modal',
+            generator: () => generateUserItemRatioTooltip(datasets),
+        },
+        meanNumberOfRatingsByUser: {
+            modalId: 'mean-ratings-per-user-modal',
+            generator: () => generateMeanRatingsPerUserTooltip(datasets),
+        },
+        meanNumberOfRatingsOnItem: {
+            modalId: 'mean-ratings-per-item-modal',
+            generator: () => generateMeanRatingsPerItemTooltip(datasets),
+        },
+    };
+
     selectedColumns.forEach((key) => {
         const th = document.createElement('th');
         th.classList.add('sortable');
-        th.style.cursor = 'pointer'; 
+        th.style.cursor = 'pointer';
         th.dataset.key = key;
 
         const spanText = document.createElement('span');
         spanText.textContent = columnDisplayNames[key] || key;
         th.appendChild(spanText);
 
-        
-        const columnsWithInfo = {
-            userItemRatio: 'user-item-ratio-info',
-            meanNumberOfRatingsByUser: 'mean-ratings-per-user-info',
-            meanNumberOfRatingsOnItem: 'mean-ratings-per-item-info',
-        };
-        //creates the info icons for columsn in columnsWithIndo
         if (columnsWithInfo[key]) {
             const infoIcon = document.createElement('button');
             infoIcon.classList.add('tooltip-icon');
-            infoIcon.dataset.tooltipId = columnsWithInfo[key];
             infoIcon.setAttribute('type', 'button');
             infoIcon.setAttribute('aria-label', 'Info');
             infoIcon.style.background = 'none';
@@ -518,43 +577,15 @@ function renderTableHead() {
             infoIcon.style.cursor = 'help';
             infoIcon.style.padding = '0';
             infoIcon.style.marginLeft = '5px';
-            
 
             const iconElem = document.createElement('i');
             iconElem.className = 'fa-solid fa-circle-info';
             infoIcon.appendChild(iconElem);
 
+            // Wichtig: Modal-ID als data-Attribut speichern
+            infoIcon.dataset.modalId = columnsWithInfo[key].modalId;
 
-            //The tooltip reveals after clicking on the info icon
-
-            infoIcon.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                const tooltip = document.getElementById(columnsWithInfo[key]);
-                if (tooltip) {
-                    const isVisible = tooltip.style.display === 'block';
-                    tooltip.style.display = isVisible ? 'none' : 'block';
-                    if (!isVisible) {
-                        positionTooltip(e, tooltip);
-                    }
-                }
-            });
-
-        
-            infoIcon.addEventListener('focus', (e) => {
-                const tooltip = document.getElementById(columnsWithInfo[key]);
-                if (tooltip) {
-                    tooltip.style.display = 'block';
-                    positionTooltip(e, tooltip);
-                }
-            });
-
-        
-            infoIcon.addEventListener('blur', () => {
-                const tooltip = document.getElementById(columnsWithInfo[key]);
-                if (tooltip) {
-                    tooltip.style.display = 'none';
-                }
-            });
+            
 
             th.appendChild(infoIcon);
         }
@@ -562,19 +593,21 @@ function renderTableHead() {
         const sortIcon = document.createElement('span');
         sortIcon.classList.add('sort-icon');
         sortIcon.style.marginLeft = '6px';
-        sortIcon.textContent = '⇵'; 
-
+        sortIcon.textContent = '⇵';
         th.appendChild(sortIcon);
 
-        th.addEventListener('click', () => {
+        th.addEventListener('click', (event) => {
+            if (event.target.closest('button.tooltip-icon')) {
+                return; // Klick auf Info-Icon ignorieren für Sortierung
+            }
             if (currentSortKey === key) {
                 currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
             } else {
                 currentSortKey = key;
                 currentSortDirection = 'asc';
             }
-            renderTableHead(); 
-            renderDatasetComparisonTable(); 
+            renderTableHead();
+            renderDatasetComparisonTable();
         });
 
         theadRow.appendChild(th);
@@ -582,11 +615,8 @@ function renderTableHead() {
 
     updateSortIcons();
     renderDatasetComparisonTable();
-    generateUserItemRatioTooltip(datasets);
-    generateMeanRatingsPerUserTooltip(datasets);
-    generateMeanRatingsPerItemTooltip(datasets);
-    // initializeTooltips();
 }
+
 
 
 //renders the body of the dataset comparison table
@@ -640,10 +670,6 @@ function renderDatasetComparisonTable() {
         });
 
         tableBodyElement.appendChild(row);
-    }
-
-    if (typeof initializeTooltips === 'function') {
-        initializeTooltips();
     }
 }
  
@@ -700,7 +726,7 @@ function bindSortEvents() {
             }
 
             compareDatasets();
-            initializeTooltips();
+            
         });
     });
 }
@@ -710,71 +736,6 @@ function formatValue(value, decimals = 0) {
     if (value === null || value === undefined) return '-';
     return typeof value === 'number' ? value.toFixed(decimals) : value;
 } 
-
-// initializes the tooltips of the dataset-tab
-function initializeTooltips() {
-    document.querySelectorAll('.tooltip-icon').forEach(icon => {
-        const tooltipId = icon.dataset.tooltipId;
-        const tooltip = document.getElementById(tooltipId);
-
-        if (!tooltip) return;
-
-        icon.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-
-            const isVisible = tooltip.style.display === 'block';
-
-            
-            document.querySelectorAll('.tooltip').forEach(t => t.style.display = 'none');
-
-            if (!isVisible) {
-                tooltip.style.display = 'block';
-                positionTooltip(e, tooltip);
-            } else {
-                tooltip.style.display = 'none';
-            }
-        });
-    });
-
-   
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.tooltip').forEach(t => t.style.display = 'none');
-    });
-}
-
-
-
-
-function positionTooltip(e, tooltip) {
-    
-    tooltip.style.visibility = 'hidden';
-    tooltip.style.display = 'block';
-
-    const tooltipRect = tooltip.getBoundingClientRect();
-    const pageWidth = window.innerWidth;
-    const pageHeight = window.innerHeight;
-
-    let left = e.clientX + 10;
-    let top = e.clientY + 10;
-
-    
-    if (left + tooltipRect.width > pageWidth) {
-        left = e.clientX - tooltipRect.width - 10;
-    }
-
-   
-    if (top + tooltipRect.height > pageHeight) {
-        top = e.clientY - tooltipRect.height - 10;
-    }
-
-    tooltip.style.left = `${left + window.scrollX}px`;
-    tooltip.style.top = `${top + window.scrollY}px`;
-
-    
-    tooltip.style.visibility = 'visible';
-}
-
-
 
 
 function colorNumbersOnly(table) {
@@ -910,7 +871,9 @@ function exportDatasetTableCsv() {
     })();
 }
 
-// This function creates the tooltip for the mean interaction per user column, which can be opened by clicking the info icon
+
+
+// This function creates the tooltip for the user-item ratio column, which can be opened by clicking the info icon
 
 function generateUserItemRatioTooltip(datasets) {
     const ratios = datasets
@@ -919,194 +882,202 @@ function generateUserItemRatioTooltip(datasets) {
 
     if (ratios.length === 0) return;
 
-        const container = document.getElementById('user-item-ratio-info');
-    if (!container) return;
+    const modal = document.getElementById('user-item-ratio-modal');
+    const body = document.getElementById('user-item-ratio-modal-body');
+    if (!modal || !body) return;
 
-   
-        container.innerHTML = '';
+    body.innerHTML = ''; // clear previous content
 
-    
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = `
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            font-size: 0.8rem;
-            color: #333;
-        `;
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `font-size: 0.85rem; color: #333;`;
 
-        
-        const explanationText = `
-            The user-item ratio is an indicator for evaluating the balance of the interaction matrix. An extreme imbalance
-            hinders the model's capacity to learn robust collaborative patterns. In contrast, a more moderate ratio helps adequate
-            interaction overlap between users and items. Therefore, a moderate user-item ratio improves the effectiveness of
-            co-embedding representations. This subsequently helps you to reduce the issues of data sparsity and the risk of
-            overfitting to popular users or items.
-        `;
-        const p = document.createElement('p');
-        p.style.cssText = `
-            border: 1px solid #ccc;
-            background-color: white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            padding: 8px;
-            margin-bottom: 0.5rem;
-        `;
-        p.textContent = explanationText.trim();
-        wrapper.appendChild(p);
+    const explanationText = `
+        The user-item ratio is an indicator for evaluating the balance of the interaction matrix. An extreme imbalance
+        hinders the model's capacity to learn robust collaborative patterns. In contrast, a more moderate ratio helps adequate
+        interaction overlap between users and items. Therefore, a moderate user-item ratio improves the effectiveness of
+        co-embedding representations. This subsequently helps you to reduce the issues of data sparsity and the risk of
+        overfitting to popular users or items.
+    `;
 
-        
-        const table = document.createElement('table');
-        table.style.cssText = `
-            border: 1px solid #ccc;
-            background-color: white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            padding: 0px;
-            font-size: 0.8rem;
-            width: 100%;
-        `;
+    const explanation = document.createElement('div');
+    explanation.innerHTML = `<p>${explanationText}</p>`;
+    explanation.style.cssText = `
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    `;
+    wrapper.appendChild(explanation);
 
-        const thead = document.createElement('thead');
-        const headRow = document.createElement('tr');
-        ['Ratio', 'Description', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk'].forEach(title => {
-            const th = document.createElement('th');
-            th.textContent = title;
-            th.style = 'border: 1px solid #ddd; padding: 4px 8px;';
-            headRow.appendChild(th);
+    const disclaimer = document.createElement('div');
+    disclaimer.className = 'difficulty-disclaimer';
+    disclaimer.style.cssText = `
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 0.375rem;
+        color: #856404;
+    `;
+    disclaimer.innerHTML = `
+        <strong>Important note:</strong> The displayed ranges are computed using a quantile-based statistical distribution.
+    `;
+    wrapper.appendChild(disclaimer);
+
+    const table = document.createElement('table');
+    table.style.cssText = `
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    `;
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    ['Ratio', 'Description', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk'].forEach(title => {
+        const th = document.createElement('th');
+        th.textContent = title;
+        th.style = 'border: 1px solid #ccc; padding: 6px; background: #e9ecef;';
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const levels = [
+        { description: 'Extremely item-heavy', risk: 'High', cause: 'Too many items with too few users', bias: 'Strong long-tail bias', coldStart: 'High (items)' },
+        { description: 'Very item-heavy', risk: 'Medium', cause: 'Items start getting ignored', bias: 'Long-tail bias', coldStart: 'Medium (items)' },
+        { description: 'Slightly item-heavy', risk: 'Low', cause: 'Good coverage of items and users', bias: 'Low', coldStart: 'Low' },
+        { description: 'Balanced', risk: 'Low', cause: 'Optimal learning conditions', bias: 'Minimal', coldStart: 'Low' },
+        { description: 'Slightly user-heavy', risk: 'Medium', cause: 'Fewer items, users converge on same content', bias: 'Popularity bias', coldStart: 'Medium (users)' },
+        { description: 'Very user-heavy', risk: 'High', cause: 'Too few items for many users', bias: 'Heavy popularity bias', coldStart: 'High (users)' },
+        { description: 'Extremely user-heavy', risk: 'High', cause: 'Severe lack of items', bias: 'Strong popularity bias', coldStart: 'High (users)' }
+    ];
+
+    const ranges = createQuantileRanges(ratios, levels);
+
+    const tbody = document.createElement('tbody');
+    ranges.forEach(r => {
+        const row = document.createElement('tr');
+        [
+            r.label,
+            r.description,
+            r.risk,
+            r.cause,
+            r.bias,
+            r.coldStart
+        ].forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            td.style = 'border: 1px solid #ccc; padding: 6px;';
+            row.appendChild(td);
         });
-        thead.appendChild(headRow);
-        table.appendChild(thead);
+        tbody.appendChild(row);
+    });
 
-        const levels = [
-            { description: 'Extremely item-heavy', risk: 'High', cause: 'Too many items with too few users', bias: 'Strong long-tail bias', coldStart: 'High (items)' },
-            { description: 'Very item-heavy', risk: 'Medium', cause: 'Items start getting ignored', bias: 'Long-tail bias', coldStart: 'Medium (items)' },
-            { description: 'Slightly item-heavy', risk: 'Low', cause: 'Good coverage of items and users', bias: 'Low', coldStart: 'Low' },
-            { description: 'Balanced', risk: 'Low', cause: 'Optimal learning conditions', bias: 'Minimal', coldStart: 'Low' },
-            { description: 'Slightly user-heavy', risk: 'Medium', cause: 'Fewer items, users converge on same content', bias: 'Popularity bias', coldStart: 'Medium (users)' },
-            { description: 'Very user-heavy', risk: 'High', cause: 'Too few items for many users', bias: 'Heavy popularity bias', coldStart: 'High (users)' },
-            { description: 'Extremely user-heavy', risk: 'High', cause: 'Severe lack of items', bias: 'Strong popularity bias', coldStart: 'High (users)' }
-        ];
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    body.appendChild(wrapper);
 
-        const ranges = createQuantileRanges(ratios, levels);
+    modal.style.display = 'flex';
 
-        const tbody = document.createElement('tbody');
-        ranges.forEach(r => {
-            const row = document.createElement('tr');
-            [
-                r.label,
-                r.description,
-                r.risk,
-                r.cause,
-                r.bias,
-                r.coldStart
-            ].forEach(value => {
-                const td = document.createElement('td');
-                td.textContent = value;
-                td.style = 'border: 1px solid #ddd; padding: 4px 8px;';
-                row.appendChild(td);
-            });
-            tbody.appendChild(row);
-        });
+    modal.querySelector('.info-modal-close').onclick = () => {
+        modal.style.display = 'none';
+    };
 
-        table.appendChild(tbody);
-        wrapper.appendChild(table);
-        container.appendChild(wrapper);
+    window.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
 }
 
-// This function creates the tooltip for the user-item ratio column, which can be opened by clicking the info icon
-
+// This function creates the tooltip for the mean interaction per user column, which can be opened by clicking the info icon
 function generateMeanRatingsPerUserTooltip(datasets) {
-    // Extract the User-Item Ratio from all Datasets
     const ratios = datasets
         .map(d => d.userItemRatio)
         .filter(r => typeof r === 'number' && !isNaN(r));
 
     if (ratios.length === 0) return;
 
-    // Creates the container of the tooltip
+    const modal = document.getElementById('mean-ratings-per-user-modal');
+    const body = document.getElementById('mean-ratings-per-user-modal-body');
+    if (!modal || !body) return;
 
-    const container = document.getElementById('mean-ratings-per-user-info');
-    if (!container) return;
+    body.innerHTML = ''; // clear previous content
 
-   
-    container.innerHTML = '';
-
-   
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = `
-        max-width: 600px;
-        width: 100%;
-        margin: 0 auto;
-        font-size: 0.8rem;
-        color: #333;
-    `;
+    wrapper.style.cssText = `font-size: 0.85rem; color: #333;`;
 
-    // Add a text for explanation
     const explanationText = `
         A sufficient volume of user interactions is essential for learning reliable preference patterns in collaborative
         filtering (CF) systems. However, an excessive concentration of interactions among a small subset of highly active users
-        can introduce activity bias, leading the model to overfit to these users and compromising its generalizability. Optimal
-        performance is typically achieved when users contribute enough interactions to show consistent behavioral patterns
+        can introduce activity bias, leading the model to overfit to these users and compromising its generalizability.
+        Optimal performance is typically achieved when users contribute enough interactions to show consistent behavioral patterns
         without dominating the training of your model.
     `;
-    const p = document.createElement('p');
-    p.style.cssText = `
-        border: 1px solid #ccc;
-        background-color: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        padding: 8px;
-        margin-bottom: 0.5rem;
-    `;
-    p.textContent = explanationText.trim();
-    wrapper.appendChild(p);
 
-    //Creates the table of the tooltip
+    const explanation = document.createElement('div');
+    explanation.innerHTML = `<p>${explanationText}</p>`;
+    explanation.style.cssText = `
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    `;
+    wrapper.appendChild(explanation);
+
+    const disclaimer = document.createElement('div');
+    disclaimer.className = 'difficulty-disclaimer';
+    disclaimer.style.cssText = `
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 0.375rem;
+        color: #856404;
+    `;
+    disclaimer.innerHTML = `
+        <strong>Important note:</strong> The displayed ranges are computed using a quantile-based statistical distribution.
+    `;
+    wrapper.appendChild(disclaimer);
+
     const table = document.createElement('table');
     table.style.cssText = `
-        border: 1px solid #ccc;
-        background-color: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        padding: 0px;
-        font-size: 0.8rem;
         width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
     `;
+    
 
     const thead = document.createElement('thead');
-
-
-    //header of the table
     const headRow = document.createElement('tr');
-    ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk',].forEach(title => {
+    ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk'].forEach(title => {
         const th = document.createElement('th');
         th.textContent = title;
-        th.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+        th.style = 'border: 1px solid #ccc; padding: 6px; background: #e9ecef;';
         headRow.appendChild(th);
     });
     thead.appendChild(headRow);
     table.appendChild(thead);
-    //content of the table
+
     const levels = [
-        { risk: 'High', cause: 'Users do not interact enough to learn preferences', bias: 'Strong long-tail bias', coldStart: 'High(users))' },
+        { risk: 'High', cause: 'Users do not interact enough to learn preferences', bias: 'Strong long-tail bias', coldStart: 'High (users)' },
         { risk: 'Medium', cause: 'Sparse signals', bias: 'Slight popularity bias', coldStart: 'Medium (users)' },
         { risk: 'Low', cause: 'Balanced', bias: 'Low', coldStart: 'Low' },
         { risk: 'Medium', cause: 'Power users dominate, skewed model', bias: 'Activity bias', coldStart: 'Low' },
         { risk: 'High', cause: 'Overfitting to active users', bias: 'User bias', coldStart: 'High' },
     ];
-    // Calculate the ranges with QuantileRanges
+
     const ranges = createQuantileRanges(ratios, levels);
 
     const tbody = document.createElement('tbody');
     ranges.forEach(r => {
         const row = document.createElement('tr');
-        [
-            r.label,
-            r.risk,
-            r.cause,
-            r.bias,
-            r.coldStart
-        ].forEach(value => {
+        [r.label, r.risk, r.cause, r.bias, r.coldStart].forEach(value => {
             const td = document.createElement('td');
             td.textContent = value;
-            td.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+            td.style = 'border: 1px solid #ccc; padding: 6px;';
             row.appendChild(td);
         });
         tbody.appendChild(row);
@@ -1114,100 +1085,106 @@ function generateMeanRatingsPerUserTooltip(datasets) {
 
     table.appendChild(tbody);
     wrapper.appendChild(table);
-    container.appendChild(wrapper);
+    body.appendChild(wrapper);
+
+    modal.style.display = 'flex'; 
+
+    // Close modal logic
+    modal.querySelector('.info-modal-close').onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    window.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
 }
 
 // This function creates the tooltip for the mean interactions per item column, which can be opened by clicking the info icon
 
 function generateMeanRatingsPerItemTooltip(datasets) {
-    
-    // Get the meanNumberOfRatingsOnItem values from all datasets
-    const ratios = datasets
+
+    console.log("Modal:", document.getElementById('mean-ratings-per-item-modal'));
+    console.log("Modal Body:", document.getElementById('mean-ratings-per-item-modal-body'));
+    const values = datasets
         .map(d => d.meanNumberOfRatingsOnItem)
-        .filter(r => typeof r === 'number' && !isNaN(r));
+        .filter(v => typeof v === 'number' && !isNaN(v));
 
-    if (ratios.length === 0) return;
-    // Creates container for the tooltips
-    const container = document.getElementById('mean-ratings-per-item-info');
-    if (!container) return;
+    if (values.length === 0) return;
 
-   
-    container.innerHTML = '';
+    const modal = document.getElementById('mean-ratings-per-item-modal');
+    const body = document.getElementById('mean-ratings-per-item-modal-body');
+    body.innerHTML = ''; 
 
-   
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = `
-        max-width: 600px;
-        width: 100%;
-        margin: 0 auto;
-        font-size: 0.8rem;
-        color: #333;
-    `;
+    wrapper.style.cssText = `font-size: 0.85rem; color: #333;`;
 
-    //explanation Text
-    const explanationText = `
-        Balanced item exposure is crucial for learning robust item representations in recommender systems. Items with sparse
-        interactions tend to be underrepresented in the learned latent space, which results in poor generalization and increase in
-        the cold-start problem. In contrast, items with high interactions can dominate the representation space and can lead
-        to popularity bias. Maintaining a moderate and well-distributed range of item interactions helps the training of your model
-        across the item catalog and improves the recommendation diversity.
+    const explanation = document.createElement('div');
+    explanation.innerHTML = `
+        <p>
+            Balanced item exposure is crucial for learning robust item representations...
+            Maintaining a moderate and well-distributed range of item interactions helps improve recommendation diversity.
+        </p>
     `;
-    const p = document.createElement('p');
-    p.style.cssText = `
-        border: 1px solid #ccc;
-        background-color: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        padding: 8px;
-        margin-bottom: 0.5rem;
+    explanation.style.cssText = `
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
     `;
-    p.textContent = explanationText.trim();
-    wrapper.appendChild(p);
+    wrapper.appendChild(explanation);
 
-    
+    const disclaimer = document.createElement('div');
+    disclaimer.className = 'difficulty-disclaimer';
+    disclaimer.style.cssText = `
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 0.375rem;
+        color: #856404;
+    `;
+    disclaimer.innerHTML = `
+        <strong>Important note:</strong> The displayed ranges are computed using a quantile-based statistical distribution.
+    `;
+    wrapper.appendChild(disclaimer);
+
     const table = document.createElement('table');
     table.style.cssText = `
-        border: 1px solid #ccc;
-        background-color: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        padding: 0px;
-        font-size: 0.8rem;
         width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
     `;
-
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
-    ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk',].forEach(title => {
+    ['Range', 'Risk Level', 'Cause', 'Bias Risk', 'Cold-Start Risk'].forEach(title => {
         const th = document.createElement('th');
         th.textContent = title;
-        th.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+        th.style = 'border: 1px solid #ccc; padding: 6px; background: #e9ecef;';
         headRow.appendChild(th);
     });
     thead.appendChild(headRow);
     table.appendChild(thead);
 
     const levels = [
-        { risk: 'High', cause: 'Items too underexposed for learning', bias: 'Long-tail bias', coldStart: 'High (items)' },
-        { risk: 'Medium', cause: 'Weak signals for most items', bias: 'Slight popularity bias', coldStart: 'Medium (items)' },
+        { risk: 'High', cause: 'Items too underexposed', bias: 'Long-tail bias', coldStart: 'High (items)' },
+        { risk: 'Medium', cause: 'Weak signals for most items', bias: 'Slight popularity bias', coldStart: 'Medium' },
         { risk: 'Low', cause: 'Balanced', bias: 'Low', coldStart: 'Low' },
-        { risk: 'Medium', cause: 'Few dominant items get most ratings', bias: 'Popularity bias', coldStart: 'Low' },
-        { risk: 'High', cause: 'Tail items get buried, head dominates', bias: 'Strong popularity bias', coldStart: 'High' }
+        { risk: 'Medium', cause: 'Few dominant items', bias: 'Popularity bias', coldStart: 'Low' },
+        { risk: 'High', cause: 'Head dominates, tail ignored', bias: 'Strong popularity bias', coldStart: 'High' },
     ];
-    //Calculate the ranges
-    const ranges = createQuantileRanges(ratios, levels);
 
+    const ranges = createQuantileRanges(values, levels);
     const tbody = document.createElement('tbody');
+
     ranges.forEach(r => {
         const row = document.createElement('tr');
-        [
-            r.label,
-            r.risk,
-            r.cause,
-            r.bias,
-            r.coldStart
-        ].forEach(value => {
+        [r.label, r.risk, r.cause, r.bias, r.coldStart].forEach(text => {
             const td = document.createElement('td');
-            td.textContent = value;
-            td.style = 'border: 1px solid #ddd; padding: 4px 8px;';
+            td.textContent = text;
+            td.style = 'border: 1px solid #ccc; padding: 6px;';
             row.appendChild(td);
         });
         tbody.appendChild(row);
@@ -1215,7 +1192,15 @@ function generateMeanRatingsPerItemTooltip(datasets) {
 
     table.appendChild(tbody);
     wrapper.appendChild(table);
-    container.appendChild(wrapper);
+    body.appendChild(wrapper);
+
+    // Show modal
+    modal.style.display = 'flex';
+
+    // Add close handler
+    modal.querySelector('.info-modal-close').onclick = () => {
+        modal.style.display = 'none';
+    };
 }
 
 // This function creates the statistical model for the ranges of the info icons in the dataset-tab
