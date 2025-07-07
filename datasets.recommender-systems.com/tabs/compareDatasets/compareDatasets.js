@@ -182,9 +182,15 @@ export async function initialize(queryOptions) {
     
     let initialSelectedDatasetIds;
     if (queryOptions && queryOptions.datasets) {
-        initialSelectedDatasetIds = queryOptions.datasets.split(' ').map(id => Number(id));
+        initialSelectedDatasetIds = queryOptions.datasets.split(',').map(id => Number(id));
     } else {
-        initialSelectedDatasetIds = datasets.map(ds => ds.id);
+        initialSelectedDatasetIds = datasets.map(ds => ds.id);    
+    }
+    let initialSelectedColumnIds;
+
+    if (queryOptions && queryOptions.columns) {
+        initialSelectedColumnIds = queryOptions.columns.split(',');
+        selectedColumns = initialSelectedColumnIds;
     }
 
     datasets.forEach(dataset => {
@@ -807,14 +813,15 @@ function colorNumbersOnly(table) {
 
 function shareDatabaseComparison() {
   const datasetIds = selectedDatasets.map(ds => typeof ds === 'object' ? ds.id : ds);
+  const columnIds = selectedColumns.map(col => typeof col === 'object' ? col.id : col);
 
-  const options = {
+    const options = {
     tab: "compareDatasets",
-    datasets: datasetIds.join(","),             
-    columns: selectedColumns.join(","),         
-  };
+    datasets: datasetIds.join(","),
+    columns: columnIds.join(",")
+    };
 
-  const url = getQueryString(options);
+  const url = getQueryString(options); 
 
   navigator.clipboard
     .writeText(url)
@@ -833,6 +840,7 @@ function shareDatabaseComparison() {
       }, 2000);
     });
 }
+
 
 function exportDatasetTableCsv() {
     const exportBtn = document.getElementById('dataset-export-csv-btn');
