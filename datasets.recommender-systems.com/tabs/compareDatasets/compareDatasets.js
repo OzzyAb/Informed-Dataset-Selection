@@ -146,11 +146,6 @@ export async function initialize(queryOptions) {
     infoElements['mean-ratings-per-user-info-p'] = document.getElementById('mean-ratings-per-user-info-p');
     infoElements['mean-ratings-per-item-info'] = document.getElementById('mean-ratings-per-item-info');
     infoElements['mean-ratings-per-item-info-p'] = document.getElementById('mean-ratings-per-item-info-p');
-
-    
-    //document.body.appendChild(infoElements['user-item-ratio-info']);
-    //document.body.appendChild(infoElements['mean-ratings-per-user-info']);
-    //document.body.appendChild(infoElements['mean-ratings-per-item-info']);
     
     const table = document.querySelector("#dataset-table");
     tableHeadElement = table.querySelector("thead");
