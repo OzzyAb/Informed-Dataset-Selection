@@ -871,7 +871,7 @@ function exportDatasetTableCsv() {
 
 function generateUserItemRatioTooltip(datasets) {
     const ratios = datasets
-        .map(d => d.meanNumberOfRatingsByUser)
+        .map(d => d.userItemRatio)
         .filter(r => typeof r === 'number' && !isNaN(r));
 
     if (ratios.length === 0) return;
@@ -988,7 +988,7 @@ function generateUserItemRatioTooltip(datasets) {
 // This function creates the tooltip for the mean interaction per user column, which can be opened by clicking the info icon
 function generateMeanRatingsPerUserTooltip(datasets) {
     const ratios = datasets
-        .map(d => d.userItemRatio)
+        .map(d => d.meanNumberOfRatingsByUser)
         .filter(r => typeof r === 'number' && !isNaN(r));
 
     if (ratios.length === 0) return;
