@@ -1,6 +1,5 @@
 import { ApiService } from "../../apiService.js";
-import { capitalizeFirstLetter } from "../../util.js";
-import { readQueryString, getQueryString, clearQueryString } from "../../main.js";
+import { getQueryString } from "../../main.js";
 
 var datasets = null;
 var selectedDatasets = [];
@@ -33,6 +32,8 @@ var selectAllColumnsButtonText = null;
 var shareButton = null;
 
 let columnsWithInfo = {};
+
+let modalClickHandler = {};
 
 
 const columnDisplayNames = {
@@ -285,7 +286,7 @@ export async function initialize(queryOptions) {
         },
     };
 
-    const theadRow = document.querySelector('#dataset-table thead tr');
+    const theadRow = tableHeadElement.querySelector('tr');
     if (theadRow) {
         theadRow.addEventListener('click', (event) => {
             const btn = event.target.closest('button.tooltip-icon');
@@ -528,7 +529,7 @@ function updateColumnHeaderLabel() {
 
 //renders the table head of the dataset tab
 function renderTableHead() {
-    const theadRow = document.querySelector('#dataset-table thead tr');
+    const theadRow = tableHeadElement.querySelector('tr');
     if (!theadRow) {
         console.error("thead tr konnte nicht gefunden werden.");
         return;
@@ -865,10 +866,35 @@ function exportDatasetTableCsv() {
     })();
 }
 
+function setupModalHandlers(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
 
+    // Remove existing handler
+    if (modalClickHandler[modalId]) {
+        window.removeEventListener('click', modalClickHandler[modalId]);
+    }
+
+    // Setup close button and remove the individual click handler
+    const closeButton = modal.querySelector('.info-modal-close');
+    if (closeButton) {
+        closeButton.onclick = null; // Remove any existing click handler
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+
+    // Setup click outsite to close
+    modalClickHandler[modalId] = function (e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    window.addEventListener('click', modalClickHandler[modalId]);
+}
 
 // This function creates the tooltip for the user-item ratio column, which can be opened by clicking the info icon
-
 function generateUserItemRatioTooltip(datasets) {
     const ratios = datasets
         .map(d => d.userItemRatio)
@@ -974,15 +1000,7 @@ function generateUserItemRatioTooltip(datasets) {
 
     modal.style.display = 'flex';
 
-    modal.querySelector('.info-modal-close').onclick = () => {
-        modal.style.display = 'none';
-    };
-
-    window.addEventListener('click', function (e) {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    setupModalHandlers('user-item-ratio-modal');
 }
 
 // This function creates the tooltip for the mean interaction per user column, which can be opened by clicking the info icon
@@ -1083,20 +1101,10 @@ function generateMeanRatingsPerUserTooltip(datasets) {
 
     modal.style.display = 'flex'; 
 
-    // Close modal logic
-    modal.querySelector('.info-modal-close').onclick = () => {
-        modal.style.display = 'none';
-    };
-
-    window.addEventListener('click', function (e) {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    setupModalHandlers('mean-ratings-per-user-modal');
 }
 
 // This function creates the tooltip for the mean interactions per item column, which can be opened by clicking the info icon
-
 function generateMeanRatingsPerItemTooltip(datasets) {
 
     const values = datasets
@@ -1107,7 +1115,10 @@ function generateMeanRatingsPerItemTooltip(datasets) {
 
     const modal = document.getElementById('mean-ratings-per-item-modal');
     const body = document.getElementById('mean-ratings-per-item-modal-body');
+    if (!modal || !body) return;
+
     body.innerHTML = ''; 
+    
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `font-size: 0.85rem; color: #333;`;
@@ -1192,10 +1203,7 @@ function generateMeanRatingsPerItemTooltip(datasets) {
     // Show modal
     modal.style.display = 'flex';
 
-    // Add close handler
-    modal.querySelector('.info-modal-close').onclick = () => {
-        modal.style.display = 'none';
-    };
+    setupModalHandlers('mean-ratings-per-item-modal');
 }
 
 // This function creates the statistical model for the ranges of the info icons in the dataset-tab
