@@ -186,14 +186,14 @@ export async function initialize(queryOptions) {
     
     let initialSelectedDatasetIds;
     if (queryOptions && queryOptions.datasets) {
-        initialSelectedDatasetIds = queryOptions.datasets.split(',').map(id => Number(id));
+        initialSelectedDatasetIds = queryOptions.datasets.split(' ').map(id => Number(id));
     } else {
         initialSelectedDatasetIds = datasets.map(ds => ds.id);    
     }
     let initialSelectedColumnIds;
 
     if (queryOptions && queryOptions.columns) {
-        initialSelectedColumnIds = queryOptions.columns.split(',');
+        initialSelectedColumnIds = queryOptions.columns.split(' ');
         selectedColumns = initialSelectedColumnIds;
     }
 
@@ -778,8 +778,8 @@ function shareDatabaseComparison() {
 
     const options = {
     tab: "compareDatasets",
-    datasets: datasetIds.join(","),
-    columns: columnIds.join(",")
+    datasets: datasetIds.join(" "),
+    columns: columnIds.join(" ")
     };
 
   const url = getQueryString(options); 
