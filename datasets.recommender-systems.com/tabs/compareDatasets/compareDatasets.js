@@ -302,7 +302,6 @@ export async function initialize(queryOptions) {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'flex';
-                console.log("Modal geöffnet:", modalId);
 
                 // NEU: Tooltip dynamisch erzeugen
                 const key = btn.closest('th')?.dataset.key;
@@ -1105,8 +1104,6 @@ function generateMeanRatingsPerUserTooltip(datasets) {
 
 function generateMeanRatingsPerItemTooltip(datasets) {
 
-    console.log("Modal:", document.getElementById('mean-ratings-per-item-modal'));
-    console.log("Modal Body:", document.getElementById('mean-ratings-per-item-modal-body'));
     const values = datasets
         .map(d => d.meanNumberOfRatingsOnItem)
         .filter(v => typeof v === 'number' && !isNaN(v));
