@@ -78,212 +78,42 @@
     </div>
 
 
-<div id="user-item-ratio-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
-    <table style="
-        border: 1px solid #ccc;
-        background-color: white;
-        padding: 0px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        font-size: 0.8rem;
-        max-width: 600px; 
-        width: 100%;">
-        <tr>
-            <th colspan="6" style="font-weight: normal; border: 1px solid #ddd; padding: 4px 8px;">
-                The user-item ratio is an indicator for evaluating the balance of the interaction matrix. An extreme imbalance
-                hinders the model's capacity to learn robust collaborative patterns. In contrast, a more moderate ratio helps adequate
-                interaction overlap between users and items. Therefore, a moderate user-item ratio improves the effectiveness of
-                co-embedding representations. This subsequently helps you to reduce the issues of data sparsity and the risk of
-                overfitting to popular users or items.
-            </th>
-        </tr>
-        <tr>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Ratio</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Description</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Risk Level</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Cause</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Bias Risk</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Cold-Start Risk</th>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&lt; 0.1</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Extremely item-heavy</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Too many items with too few users</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Strong long-tail bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (items)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">0.1 - 0.2</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Very item-heavy</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Items start getting ignored</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Long-tail bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium (items)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">0.2 - 1.0</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Slightly item-heavy</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Good coverage of items and users</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">1.0 - 2.0</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Near balanced</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Optimal learning conditions</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Minimal</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">2.0 - 5.0</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Slightly user-heavy</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Fewer items, users converge on same content</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium (users)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">5.0 - 10.0</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Very user-heavy</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Too few items for many users</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Heavy popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (users)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&gt; 10.0</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Extremely user-heavy</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Severe lack of items</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Strong popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (users)</td>
-        </tr>
-    </table>
-
-<div id="mean-ratings-per-user-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
-    <p id="mean-ratings-per-user-info-p" style="margin: 0.3rem;">
-    </p>
-    <table style="
-        border: 1px solid #ccc;
-        padding: 0px;
-        font-size: 0.8rem;
-        max-width: 600px; 
-        width: 100%;">
-        <tr>
-            <th colspan="5" style="font-weight: normal; border: 1px solid #ddd; padding: 4px 8px;">
-                A sufficient volume of user interactions is essential for learning reliable preference patterns in collaborative
-                filtering (CF) systems. However, an excessive concentration of interactions among a small subset of highly active users
-                can introduce activity bias, leading the model to overfit to these users and compromising its generalizability. Optimal
-                performance is typically achieved when users contribute enough interactions to show consistent behavioral patterns
-                without dominating the training of your model.
-            </th>
-        </tr>
-        <tr>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Range</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Risk Level</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Cause</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Bias Risk</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Cold-Start Risk</th>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&lt; 5</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Users don't interact enough to learn preferences</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (users)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">5 - 20</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Sparse signals</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Slight popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium (users)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">20 - 50</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Balanced</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">50 - 100</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Power users dominate, skewed model</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Activity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&gt; 100</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Overfitting to active users</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">User bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-        </tr>
-    </table>
+<div id="user-item-ratio-modal" class="info-modal-overlay" style="display: none;">
+  <div class="info-modal-content">
+    <div class="info-modal-header">
+      <h2 class="info-modal-title">User-Item Ratio</h2>
+      <button class="info-modal-close" type="button">&times;</button>
+    </div>
+        <!-- Tooltip content -->
+    <div id="user-item-ratio-modal-body" class="info-modal-body"></div>
+  </div>
 </div>
 
-<div id="mean-ratings-per-item-info" style="position: absolute; display: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 9999; background-color: #fcfcfc">
-    <table style="
-        border: 1px solid #ccc;
-        background-color: white;
-        padding: 0px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        font-size: 0.8rem;
-        max-width: 600px; 
-        width: 100%;">
-        <tr>
-            <th colspan="5" style="font-weight: normal; border: 1px solid #ddd; padding: 4px 8px;">
-                Balanced item exposure is crucial for learning robust item representations in recommender systems. Items with sparse
-                interactions tend to be underrepresented in the learned latent space, which results in poor generalization and increase in
-                the cold-start problem. In contrast, items with high interactions can dominate the representation space and can lead
-                to popularity bias. Maintaining a moderate and well-distributed range of item interactions helps the training of your model
-                across the item catalog and improves the recommendation diversity.
-            </th>
-        </tr>
-        <tr>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Range</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Risk Level</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Cause</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Bias Risk</th>
-            <th style="border: 1px solid #ddd; padding: 4px 8px;">Cold-Start Risk</th>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&lt; 5</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Items too underexposed for learning</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Long-tail bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (items)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">5 - 20</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Weak signals for most items</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Slight popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium (items)</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">20 - 50</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Balanced</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Low</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">50 - 100</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#x1F7E1; Medium</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Few dominant items get most ratings</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128994; Low</td>
-        </tr>
-        <tr>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&gt; 100</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Tail items get buried, head dominates</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">Strong popularity bias</td>
-            <td style="border: 1px solid #ddd; padding: 4px 8px;">&#128308; High (items)</td>
-        </tr>
-    </table>
+
+<div id="mean-ratings-per-user-modal" class="info-modal-overlay" style="display: none;">
+    <div class="info-modal-content">
+        <div class="info-modal-header">
+            <h2 class="info-modal-title">User Interaction Risk Levels</h2>
+            <button class="info-modal-close" type="button">&times;</button>
+        </div>
+        <div id="mean-ratings-per-user-modal-body" class="info-modal-body">
+            <!-- Tooltip content -->
+        </div>
+    </div>
 </div>
+
+<div id="mean-ratings-per-item-modal" class="info-modal-overlay" style="display: none;">
+  <div class="info-modal-content">
+    <div class="info-modal-header">
+      <h2 class="info-modal-title">Mean Interactions per Item</h2>
+      <button class="info-modal-close" type="button">&times;</button>
+    </div>
+    <div class="info-modal-body" id="mean-ratings-per-item-modal-body">
+      <!-- Tooltip content -->
+    </div>
+  </div>
+</div>
+
+
+
+
