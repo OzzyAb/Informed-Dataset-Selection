@@ -542,7 +542,7 @@ function renderTableHead() {
 
     theadRow.innerHTML = '';
 
-    const columnsWithInfo = {
+    columnsWithInfo = {
         userItemRatio: {
             modalId: 'user-item-ratio-modal',
             generator: () => generateUserItemRatioTooltip(datasets),
