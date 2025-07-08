@@ -5,13 +5,13 @@ var datasets = null;
 var selectedDatasets = [];
 var selectedColumns = [];
 
-
+var tableElement = null;
 var tableBodyElement = null;
 var tableHeadElement = null;
 
 let currentSortKey = null;
 let currentSortDirection = 'asc'; // 'asc' oder 'desc'
-var infoElements = {};
+/* var infoElements = {}; */
 
 var datasetFilterHeaderElement = null;
 var datasetFilterArea = null;
@@ -29,11 +29,11 @@ var selectAllColumnsArea = null;
 var selectAllColumnsButton = null;
 var selectAllColumnsButtonText = null;
 
-var shareButton = null;
-
 let columnsWithInfo = {};
 
 let modalClickHandler = {};
+
+let datasetComparisonFilterElement = null;
 
 
 const columnDisplayNames = {
@@ -141,16 +141,16 @@ var metadataElements = [
 
 export async function initialize(queryOptions) {
 
-    infoElements['user-item-ratio-info'] = document.getElementById('user-item-ratio-info');
+    /* infoElements['user-item-ratio-info'] = document.getElementById('user-item-ratio-info');
     infoElements['user-item-ratio-info-p'] = document.getElementById('user-item-ratio-info-p');
     infoElements['mean-ratings-per-user-info'] = document.getElementById('mean-ratings-per-user-info');
     infoElements['mean-ratings-per-user-info-p'] = document.getElementById('mean-ratings-per-user-info-p');
     infoElements['mean-ratings-per-item-info'] = document.getElementById('mean-ratings-per-item-info');
-    infoElements['mean-ratings-per-item-info-p'] = document.getElementById('mean-ratings-per-item-info-p');
-    
-    const table = document.querySelector("#dataset-table");
-    tableHeadElement = table.querySelector("thead");
-    tableBodyElement = table.querySelector("tbody");
+    infoElements['mean-ratings-per-item-info-p'] = document.getElementById('mean-ratings-per-item-info-p'); */
+
+    tableElement = document.querySelector("#dataset-table");
+    tableHeadElement = tableElement.querySelector("thead");
+    tableBodyElement = tableElement.querySelector("tbody");
 
     document.querySelectorAll('.compareDatasets').forEach(element => {
         element.addEventListener('change', compareDatasets);
@@ -166,6 +166,8 @@ export async function initialize(queryOptions) {
 
     datasetFilterArea.innerHTML = '';
     datasetFilterArea.appendChild(selectAllDatasetArea);
+
+    datasetComparisonFilterElement = document.getElementById('dataset-comparison-filter');
 
     datasetFilterCheckboxes = [];
     selectedDatasets = [];
@@ -318,8 +320,7 @@ export async function initialize(queryOptions) {
         });
     });
 
-    shareButton = document.getElementById("compare-database-share-btn");
-    shareButton.addEventListener("click", shareDatabaseComparison);
+    document.getElementById("compare-database-share-btn").addEventListener("click", shareDatabaseComparison);
     document.getElementById('dataset-export-csv-btn').addEventListener('click', exportDatasetTableCsv);
     currentSortKey = 'name';
     currentSortDirection = 'asc';
@@ -367,9 +368,8 @@ async function onFilterDataset(e) {
 }
 
 // main function of the comparison
-
 function compareDatasets() {
-    const selectedDatasetIds = Array.from(document.querySelectorAll('#dataset-comparison-filter input[type="checkbox"]:checked'))
+    const selectedDatasetIds = Array.from(datasetComparisonFilterElement.querySelectorAll('input[type="checkbox"]:checked'))
         .map(cb => Number(cb.id));
 
     selectedDatasets = datasets.filter(d => selectedDatasetIds.includes(d.id));
@@ -378,7 +378,6 @@ function compareDatasets() {
         selectedDatasets = sortDatasets(selectedDatasets, currentSortKey);
     }
 
-    const tableBodyElement = document.querySelector('#dataset-table tbody');
     tableBodyElement.innerHTML = '';
     renderTableHead();
     bindSortEvents();
@@ -396,15 +395,11 @@ function compareDatasets() {
         tr.innerHTML = cells.join('');
         tableBodyElement.appendChild(tr);
     });
-
     updateSortIcons();
-    const table = document.querySelector("#dataset-table");
-    // colorNumbersOnly(table);
 } 
 
 function createSelectAllButtons() {
     // Dataset filter select button
-
     selectAllDatasetArea = document.createElement('div');
     selectAllDatasetArea.style.width = '100%';
 
@@ -615,7 +610,6 @@ function renderTableHead() {
 
 
 //renders the body of the dataset comparison table
-
 function renderDatasetComparisonTable() {
     if (!Array.isArray(datasets) || datasets.length === 0) {
         console.warn("Keine datasets geladen.");
@@ -626,8 +620,6 @@ function renderDatasetComparisonTable() {
         console.warn("Keine Datensätze ausgewählt.");
         return;
     }
-
-    const tableBodyElement = document.querySelector('#dataset-table tbody');
 
     if (!tableBodyElement) {
         console.error("tbody konnte nicht gefunden werden.");
@@ -731,41 +723,6 @@ function formatValue(value, decimals = 0) {
     if (value === null || value === undefined) return '-';
     return typeof value === 'number' ? value.toFixed(decimals) : value;
 } 
-
-
-function colorNumbersOnly(table) {
-    const rows = table.querySelectorAll('tbody tr');
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-
-        cells.forEach((cell, index) => {
-            const content = cell.textContent.trim();
-            const match = content.match(/[-+]?[0-9]*\.?[0-9]+/);
-            if (!match) return;
-
-            const value = parseFloat(match[0]);
-            const key = cell.getAttribute('data-key');
-            const meta = metadataElements.find(m => m.key === key);
-
-            if (!meta || !meta.rangeDescription) return; 
-
-            let colorClass = null;
-            for (const range of meta.rangeDescription) {
-                const [min, max] = range.value;
-                if (value >= min && value < max) {
-                    colorClass = range.color;
-                    break;
-                }
-            }
-
-            if (colorClass) {
-                const coloredNumber = `<span class="${colorClass}" style="font-weight: bold;">${match[0]}</span>`;
-                cell.innerHTML = content.replace(match[0], coloredNumber);
-            }
-        });
-    });
-}
 
 function shareDatabaseComparison() {
   const datasetIds = selectedDatasets.map(ds => typeof ds === 'object' ? ds.id : ds);
