@@ -16,5 +16,5 @@ https://doi.org/10.1145/3705328.3759342
 
 ### Related Work
 **Informed Dataset Selection with ‘Algorithm Performance Spaces’**  
-Joeran Beel, Lukas Wegmeth, Lien Michiels, and Steffen Schulz. (RecSys ’24).  
+Joeran Beel, Lukas Wegmeth, Lien Michiels, and Steffen Schulz. (ACM RecSys 2024).
 DOI: 10.1145/3640457.3691704
